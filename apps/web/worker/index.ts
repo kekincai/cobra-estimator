@@ -3,6 +3,7 @@ import { Hono } from 'hono';
 import { authenticate } from './auth';
 import * as schema from './db/schema';
 import type { AppEnv } from './env';
+import { auditRoute } from './routes/audit';
 import { estimatesRoute } from './routes/estimates';
 import { factorsRoute } from './routes/factors';
 import { modelRoute } from './routes/model';
@@ -25,7 +26,8 @@ const routes = app
   .route('/factors', factorsRoute)
   .route('/projects', projectsRoute)
   .route('/estimates', estimatesRoute)
-  .route('/transfer', transferRoute);
+  .route('/transfer', transferRoute)
+  .route('/audit', auditRoute);
 
 app.onError((err, c) => {
   console.error(err);

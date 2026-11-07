@@ -1,0 +1,20 @@
+/* 業務フロー（design/Flow.dc.html）の動き */
+.flow-node { animation: flow-rise 0.6s var(--ease-out-rise) backwards; transition: border-color 0.25s, transform 0.25s, background 0.25s, box-shadow 0.25s, opacity 0.25s; font-family: inherit; }
+.flow-node:hover { border-color: var(--color-line-strong) !important; opacity: 1 !important; }
+.flow-card { animation: flow-rise 0.6s var(--ease-out-rise) backwards; }
+@keyframes flow-rise { from { opacity: 0; transform: translateY(12px); } }
+.flow-panel { animation: flow-panel 0.45s var(--ease-out-rise) backwards; }
+@keyframes flow-panel { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+.flow-dash { animation: flow-dash 1s linear infinite; }
+.flow-dash-slow { animation: flow-dash 1.2s linear infinite; }
+@keyframes flow-dash { to { stroke-dashoffset: -32; } }
+.flow-spin { animation: flow-spin 1s linear infinite; }
+@keyframes flow-spin { to { transform: rotate(360deg); } }
+.flow-btn { transition: transform 0.15s, background 0.2s, border-color 0.2s, color 0.2s; font-family: inherit; }
+.flow-btn:hover { transform: translateY(-1px); }
+.flow-chip { display: inline-flex; align-items: center; min-height: 24px; padding: 0 9px; border-radius: 999px; font-size: 11px; background: var(--color-raised); border: 1px solid var(--color-muted); color: var(--color-body); white-space: nowrap; }
+.flow-chip.out { border-color: var(--color-accent-line); background: var(--color-accent-bg); color: var(--color-accent-ink); }
+@media (prefers-reduced-motion: reduce) {
+  .flow-node, .flow-card, .flow-panel, .flow-dash, .flow-dash-slow, .flow-spin { animation: none; }
+  .flow-btn:hover { transform: none; }
+}

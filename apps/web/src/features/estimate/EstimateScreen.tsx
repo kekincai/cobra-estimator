@@ -1,10 +1,11 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { expectedCO, type Levels, type SimulationResult } from 'cobra-core';
 import { useEffect, useMemo, useState } from 'react';
+import { SimSettingsDialog, useSimSettings } from '../sim-settings';
 import { apiSend, qk } from '../../data/api';
 import { runSimulation } from '../../lib/cobra-client';
 import { fmt1, fmtInt } from '../../ui/format';
-import { Histogram } from '../../ui/Histogram';
+import { DistributionHistogram } from './DistributionHistogram';
 import { PBand } from '../../ui/PBand';
 import { binSamples, histRange } from '../../ui/stats';
 import { useCountUp } from '../../ui/useCountUp';
@@ -15,9 +16,9 @@ import {
   estimateTitle,
   nextGenLabel,
   resultsOf,
+  sigmaFor,
   specFor,
   useEstimateContext,
-  useEstimateSimSettings,
   useSetReportGeneration,
   type EstimateContext,
   type StoredResults,
@@ -54,7 +55,9 @@ function EstimateEditor({ ctx }: { ctx: EstimateContext }) {
   const version = bundle.activeVersion!;
   const alpha = version.alpha;
   const spec = useMemo(() => specFor(bundle, version), [bundle, version]);
-  const settings = useEstimateSimSettings();
+  const settings = useSimSettings('estimate');
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const sigma = useMemo(() => sigmaFor(version), [version]);
   const qc = useQueryClient();
   const mounted = useMounted();
 
@@ -79,6 +82,7 @@ function EstimateEditor({ ctx }: { ctx: EstimateContext }) {
   const detMean = nominal * (1 + det.sco);
 
   // モンテカルロ（デバウンスして Web Worker）
+  // プレビューは保存済みのシードで回す（「実行ごとに更新」でも入力を変えるたびに揺れないように）
   const inputKey = JSON.stringify([version.id, sizeFP, levels, settings.runs, settings.seed]);
   const [sim, setSim] = useState<{ key: string; result: SimulationResult; det: number } | null>(null);
   useEffect(() => {
@@ -86,7 +90,7 @@ function EstimateEditor({ ctx }: { ctx: EstimateContext }) {
     let alive = true;
     const d = detMean;
     const t = setTimeout(() => {
-      runSimulation(spec, { alpha, sizeFP, levels }, settings)
+      runSimulation(spec, { alpha, sizeFP, levels, sigma }, { runs: settings.runs, seed: settings.seed })
         .then((result) => alive && setSim({ key: inputKey, result, det: d }))
         .catch(() => undefined);
     }, PREVIEW_DEBOUNCE_MS);
@@ -129,8 +133,10 @@ function EstimateEditor({ ctx }: { ctx: EstimateContext }) {
     setRunError(null);
     const key = inputKey;
     const d = detMean;
+    const runs = settings.runs;
+    const seed = settings.seedForRun();
     try {
-      const result = await runSimulation(spec, { alpha, sizeFP, levels }, settings, (_stage, done, total) => setProgress(done / total));
+      const result = await runSimulation(spec, { alpha, sizeFP, levels, sigma }, { runs, seed }, (_stage, done, total) => setProgress(done / total));
       setSim({ key, result, det: d });
       const notes = memo.trim() ? { [MEMO_KEY]: memo.trim() } : {};
       await apiSend('POST', `/estimates/${id}/generations`, {
@@ -138,8 +144,8 @@ function EstimateEditor({ ctx }: { ctx: EstimateContext }) {
         sizeFP,
         levels,
         notes,
-        runs: settings.runs,
-        seed: settings.seed,
+        runs,
+        seed,
         modelVersionId: version.id,
         results: stripSamples(result),
       });
@@ -294,17 +300,17 @@ function EstimateEditor({ ctx }: { ctx: EstimateContext }) {
               {running ? `シミュレーション中 ${Math.round(progress * 100)}% ・ ${fmtInt(doneRuns)} / ${fmtInt(settings.runs)}` : runLabel}
             </button>
             <span className="whitespace-nowrap text-[11px] text-weak">
-              {fmtInt(settings.runs)} 回 ・ 乱数固定 ・{' '}
-              {/* TODO(sim-settings): SimSettingsDialog が main に入ったら open する */}
+              {fmtInt(settings.runs)} 回 ・ {settings.fixedSeed ? '乱数固定' : '乱数は毎回更新'} ・{' '}
               <button
                 type="button"
-                aria-disabled="true"
-                title="シミュレーション設定は準備中です"
-                className="cursor-not-allowed border-0 bg-transparent p-0 font-[inherit] text-[11px] text-accent underline"
+                aria-haspopup="dialog"
+                onClick={() => setSettingsOpen(true)}
+                className="cursor-pointer border-0 bg-transparent p-0 font-[inherit] text-[11px] text-accent underline"
               >
                 設定
               </button>
             </span>
+            <SimSettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} target="estimate" />
           </div>
           {dropped && !running && <p className="m-0 -mt-1.5 text-[11px] text-weak">保存は最大 5 世代です。実行すると最も古い {dropped} が削除されます。</p>}
           {runError && (
@@ -367,7 +373,7 @@ function EstimateEditor({ ctx }: { ctx: EstimateContext }) {
             )}
 
             {hist && p80 !== null ? (
-              <Histogram
+              <DistributionHistogram
                 counts={hist.counts}
                 lo={hist.lo * scale}
                 hi={hist.hi * scale}

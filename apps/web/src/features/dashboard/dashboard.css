@@ -1,0 +1,17 @@
+/* ダッシュボード専用の動き（reduced-motion は index.css で一括無効化） */
+.dash-pulse { animation: dash-pulse 1.8s ease-in-out infinite; }
+@keyframes dash-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 55%, transparent); }
+  60% { box-shadow: 0 0 0 7px color-mix(in srgb, var(--accent) 0%, transparent); }
+}
+.dash-spin { animation: dash-spin 1s linear infinite; }
+@keyframes dash-spin { to { transform: rotate(360deg); } }
+.dash-row { transition: background 0.2s, transform 0.2s, border-color 0.2s; font-family: inherit; }
+.dash-row:hover { background: var(--color-raised); transform: translateX(2px); }
+.dash-feed { animation: rise 0.6s var(--ease-out-rise) backwards; }
+.dash-search { transition: border-color 0.2s; }
+.dash-search:focus { outline: none; border-color: var(--accent); }
+@media (prefers-reduced-motion: reduce) {
+  .dash-pulse, .dash-spin, .dash-feed { animation: none; }
+  .dash-row:hover { transform: none; }
+}

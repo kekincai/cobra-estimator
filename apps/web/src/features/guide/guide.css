@@ -1,0 +1,17 @@
+/* 解説ページの本文スタイル（design/Guide.dc.html） */
+.guide-body { display: flex; flex-direction: column; gap: 18px; animation: guide-rise 0.4s var(--ease-out-rise) backwards; }
+@keyframes guide-rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+.guide-body p { margin: 0; font-size: 13.5px; line-height: 1.85; color: var(--color-body); }
+.guide-body h2 { margin: 0; font-size: 24px; outline: none; }
+.guide-body h3 { margin: 0; font-size: 15px; font-weight: 700; }
+.guide-body dt { font-size: 13px; font-weight: 700; }
+.guide-body dd { margin: 2px 0 0; font-size: 12.5px; color: var(--color-sub); line-height: 1.6; }
+.guide-toc { transition: background 0.2s, color 0.2s; font-family: inherit; }
+.guide-toc:hover { background: var(--color-card-2); color: var(--color-text); }
+.guide-lk { transition: border-color 0.2s, transform 0.15s; }
+.guide-lk:hover { border-color: var(--accent); transform: translateY(-1px); }
+.guide-range { width: 100%; height: 28px; cursor: pointer; accent-color: var(--accent); }
+@media (prefers-reduced-motion: reduce) {
+  .guide-body { animation: none; }
+  .guide-lk:hover { transform: none; }
+}

@@ -45,7 +45,7 @@ export function GenerationStrip({
             aria-label={`${g.label} 推定 ${r ? fmt1(r.p50) : '—'} 人月。${isReport ? 'レポートに使用中' : 'レポートに使う'}`}
             disabled={busyId !== null}
             onClick={() => onSelect(g.id)}
-            className={`pop flex min-h-[112px] cursor-pointer flex-col gap-1 rounded-[14px] border bg-bg px-3.5 py-3 text-left font-[inherit] text-text transition-colors hover:border-line-strong disabled:cursor-progress ${
+            className={`gen-pop flex min-h-[112px] cursor-pointer flex-col gap-1 rounded-[14px] border bg-bg px-3.5 py-3 text-left font-[inherit] text-text transition-colors hover:border-line-strong disabled:cursor-progress ${
               isReport ? 'border-accent hover:border-accent' : 'border-line'
             }`}
             style={{ animationDelay: `${i * 80}ms` }}

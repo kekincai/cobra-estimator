@@ -38,7 +38,7 @@ export function PBand({
         className="relative h-3 rounded-md bg-raised"
       >
         <div className="mk absolute inset-y-0 rounded-md bg-accent" style={{ left: `${pct(p20)}%`, width: `${pct(p80) - pct(p20)}%`, opacity: mounted ? 0.9 : 0 }} />
-        <div className="mk absolute inset-y-0 rounded-r-md bg-dim" style={{ left: `${pct(p80)}%`, width: `${pct(p95) - pct(p80)}%`, opacity: mounted ? 1 : 0 }} />
+        <div className="mk absolute inset-y-0 rounded-r-md bg-slate" style={{ left: `${pct(p80)}%`, width: `${pct(p95) - pct(p80)}%`, opacity: mounted ? 1 : 0 }} />
         <div
           className="mk absolute -inset-y-[3px] w-1 rounded-sm border border-accent bg-bg"
           style={{ left: `calc(${pct(p50)}% - 2px)`, opacity: mounted ? 1 : 0 }}

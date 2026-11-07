@@ -1,6 +1,6 @@
 // 見積り・リスク・レポート画面で共有するデータ取得と計算フック。
 import { useQueryClient } from '@tanstack/react-query';
-import { DEFAULT_RUNS, DEFAULT_SEED, type ExpertMode, type Lever, type Levels, type ModelSpec, type SimulationResult } from 'cobra-core';
+import { predictiveSigma, type ExpertMode, type Lever, type Levels, type ModelSpec, type SimulationResult } from 'cobra-core';
 import { SEED_G3 } from 'cobra-core/seed';
 import { useEffect, useMemo, useState } from 'react';
 import { apiSend, qk, useEstimate, useModel } from '../../data/api';
@@ -15,19 +15,11 @@ export const resultsOf = (g: GenerationRow | null | undefined): StoredResults | 
 /** 世代に保存する前提メモのキー（要因 ID と衝突しない） */
 export const MEMO_KEY = 'memo';
 
-export interface SimSettingsValue {
-  runs: number;
-  seed: number;
-}
-
 /**
- * シミュレーション設定。
- * TODO(sim-settings): `src/features/sim-settings/` の `useSimSettings('estimate')` と `SimSettingsDialog` が main に入ったら差し替える。
- * それまでは既定値（10,000 回・乱数固定）。
+ * 版のモデル誤差 σ（LOO 残差の対数 RMS）。runSimulation / runLevers の `EstimateInput.sigma` に必ず渡す。
+ * 渡さないと CO のばらつきだけになり、P5〜P95 が狭くなりすぎる。
  */
-export function useEstimateSimSettings(): SimSettingsValue {
-  return { runs: DEFAULT_RUNS, seed: DEFAULT_SEED };
-}
+export const sigmaFor = (version: ModelVersionRow | null | undefined): number => (version ? predictiveSigma(version.loo) : 0);
 
 export const genNo = (label: string) => Number(label.slice(1)) || 0;
 export const nextGenLabel = (gens: GenerationRow[]) => `G${gens.reduce((m, g) => Math.max(m, genNo(g.label)), 0) + 1}`;
@@ -109,7 +101,11 @@ export function useGenerationSimulation(bundle: ModelBundle | undefined, gen: Ge
   useEffect(() => {
     if (!bundle || !gen || !version) return;
     let alive = true;
-    runSimulation(specFor(bundle, version), { alpha: version.alpha, sizeFP: gen.sizeFP, levels: gen.levels }, { runs: gen.runs, seed: gen.seed })
+    runSimulation(
+      specFor(bundle, version),
+      { alpha: version.alpha, sizeFP: gen.sizeFP, levels: gen.levels, sigma: sigmaFor(version) },
+      { runs: gen.runs, seed: gen.seed },
+    )
       .then((result) => alive && setState({ key, result }))
       .catch((e: unknown) => alive && setState({ key, error: e instanceof Error ? e.message : String(e) }));
     return () => {
@@ -141,7 +137,7 @@ export function useLevers(
     const t = setTimeout(() => {
       runLevers(
         specFor(bundle, version),
-        { alpha: version.alpha, sizeFP: gen.sizeFP, levels: gen.levels },
+        { alpha: version.alpha, sizeFP: gen.sizeFP, levels: gen.levels, sigma: sigmaFor(version) },
         { runs: gen.runs, seed: gen.seed, budget: budget ?? undefined, top: 3 },
       )
         .then((levers) => alive && setState({ key, levers }))

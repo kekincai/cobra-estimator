@@ -4,7 +4,7 @@ import { Link } from 'react-router';
 import type { GenerationRow, ModelBundle } from '../../../shared/types';
 import { ExceedanceCurve } from '../../ui/ExceedanceCurve';
 import { fmt1, factorNo } from '../../ui/format';
-import { Segmented } from '../../ui/Segmented';
+import { ViewToggle } from './ViewToggle';
 import { clamp, histRange } from '../../ui/stats';
 import { useMounted } from '../../ui/useMounted';
 import { EstimateHeader, ScreenMessage } from '../estimate/EstimateHeader';
@@ -97,7 +97,7 @@ function RiskView({ ctx, gen, result, versionNo }: { ctx: EstimateContext; gen: 
         <div className="tile col-span-12 flex min-w-0 flex-col gap-3 px-[26px] py-[22px] xl:col-span-8" style={{ animationDelay: '0ms' }}>
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 className="m-0 text-[13px] font-medium">工数超過確率分布</h2>
-            <Segmented
+            <ViewToggle
               label="横軸"
               value={axis}
               onChange={setAxis}
@@ -206,7 +206,7 @@ function RiskView({ ctx, gen, result, versionNo }: { ctx: EstimateContext; gen: 
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 className="m-0 text-[13px] font-medium">変動要因の寄与度</h2>
             <div className="flex gap-2">
-              <Segmented
+              <ViewToggle
                 label="並び順"
                 value={sort}
                 onChange={setSort}
@@ -215,7 +215,7 @@ function RiskView({ ctx, gen, result, versionNo }: { ctx: EstimateContext; gen: 
                   { value: 'no', label: '番号順' },
                 ]}
               />
-              <Segmented
+              <ViewToggle
                 label="単位"
                 value={unit}
                 onChange={setUnit}

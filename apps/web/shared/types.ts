@@ -39,3 +39,53 @@ export function toFactor(r: FactorRow): Factor {
 export function toModelSpec(bundle: Pick<ModelBundle, 'model' | 'factors'>, expertMode: ExpertMode = { kind: 'average' }): ModelSpec {
   return { factors: bundle.factors.map(toFactor), k: bundle.model.k, expertMode };
 }
+
+// ---- 取り込み / 書き出し（/transfer） ----
+// 取り込み確定 API（POST /api/transfer/import）の本文。解析・衝突処理はブラウザ側で済ませ、ここには確定した差分だけを送る。
+
+export type AuditRow = typeof s.auditLog.$inferSelect;
+
+export interface TransferFactorInsert {
+  /** ブラウザ側で採番（関係の参照に使うため） */
+  id: string;
+  no: number;
+  name: string;
+  category: string;
+  kind: 'direct' | 'indirect';
+  targetFactorId: string | null;
+  definition: string;
+  levels: [string, string, string, string];
+  origin: 'standard' | 'custom';
+  triangles: { expert: string; best: number; likely: number; worst: number }[];
+}
+
+/** 既存要因の上書き（名前は変えない）。targetFactorId だけの更新もある（関係の整合性を保つため）。 */
+export type TransferFactorUpdate = { id: string } & Partial<Omit<TransferFactorInsert, 'id' | 'no' | 'name'>>;
+
+export interface TransferProjectInsert {
+  id: string;
+  groupId: string;
+  name: string;
+  sizeFP: number;
+  effortMM: number;
+  levels: Record<string, number>;
+  note: string;
+  adopted: boolean;
+  excludedReason: string | null;
+}
+
+export interface TransferImportRequest {
+  source: { kind: 'json' | 'xml' | 'csv'; fileName: string; exportedBy?: string | null; exportedAt?: string | null };
+  groups: { id: string; name: string }[];
+  factorsInsert: TransferFactorInsert[];
+  factorsUpdate: TransferFactorUpdate[];
+  projects: TransferProjectInsert[];
+}
+
+export interface TransferImportResponse {
+  ok: true;
+  factorsAdded: number;
+  factorsUpdated: number;
+  projectsAdded: number;
+  groupsAdded: number;
+}

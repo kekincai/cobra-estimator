@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
 
-/** 初回描画の少し後に true。棒や帯を 0 から伸ばす CSS トランジションの起点に使う。 */
+/**
+ * マウント直後に false → true になるフラグ。
+ * 棒・リング・帯を 0 から CSS transition で伸ばすのに使う（reduced-motion は index.css 側で transition を無効化済み）。
+ */
 export function useMounted(delayMs = 80): boolean {
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
