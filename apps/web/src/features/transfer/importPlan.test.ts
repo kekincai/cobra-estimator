@@ -82,8 +82,9 @@ describe('import plan', () => {
     expect(pj7).toMatchObject({ adopted: false, excludedReason: 'ΣCO と生産性の不整合', groupId: 'A' });
     const pj10 = projects.find((p) => p.id === 'PJ-010')!;
     const idOf = (no: number) => factorsInsert.find((f) => f.no === no)!.id;
-    expect(pj10.levels[idOf(1)]).toBe(3);
-    expect(pj10.levels[idOf(2)]).toBe(2);
+    // seed のレベル値は cobra-core の校正で変わるので、seed から期待値を作る
+    const seed10 = SEED_PROJECTS.find((p) => p.id === 'PJ-010')!;
+    for (const f of SEED_FACTORS) expect(pj10.levels[idOf(f.no)] ?? 0).toBe(seed10.levels[f.id] ?? 0);
     expect(plan.after).toEqual({ factors: 8, triangles: 16, projects: 12, standard: 8 });
     expect(plan.warnings).toEqual([]);
   });
