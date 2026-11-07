@@ -1,6 +1,8 @@
 // 示例 seed（IMPLEMENTATION_BRIEF.md §6）。DB seed とユニットテストで共用。
-// 注意: 実績のレベル値は §6 の「ΣCO から逆算して合理的な値」の仮置き。
-//       α = 0.0210 / MMRE 18.4% / PRED(25) 75% に合わせた調整は cobra-core の担当タスクで行う。
+// 実績のレベル値は §6 の規模・工数のまま、平均の三角分布で構築したとき α が 0.0210（4 桁）になるよう較正した。
+// §6 の規模・工数と α = 0.0210 からは MMRE 18.4% / PRED(25) 75% は両立しない（§11 参照）。
+// 値を変えたら test/core.test.ts の §6 テストと SEED_VERSIONS を更新し、DB には差分マイグレーションを足す
+// （`pnpm --filter web db:seed-sql:update`、apps/web/scripts/seed-sql.ts 参照）。
 
 import { DEFAULT_K, type Factor, type ModelSpec, type ProjectRecord } from './index';
 
@@ -36,32 +38,49 @@ export interface SeedProject extends ProjectRecord {
 }
 
 export const SEED_PROJECTS: SeedProject[] = [
-  { id: 'PJ-001', name: '予約受付 スマホ対応', sizeFP: 420, effortMM: 8.2, levels: lv([0, 0, 0, 0, 1, 0, 0, 0]) },
-  { id: 'PJ-002', name: '採用管理 SaaS 連携', sizeFP: 560, effortMM: 12.9, levels: lv([1, 1, 0, 1, 1, 2, 0, 0]) },
-  { id: 'PJ-003', name: '勤怠管理 クラウド移行', sizeFP: 680, effortMM: 13.1, levels: lv([0, 0, 1, 0, 1, 0, 0, 0]) },
-  { id: 'PJ-004', name: '販売分析ダッシュボード', sizeFP: 760, effortMM: 17.8, levels: lv([1, 1, 2, 0, 2, 1, 0, 0]) },
-  { id: 'PJ-005', name: '在庫照会 API', sizeFP: 900, effortMM: 21.5, levels: lv([1, 1, 1, 1, 1, 2, 0, 0]) },
-  { id: 'PJ-006', name: '契約書ワークフロー', sizeFP: 980, effortMM: 19.4, levels: lv([1, 0, 1, 0, 1, 1, 0, 1]) },
-  { id: 'PJ-007', name: '物流追跡 API 基盤', sizeFP: 1100, effortMM: 26.9, levels: lv([0, 0, 1, 0, 1, 0, 0, 0]), note: 'ΣCO が低いのに工数が多い — レベル値を再確認', adopted: false, excludedReason: 'ΣCO と生産性の不整合' },
-  { id: 'PJ-008', name: '会員サイト リニューアル', sizeFP: 1250, effortMM: 31.2, levels: lv([1, 0, 1, 1, 1, 0, 0, 1]) },
-  { id: 'PJ-009', name: '社内ポータル刷新', sizeFP: 1400, effortMM: 29.1, levels: lv([2, 1, 1, 2, 1, 1, 1, 1]) },
-  { id: 'PJ-010', name: '請求書電子化 (法対応)', sizeFP: 1620, effortMM: 41.3, levels: lv([3, 2, 1, 1, 2, 1, 1, 0]), note: '法改正で要件が流動' },
-  { id: 'PJ-011', name: '経費精算 モバイル', sizeFP: 1880, effortMM: 46.8, levels: lv([0, 0, 1, 0, 2, 0, 0, 0]) },
-  { id: 'PJ-012', name: '受発注システム更改', sizeFP: 2150, effortMM: 55.2, levels: lv([2, 1, 1, 0, 2, 1, 0, 1]), note: 'サブシステム3本' },
+  { id: 'PJ-001', name: '予約受付 スマホ対応', sizeFP: 420, effortMM: 8.2, levels: lv([0, 0, 0, 0, 0, 0, 0, 1]) },
+  { id: 'PJ-002', name: '採用管理 SaaS 連携', sizeFP: 560, effortMM: 12.9, levels: lv([0, 0, 0, 0, 0, 1, 0, 0]) },
+  { id: 'PJ-003', name: '勤怠管理 クラウド移行', sizeFP: 680, effortMM: 13.1, levels: lv([0, 0, 1, 1, 1, 0, 0, 0]) },
+  { id: 'PJ-004', name: '販売分析ダッシュボード', sizeFP: 760, effortMM: 17.8, levels: lv([0, 0, 0, 0, 0, 0, 0, 1]) },
+  { id: 'PJ-005', name: '在庫照会 API', sizeFP: 900, effortMM: 21.5, levels: lv([0, 0, 0, 0, 0, 1, 0, 0]) },
+  { id: 'PJ-006', name: '契約書ワークフロー', sizeFP: 980, effortMM: 19.4, levels: lv([0, 0, 0, 0, 0, 0, 1, 0]) },
+  { id: 'PJ-007', name: '物流追跡 API 基盤', sizeFP: 1100, effortMM: 26.9, levels: lv([2, 1, 1, 1, 2, 3, 1, 0]), note: 'ΣCO が高いのに工数が少ない — レベル値を再確認', adopted: false, excludedReason: 'ΣCO と生産性の不整合' },
+  { id: 'PJ-008', name: '会員サイト リニューアル', sizeFP: 1250, effortMM: 31.2, levels: lv([1, 0, 0, 0, 0, 0, 0, 0]) },
+  { id: 'PJ-009', name: '社内ポータル刷新', sizeFP: 1400, effortMM: 29.1, levels: lv([0, 0, 0, 0, 0, 0, 1, 0]) },
+  { id: 'PJ-010', name: '請求書電子化 (法対応)', sizeFP: 1620, effortMM: 41.3, levels: lv([3, 0, 2, 0, 3, 1, 1, 0]), note: '法改正で要件が流動' },
+  { id: 'PJ-011', name: '経費精算 モバイル', sizeFP: 1880, effortMM: 46.8, levels: lv([0, 0, 0, 0, 1, 0, 0, 0]) },
+  { id: 'PJ-012', name: '受発注システム更改', sizeFP: 2150, effortMM: 55.2, levels: lv([0, 0, 0, 1, 0, 0, 0, 0]), note: 'サブシステム3本' },
 ].map((p) => ({ groupId: 'A', note: '', adopted: true, excludedReason: null, ...p }));
 
-/** §6 の示例見積り G3 */
+/**
+ * §6 の示例見積り G3。
+ * expected は v3（SEED_PROJECTS を平均の三角分布で構築）の α・σ で 10,000 回・seed 20261106 を回したときの値
+ * （test/core.test.ts が ±1% で確認する）。元の設計稿の値（P50 42.3 / P80 49.1 / P5 31.4 / P95 56.9 / 34%）は
+ * ΣCO ≈ 0.68 を前提にしていたが、§2.2 の規則と §6 の三角分布からは ΣCO = 0.743 になる（§11）。
+ */
 export const SEED_G3 = {
   name: '顧客ポータル刷新 — 案B (外部連携あり)',
   sizeFP: 1200,
   levels: lv([3, 2, 1, 2, 2, 3, 1, 1]),
   budget: 45,
   /** 期待値（テストの目標、±1%） */
-  expected: { sco: 0.68, nominal: 25.2, overhead: 17.1, p50: 42.3, p80: 49.1, p5: 31.4, p95: 56.9, exceedAtBudget: 0.34 },
+  expected: {
+    sco: 0.743,
+    nominal: 25.2,
+    overhead: 18.7,
+    p50: 43.9,
+    p80: 49.9,
+    p5: 34.3,
+    p95: 56.2,
+    exceedAtBudget: 0.43,
+    contributions: { F01: 7.7, F06: 4.7, F05: 2.5, F04: 1.9, F03: 1.0, F07: 0.5, F08: 0.4 },
+  },
 } as const;
 
 export const SEED_VERSIONS = [
   { version: 1, expert: 'S.T.', alpha: 0.0232, mmre: 0.241, builtAt: '2026-10-14', n: 9, active: false },
   { version: 2, expert: 'Y.T.', alpha: 0.0198, mmre: 0.198, builtAt: '2026-10-28', n: 11, active: false },
-  { version: 3, expert: '平均', alpha: 0.021, mmre: 0.184, pred25: 0.75, ci95: [0.0186, 0.0237] as [number, number], builtAt: '2026-11-05', n: 11, active: true },
+  // v3 は現在の SEED_PROJECTS で buildModel した値（表示桁に丸め。DB には seed-sql.ts が構築結果をそのまま入れる）。
+  // v1 / v2 は過去の構築履歴（当時の実績・レベル値）の例示で、現在のデータからは再計算しない。
+  { version: 3, expert: '平均', alpha: 0.021, mmre: 0.128, pred25: 0.818, ci95: [0.0194, 0.0225] as [number, number], sigma: 0.145, builtAt: '2026-11-05', n: 11, active: true },
 ] as const;

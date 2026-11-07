@@ -60,6 +60,11 @@ export interface EstimateInput {
   alpha: number;
   sizeFP: number;
   levels: Levels;
+  /**
+   * モデル誤差（対数スケールの標準偏差）。各試行で工数に exp(σ·z), z ~ N(0,1) を掛ける。
+   * 構築結果の `BuildResult.sigma`（= `predictiveSigma(loo)`）を渡す。未指定・0 なら CO のばらつきだけ。
+   */
+  sigma?: number;
 }
 
 export interface SimOptions {
@@ -129,6 +134,8 @@ export interface Inconsistency {
   projectId: string;
   /** α_j / α − 1 */
   gap: number;
+  /** 不採用（除外中）の実績に対する判定なら true（`BuildOptions.excluded` から） */
+  excluded?: boolean;
 }
 
 export type BuildStage = 'alpha' | 'montecarlo' | 'loo';
@@ -138,6 +145,8 @@ export interface BuildOptions {
   runs: number;
   seed: number;
   onProgress?: (stage: BuildStage, done: number, total: number) => void;
+  /** 不採用の実績。α 推定には使わず、不整合の判定だけ行う（結果は excluded: true） */
+  excluded?: ProjectRecord[];
 }
 
 export interface BuildResult {
@@ -149,6 +158,8 @@ export interface BuildResult {
   mmre: number;
   pred25: number;
   inconsistencies: Inconsistency[];
+  /** 予測のモデル誤差 σ（LOO 残差の対数 RMS）。見積りの `EstimateInput.sigma` に渡す。buildModel は常に設定する */
+  sigma?: number;
 }
 
 export interface Lever {
