@@ -10,6 +10,6 @@
     "test": "pnpm -r test",
     "typecheck": "pnpm -r typecheck",
     "check": "pnpm typecheck && pnpm test && pnpm build",
-    "deploy": "pnpm --filter web deploy"
+    "deploy": "pnpm --filter web run deploy"
   }
 }
