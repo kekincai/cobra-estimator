@@ -101,7 +101,7 @@ const Build = () => (
           1 件を隠して残りで α を求め、隠した 1 件を見積もる。これを全件で繰り返した誤差が上の MMRE / PRED。手持ちのデータで「初めて見る案件」への当たり具合を測る方法です。
         </span>
       </div>
-      <div className={`${card} gap-2 border-coral-line bg-coral-bg-2`}>
+      <div className={`${card} gap-2 border-coral-frame bg-coral-bg-2`}>
         <h3 className="text-coral-soft">ΣCO と生産性の不整合</h3>
         <span className="text-[12px] leading-[1.6] text-body">
           レベル値が高い (ΣCO が大きい) のに生産性が良い、またはその逆の案件は、レベルの付け方か工数の集計に問題がある可能性があります。PJ-007 がその例で、除外して構築しています。
