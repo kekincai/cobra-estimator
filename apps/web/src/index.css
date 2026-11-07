@@ -40,7 +40,8 @@ body {
   font-size: 14px;
 }
 
-a { color: var(--accent); }
+/* base レイヤーに置く（unlayered だと Tailwind の text-* より強くなり、リンクの色指定が効かない） */
+@layer base { a { color: var(--accent); } }
 
 /* 数字・見出し */
 .n {
@@ -105,6 +106,41 @@ textarea:focus-visible {
   }
 }
 
+/* --- 実績データ / モデル構築 / シミュレーション設定 で追加（設計稿の補助色） --- */
+@theme {
+  --color-body: #c7cdd9;
+  --color-teal: #5eead4;
+  --color-line-mid: #2f3747;
+  --color-ok-bg: #15241c;
+  --color-warn-ink: #ffd48a;
+  --color-warn-bg: #2a1f14;
+  --color-warn-line: #4a3320;
+  --color-coral-ink: #ffb4a0;
+  --color-coral-title: #ffd1c4;
+  --color-coral-bg: #2a1a16;
+  --color-coral-line: #4a2a22;
+  --color-coral-btn-line: #5a3a30;
+  --color-coral-row: #1e1512;
+  --color-lv1-bg: #1f2a4a;
+  --color-lv1: #9db4ff;
+  --color-lv2-bg: #2f4a9e;
+}
+
+/* SVG の点・線（cx/cy/r の遷移） */
+.pt { transition: r 0.5s var(--ease-out-rise), cx 0.5s var(--ease-out-rise), cy 0.5s var(--ease-out-rise), fill 0.3s, opacity 0.5s, stroke 0.3s; }
+.ln { transition: all 0.5s var(--ease-out-rise); }
+.grow-w { transition: width 0.6s var(--ease-out-rise); }
+.grow-h { transition: height 0.6s var(--ease-out-rise); }
+.spin { animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes pop {
+  from { opacity: 0; transform: translateY(14px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+/* 数値入力のスピンボタンを隠す */
+.no-spin::-webkit-outer-spin-button,
+.no-spin::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.no-spin { -moz-appearance: textfield; }
 /* 追加トークン（変動要因・関係図の設計稿で使う色） */
 @theme {
   --color-panel: #0f1218;
