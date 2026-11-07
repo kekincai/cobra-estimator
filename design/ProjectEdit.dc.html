@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>実績データの追加・編集</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Space+Grotesk:wght@500;700&display=swap">
+<style>
+body{margin:0;background:#0B0D12}
+a{color:#D4FF4F}a:hover{color:#E6FF8A}
+.n{font-family:'Space Grotesk','Noto Sans JP',sans-serif;font-weight:700;letter-spacing:-0.03em;font-variant-numeric:tabular-nums}
+.tile{background:#13161E;border:1px solid #222734;border-radius:18px;box-sizing:border-box;animation:rise .7s cubic-bezier(.2,.7,.2,1) backwards}
+@keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+.nav{display:flex;align-items:center;gap:12px;min-height:44px;padding:0 14px;border-radius:12px;color:#8B93A5;text-decoration:none;font-size:13px;font-weight:500;transition:background .2s,color .2s}
+.nav:hover{background:#171B25;color:#F2F4F8}
+.nav.on{background:#1B2030;color:#F2F4F8}
+.btn{transition:transform .15s,filter .2s,background .2s,border-color .2s,color .2s}.btn:hover{filter:brightness(1.08)}.btn:active{transform:scale(.97)}
+.pt{transition:cx .5s cubic-bezier(.2,.7,.2,1),cy .5s cubic-bezier(.2,.7,.2,1)}
+.ln{transition:all .5s cubic-bezier(.2,.7,.2,1)}
+label{font-size:11px;color:#8B93A5}
+input[type=text],input[type=number],textarea{font-family:inherit;font-size:13px;color:#F2F4F8;background:#0B0D12;border:1px solid #222734;border-radius:10px;padding:0 12px;min-height:40px;box-sizing:border-box;width:100%;transition:border-color .2s}
+textarea{padding:10px 12px;min-height:72px;resize:none;line-height:1.6;font-size:12.5px}
+input:focus,textarea:focus{outline:none;border-color:#D4FF4F}
+input[type=number]{font-family:'Space Grotesk','Noto Sans JP',sans-serif;font-weight:700;font-size:15px}
+input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
+a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid #D4FF4F;outline-offset:2px}
+@media (prefers-reduced-motion: reduce){.tile{animation:none}.pt,.ln{transition:none}}
+</style>
+</helmet>
+<div style="min-height: 100vh; background: #0B0D12; color: #F2F4F8; font-family: 'Noto Sans JP', sans-serif; font-size: 14px; display: flex; flex-wrap: wrap; align-items: stretch">
+
+  <nav aria-label="メイン" style="flex: 0 0 232px; border-right: 1px solid #1E2330; padding: 22px 14px; box-sizing: border-box; display: flex; flex-direction: column; gap: 4px">
+    <a href="Main.dc.html" style="display: flex; align-items: center; gap: 10px; padding: 4px 10px 22px; text-decoration: none; color: #F2F4F8">
+      <span style="width: 30px; height: 30px; border-radius: 9px; background: {{accent}}; display: inline-flex; align-items: center; justify-content: center"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0B0D12" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20L12 4l8 16H4z"></path></svg></span>
+      <span class="n" style="font-size: 18px">Estima</span>
+    </a>
+    <a href="Main.dc.html" class="nav"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8" rx="2"></rect><rect x="13" y="3" width="8" height="5" rx="2"></rect><rect x="13" y="11" width="8" height="10" rx="2"></rect><rect x="3" y="14" width="8" height="7" rx="2"></rect></svg>ダッシュボード</a>
+    <span style="font-size: 11px; color: #5E677A; padding: 16px 14px 6px; letter-spacing: 0.06em">MODEL</span>
+    <a href="Factors.dc.html" class="nav"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h10M4 18h6"></path></svg>変動要因</a>
+    <a href="ProjectData.dc.html" aria-current="page" class="nav on"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="8" ry="3"></ellipse><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"></path></svg>実績データ</a>
+    <a href="Build.dc.html" class="nav"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"></path></svg>モデル構築</a>
+    <a href="Transfer.dc.html" class="nav"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"></path></svg>取り込み / 書き出し</a>
+    <span style="font-size: 11px; color: #5E677A; padding: 16px 14px 6px; letter-spacing: 0.06em">ESTIMATE</span>
+    <a href="Estimate.dc.html" class="nav"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="3"></rect><path d="M8 7h8M8 12h3M13 12h3M8 17h3M13 17h3"></path></svg>工数見積り</a>
+    <a href="Risk.dc.html" class="nav"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 17H3z"></path><path d="M12 10v4M12 17.5h.01"></path></svg>リスク</a>
+    <a href="Report.dc.html" class="nav"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6M16 13H8M16 17H8"></path></svg>レポート</a>
+    <div style="flex-grow: 1"></div>
+    <a href="Guide.dc.html" class="nav"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"></path></svg>CoBRA法の解説</a>
+    <div style="display: flex; align-items: center; gap: 10px; padding: 12px 14px 4px">
+      <span style="width: 30px; height: 30px; border-radius: 15px; background: #2A3040; color: #F2F4F8; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700">KC</span>
+      <span style="display: flex; flex-direction: column"><span style="font-size: 12px; font-weight: 500">K. Cai</span><span style="font-size: 11px; color: #5E677A">PMO</span></span>
+    </div>
+  </nav>
+
+  <main style="flex: 1 1 0; min-width: 0; padding: 28px 32px 36px; box-sizing: border-box; display: flex; flex-direction: column; gap: 20px">
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 24px">
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <span style="font-size: 12px; color: #8B93A5"><a href="ProjectData.dc.html" style="color: #8B93A5; text-decoration: none">実績データ</a> <span style="color: #3A4257">/</span> プロジェクトを追加</span>
+        <h1 class="n" style="margin: 0; font-size: 28px">プロジェクト実績を追加</h1>
+        <span style="font-size: 13px; color: #8B93A5">入力しながら右側で、既存の実績の中でどこに落ちるか・ΣCO と生産性が整合しているかを確認できます。</span>
+      </div>
+      <div style="display: flex; gap: 10px">
+        <a href="ProjectData.dc.html" class="btn" style="min-height: 40px; padding: 0 14px; border-radius: 10px; border: 1px solid #2A3040; background: transparent; color: #8B93A5; font-size: 13px; display: inline-flex; align-items: center; text-decoration: none">キャンセル</a>
+        <button type="button" class="btn" style="{{saveNext}}">保存して次を追加</button>
+        <button type="button" class="btn" style="{{saveStyle}}">{{saveText}}</button>
+      </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: minmax(0, 1.25fr) 400px; gap: 16px; align-items: start">
+      <div style="display: flex; flex-direction: column; gap: 16px">
+        <div class="tile" style="padding: 22px 24px; display: flex; flex-direction: column; gap: 16px">
+          <span style="font-size: 14px; font-weight: 700">基本情報</span>
+          <div style="display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 14px">
+            <div style="display: flex; flex-direction: column; gap: 6px"><label for="pj-name">プロジェクト名</label><input id="pj-name" type="text" value="{{name}}" onInput="{{setName}}" placeholder="例: 受発注システム更改"></div>
+            <div style="display: flex; flex-direction: column; gap: 6px"><label>グループ</label><div style="display: inline-flex; background: #0B0D12; border: 1px solid #222734; border-radius: 10px; padding: 3px; gap: 2px; min-height: 40px; box-sizing: border-box"><sc-for list="{{groups}}" as="g" hint-placeholder-count="3"><button type="button" class="btn" onClick="{{g.pick}}" style="{{g.style}}">{{g.label}}</button></sc-for></div></div>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px">
+            <div style="display: flex; flex-direction: column; gap: 6px">
+              <label for="pj-size">規模</label>
+              <div style="display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center">
+                <input id="pj-size" type="number" value="{{size}}" onInput="{{setSize}}" min="1">
+                <div style="display: inline-flex; background: #0B0D12; border: 1px solid #222734; border-radius: 10px; padding: 3px; gap: 2px"><sc-for list="{{sizeUnits}}" as="u" hint-placeholder-count="3"><button type="button" class="btn" onClick="{{u.pick}}" style="{{u.style}}">{{u.label}}</button></sc-for></div>
+              </div>
+              <span style="font-size: 11px; color: #5E677A">{{sizeHint}}</span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 6px">
+              <label for="pj-effort">工数</label>
+              <div style="display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center">
+                <input id="pj-effort" type="number" value="{{effort}}" onInput="{{setEffort}}" min="0" step="0.1">
+                <div style="display: inline-flex; background: #0B0D12; border: 1px solid #222734; border-radius: 10px; padding: 3px; gap: 2px"><sc-for list="{{effUnits}}" as="u" hint-placeholder-count="2"><button type="button" class="btn" onClick="{{u.pick}}" style="{{u.style}}">{{u.label}}</button></sc-for></div>
+              </div>
+              <span style="font-size: 11px; color: #5E677A">{{effHint}}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="tile" style="padding: 22px 24px; display: flex; flex-direction: column; gap: 12px; animation-delay: 80ms">
+          <div style="display: flex; justify-content: space-between; align-items: baseline"><span style="font-size: 14px; font-weight: 700">変動要因のレベル値</span><span style="font-size: 11px; color: #5E677A">ΣCO <span class="n" style="color: #F2F4F8">{{scoText}}</span> ・ 不明な要因は L1 (標準) のままにします</span></div>
+          <div style="display: flex; flex-direction: column; gap: 4px">
+            <sc-for list="{{factors}}" as="f" hint-placeholder-count="8">
+              <div style="display: grid; grid-template-columns: 30px minmax(0, 1fr) 176px; gap: 12px; align-items: center; padding: 8px 10px; border-radius: 12px; background: #0B0D12">
+                <span class="n" style="font-size: 11px; color: #5E677A">{{f.no}}</span>
+                <div style="display: flex; flex-direction: column; gap: 1px; min-width: 0"><span style="font-size: 13px; font-weight: 500">{{f.name}}</span><span style="font-size: 11px; color: #8B93A5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{f.lvDef}}</span></div>
+                <div style="display: inline-flex; background: #13161E; border-radius: 999px; padding: 3px; gap: 2px"><sc-for list="{{f.opts}}" as="o" hint-placeholder-count="4"><button type="button" class="btn" onClick="{{o.pick}}" style="{{o.style}}">{{o.label}}</button></sc-for></div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div class="tile" style="padding: 22px 24px; display: flex; flex-direction: column; gap: 14px; animation-delay: 160ms">
+          <div style="display: grid; grid-template-columns: minmax(0, 1fr) 200px; gap: 16px; align-items: start">
+            <div style="display: flex; flex-direction: column; gap: 6px"><label for="pj-note">備考 — 単位・留意点・特殊事情</label><textarea id="pj-note" placeholder="例: 保守チームへの移管作業 2 人月を含む。規模は要件定義書ベースの FP 計測値。">{{note}}</textarea></div>
+            <div style="display: flex; flex-direction: column; gap: 10px">
+              <label>モデル構築に使う</label>
+              <button type="button" class="btn" onClick="{{toggleAdopt}}" style="{{adoptStyle}}"><span style="{{adoptKnob}}"></span><span style="font-size: 13px; font-weight: 700">{{adoptText}}</span></button>
+              <span style="font-size: 11px; color: #5E677A; line-height: 1.5">除外しても一覧には残り、あとから採用に戻せます。</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <aside style="display: flex; flex-direction: column; gap: 16px; position: sticky; top: 24px">
+        <div class="tile" style="padding: 20px 22px; display: flex; flex-direction: column; gap: 12px; animation-delay: 60ms">
+          <div style="display: flex; justify-content: space-between; align-items: baseline"><span style="font-size: 14px; font-weight: 700">既存の実績の中での位置</span><span style="font-size: 11px; color: #5E677A">グループ A ・ 11 件採用</span></div>
+          <svg width="356" height="232" viewBox="0 0 356 232" role="img" aria-label="規模と工数の散布図。入力中のプロジェクトの位置と名目線 α を示す">
+            <line x1="36" y1="196" x2="340" y2="196" stroke="#222734"></line>
+            <line x1="36" y1="12" x2="36" y2="196" stroke="#222734"></line>
+            <g font-family="Space Grotesk" font-size="9" fill="#5E677A"><text x="36" y="212">0</text><text x="188" y="212" text-anchor="middle">1,200</text><text x="340" y="212" text-anchor="end">2,400 FP</text><text x="30" y="200" text-anchor="end">0</text><text x="30" y="106" text-anchor="end">35</text><text x="30" y="16" text-anchor="end">70</text></g>
+            <line x1="36" y1="196" x2="{{nomX2}}" y2="{{nomY2}}" stroke="#3A4257" stroke-width="1.5" stroke-dasharray="4 4"></line>
+            <text x="{{nomLx}}" y="{{nomLy}}" font-family="Space Grotesk" font-size="9" fill="#8B93A5">α 0.0210</text>
+            <sc-for list="{{pts}}" as="p" hint-placeholder-count="12"><circle cx="{{p.x}}" cy="{{p.y}}" r="4" style="{{p.style}}"></circle></sc-for>
+            <circle class="pt" cx="{{meX}}" cy="{{meY}}" r="12" fill="{{accent}}" opacity="0.18"></circle>
+            <circle class="pt" cx="{{meX}}" cy="{{meY}}" r="6" fill="{{accent}}" stroke="#0B0D12" stroke-width="2"></circle>
+            <text class="pt" x="{{meLx}}" y="{{meLy}}" font-family="Noto Sans JP" font-size="10" font-weight="700" fill="{{accent}}">{{meLabel}}</text>
+          </svg>
+          <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+            <div style="padding: 10px 12px; border-radius: 12px; background: #0B0D12; border: 1px solid #222734; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 10px; color: #5E677A">このプロジェクトの生産性</span><span class="n" style="font-size: 16px">{{prodText}}</span><span style="font-size: 10px; color: #5E677A">人月 / FP</span></div>
+            <div style="padding: 10px 12px; border-radius: 12px; background: #0B0D12; border: 1px solid #222734; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 10px; color: #5E677A">名目 α × (1 + ΣCO)</span><span class="n" style="font-size: 16px">{{expText}}</span><span style="font-size: 10px; color: #5E677A">レベル値から予想</span></div>
+          </div>
+        </div>
+        <div class="tile" style="padding: 20px 22px; display: flex; flex-direction: column; gap: 12px; animation-delay: 140ms">
+          <span style="font-size: 14px; font-weight: 700">ΣCO と生産性の整合</span>
+          <div style="display: flex; align-items: center; gap: 12px">
+            <div style="flex: 1; height: 10px; border-radius: 5px; background: linear-gradient(90deg, #FF7A59 0%, #1B2030 35%, #1B2030 65%, #FF7A59 100%); position: relative">
+              <div style="position: absolute; left: 35%; right: 35%; top: 0; bottom: 0; background: #15241C; border-radius: 5px"></div>
+              <div class="ln" style="{{gapMarker}}"></div>
+            </div>
+            <span class="n" style="{{gapStyle}}">{{gapText}}</span>
+          </div>
+          <span style="font-size: 12px; color: #C7CDD9; line-height: 1.6">{{verdict}}</span>
+          <span style="font-size: 11px; color: #5E677A; line-height: 1.5">±25% を超える食い違いは、モデル構築時に「不整合」として指摘されます (PJ-007 と同じ扱い)。</span>
+        </div>
+        <div class="tile" style="padding: 18px 22px; display: flex; flex-direction: column; gap: 8px; animation-delay: 200ms">
+          <span style="font-size: 13px; font-weight: 700">保存前のチェック</span>
+          <sc-for list="{{checks}}" as="c" hint-placeholder-count="4">
+            <div style="display: flex; gap: 10px; align-items: center; font-size: 12px"><span style="{{c.dot}}">{{c.mark}}</span><span style="{{c.text}}">{{c.label}}</span></div>
+          </sc-for>
+        </div>
+      </aside>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#D4FF4F","options":["#D4FF4F","#5EEAD4","#6E9BFF","#FFB020"]},"$preview":{"width":1440,"height":1080}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { name: '受発注システム更改', group: 0, size: 1460, sizeUnit: 0, effort: 38.5, effUnit: 0, levels: [2, 1, 1, 2, 1, 2, 1, 1], note: '', adopt: true };
+    this.alpha = 0.0210;
+    this.fdefs = [
+      ['01', '要件の安定性', 26, ['着手時に確定', '一部に変更の余地', '主要機能に未確定あり', '3 割以上が未確定']],
+      ['02', '顧客の関与度 (間接)', 0, ['即日で確認', '数日で確認', '数週間を要する', '意思決定者が不在']],
+      ['03', '開発者のスキル・経験', 12, ['全員が経験者', '半数が経験者', '一部に経験者', '経験者ほぼなし']],
+      ['04', 'チーム間のコミュニケーション', 11, ['1 社・1 拠点', '2 社', '3 社以上', '海外拠点を含む']],
+      ['05', '新規技術の割合', 15, ['なし', '周辺に新規', '基盤に新規', '大半が新規']],
+      ['06', '外部システム連携数', 18, ['なし', '1〜2', '3〜5', '6 以上 / 仕様未確定']],
+      ['07', '開発プロセスの成熟度', 6, ['標準どおり', '概ね標準', '一部逸脱', '独自プロセス']],
+      ['08', '納期の厳しさ', 5, ['妥当', '1 割圧縮', '2 割圧縮', '3 割以上圧縮']]
+    ];
+    this.existing = [[420, 8.2], [560, 12.9], [680, 13.1], [760, 17.8], [900, 21.5], [980, 19.4], [1100, 26.9], [1250, 31.2], [1400, 29.1], [1620, 41.3], [1880, 46.8], [2150, 55.2]];
+    this.setName = (e) => this.setState({ name: e.target.value });
+    this.setSize = (e) => this.setState({ size: Number(e.target.value) || 0 });
+    this.setEffort = (e) => this.setState({ effort: Number(e.target.value) || 0 });
+    this.toggleAdopt = () => this.setState({ adopt: !this.state.adopt });
+  }
+  renderVals() {
+    const accent = this.props.accent ?? '#D4FF4F';
+    const st = this.state;
+    const seg = (labels, cur, key, h) => labels.map((l, i) => ({ label: l, pick: () => this.setState({ [key]: i }), style: { minHeight: h + 'px', padding: '0 10px', borderRadius: '999px', border: '0', cursor: 'pointer', fontFamily: 'inherit', fontSize: '11px', fontWeight: '700', background: cur === i ? accent : 'transparent', color: cur === i ? '#0B0D12' : '#8B93A5' } }));
+    const sizeFP = st.sizeUnit === 0 ? st.size : st.sizeUnit === 1 ? st.size * 100 : st.size * 30;
+    const effMM = st.effUnit === 0 ? st.effort : st.effort / 160;
+    const sco = this.fdefs.reduce((a, f, i) => a + f[2] / 100 * (st.levels[i] / 3) * (i === 0 && st.levels[1] >= 2 ? 1.15 : 1), 0);
+    const prod = sizeFP > 0 ? effMM / sizeFP : 0;
+    const expected = this.alpha * (1 + sco);
+    const gap = expected > 0 ? prod / expected - 1 : 0;
+    const factors = this.fdefs.map((f, i) => ({ no: f[0], name: f[1], lvDef: 'L' + st.levels[i] + ': ' + f[3][st.levels[i]], opts: ['L0', 'L1', 'L2', 'L3'].map((l, k) => ({ label: l, pick: () => { const a = st.levels.slice(); a[i] = k; this.setState({ levels: a }); }, style: { minHeight: '26px', padding: '0 9px', borderRadius: '999px', border: '0', cursor: 'pointer', fontFamily: 'Space Grotesk, Noto Sans JP, sans-serif', fontSize: '11px', fontWeight: '700', background: st.levels[i] === k ? (k === 3 ? '#FF7A59' : accent) : 'transparent', color: st.levels[i] === k ? '#0B0D12' : '#8B93A5' } })) }));
+    const X = (fp) => 36 + Math.min(1, fp / 2400) * 304, Y = (mm) => 196 - Math.min(1, mm / 70) * 184;
+    const pts = this.existing.map((p, i) => ({ x: X(p[0]).toFixed(1), y: Y(p[1]).toFixed(1), style: { fill: i === 5 ? '#FF7A59' : '#3A4257' } }));
+    const meX = X(sizeFP), meY = Y(effMM);
+    const nameOk = st.name.trim().length > 0, sizeOk = sizeFP > 0, effOk = effMM > 0, gapOk = Math.abs(gap) <= 0.25;
+    const allOk = nameOk && sizeOk && effOk;
+    const checks = [[nameOk, 'プロジェクト名が入っている'], [sizeOk, '規模が 0 より大きい (' + Math.round(sizeFP).toLocaleString('en-US') + ' FP 換算)'], [effOk, '工数が 0 より大きい (' + effMM.toFixed(1) + ' 人月換算)'], [gapOk, gapOk ? 'ΣCO と生産性が ±25% 以内' : 'ΣCO と生産性が 25% 以上ずれている — 保存はできますが、構築時に不整合として出ます']].map((c) => ({ mark: c[0] ? '✓' : '!', label: c[1], dot: { width: '18px', height: '18px', borderRadius: '9px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: '700', flexShrink: '0', background: c[0] ? '#15241C' : '#2A1F14', color: c[0] ? '#7EE2B8' : '#FFB020' }, text: { color: c[0] ? '#C7CDD9' : '#FFD58A', lineHeight: '1.5' } }));
+    return {
+      accent, name: st.name, setName: this.setName, size: st.size, setSize: this.setSize, effort: st.effort, setEffort: this.setEffort, note: st.note,
+      groups: seg(['グループ A', 'グループ B', '新しいグループ'], st.group, 'group', 32),
+      sizeUnits: seg(['FP', 'KLOC', '画面数'], st.sizeUnit, 'sizeUnit', 32), effUnits: seg(['人月', '人時'], st.effUnit, 'effUnit', 32),
+      sizeHint: st.sizeUnit === 0 ? 'モデルは FP で構築。そのまま使います' : st.sizeUnit === 1 ? '1 KLOC ≒ 100 FP で換算 → ' + Math.round(sizeFP).toLocaleString('en-US') + ' FP' : '1 画面 ≒ 30 FP で換算 → ' + Math.round(sizeFP).toLocaleString('en-US') + ' FP',
+      effHint: st.effUnit === 0 ? 'モデルは人月で構築。そのまま使います' : '160 時間 = 1 人月で換算 → ' + effMM.toFixed(1) + ' 人月',
+      scoText: '+' + Math.round(sco * 100) + '%', factors,
+      toggleAdopt: this.toggleAdopt, adoptText: st.adopt ? '採用する' : '除外する',
+      adoptStyle: { display: 'inline-flex', alignItems: 'center', gap: '10px', minHeight: '40px', padding: '0 12px 0 6px', borderRadius: '999px', border: '1px solid ' + (st.adopt ? accent : '#2A3040'), background: st.adopt ? '#171B25' : '#0B0D12', color: '#F2F4F8', cursor: 'pointer', fontFamily: 'inherit', alignSelf: 'flex-start' },
+      adoptKnob: { width: '28px', height: '28px', borderRadius: '14px', background: st.adopt ? accent : '#3A4257', transition: 'background .2s' },
+      pts, meX: meX.toFixed(1), meY: meY.toFixed(1), meLx: (meX + 10).toFixed(1), meLy: (meY - 10).toFixed(1), meLabel: nameOk ? 'このプロジェクト' : '入力中',
+      nomX2: X(2400).toFixed(1), nomY2: Y(this.alpha * 2400).toFixed(1), nomLx: (X(2400) - 52).toFixed(1), nomLy: (Y(this.alpha * 2400) - 6).toFixed(1),
+      prodText: prod > 0 ? prod.toFixed(4) : '—', expText: expected.toFixed(4),
+      gapMarker: { position: 'absolute', top: '-4px', width: '4px', height: '18px', borderRadius: '2px', background: gapOk ? accent : '#FF7A59', left: 'calc(' + (50 + Math.max(-50, Math.min(50, gap * 100))) + '% - 2px)' },
+      gapText: (gap >= 0 ? '+' : '') + Math.round(gap * 100) + '%', gapStyle: { fontSize: '16px', color: gapOk ? '#F2F4F8' : '#FF9F84', width: '52px', textAlign: 'right' },
+      verdict: !sizeOk || !effOk ? '規模と工数を入れると判定します。' : gapOk ? '実績の生産性 ' + prod.toFixed(4) + ' は、レベル値から予想される ' + expected.toFixed(4) + ' と整合しています。この実績はモデルの精度を上げる方向に働きます。' : gap > 0 ? '実績の生産性がレベル値から予想されるより ' + Math.round(gap * 100) + '% 悪い。工数に見積り外の作業 (移管・保守) が含まれていないか、レベル値を低く付けすぎていないかを確認してください。' : '実績の生産性がレベル値から予想されるより ' + Math.round(-gap * 100) + '% 良い。規模の計測漏れや、レベル値を高く付けすぎていないかを確認してください。',
+      checks,
+      saveStyle: { minHeight: '40px', padding: '0 16px', borderRadius: '10px', border: '0', background: allOk ? accent : '#1B2030', color: allOk ? '#0B0D12' : '#5E677A', fontSize: '13px', fontWeight: '700', cursor: allOk ? 'pointer' : 'not-allowed', fontFamily: 'inherit' },
+      saveText: allOk ? '保存して一覧へ' : '必須項目を入力',
+      saveNext: { minHeight: '40px', padding: '0 14px', borderRadius: '10px', border: '1px solid ' + (allOk ? '#2F3747' : '#222734'), background: allOk ? '#13161E' : 'transparent', color: allOk ? '#F2F4F8' : '#5E677A', fontSize: '13px', fontWeight: '500', cursor: allOk ? 'pointer' : 'not-allowed', fontFamily: 'inherit' }
+    };
+  }
+}
+</script>
+</body>
+</html>

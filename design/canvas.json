@@ -1,0 +1,178 @@
+{
+  "v": 3,
+  "createdOnFiles": {
+    "v": 1,
+    "at": "2026-11-07T09:40:00Z"
+  },
+  "title": "工数見積もり Web 設計",
+  "launch": {
+    "view": "canvas"
+  },
+  "pages": [],
+  "boards": {
+    "Main.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 1440,
+      "h": 1060,
+      "title": "ダッシュボード",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "Factors.dc.html": {
+      "x": 1520,
+      "y": 0,
+      "w": 1440,
+      "h": 1120,
+      "title": "モデル編集 — 変動要因",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "FactorNew.dc.html": {
+      "x": 6080,
+      "y": 0,
+      "w": 1440,
+      "h": 1100,
+      "title": "要因を追加 — 一から定義 / 標準から選ぶ",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "ProjectData.dc.html": {
+      "x": 3040,
+      "y": 0,
+      "w": 1440,
+      "h": 1120,
+      "title": "プロジェクト実績データ",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "Build.dc.html": {
+      "x": 4560,
+      "y": 0,
+      "w": 1440,
+      "h": 1120,
+      "title": "見積りモデルの構築",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "Estimate.dc.html": {
+      "x": 0,
+      "y": 1460,
+      "w": 1440,
+      "h": 1160,
+      "title": "工数見積り",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "Risk.dc.html": {
+      "x": 1520,
+      "y": 1460,
+      "w": 1440,
+      "h": 1120,
+      "title": "リスクアセスメント",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "Report.dc.html": {
+      "x": 3040,
+      "y": 1460,
+      "w": 900,
+      "h": 1880,
+      "title": "見積りレポート（印刷）",
+      "print": "flow",
+      "paper": "a4"
+    },
+    "Flow.dc.html": {
+      "x": 4020,
+      "y": 1460,
+      "w": 1440,
+      "h": 1000,
+      "title": "画面遷移・業務フロー",
+      "is_interactive": true
+    },
+    "Transfer.dc.html": {
+      "x": 0,
+      "y": 2900,
+      "w": 1440,
+      "h": 1120,
+      "title": "取り込み / 書き出し — JSON・CSV",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "Relations.dc.html": {
+      "x": 1520,
+      "y": 2900,
+      "w": 1440,
+      "h": 1000,
+      "title": "要因関係図",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "ProjectEdit.dc.html": {
+      "x": 3040,
+      "y": 2900,
+      "w": 1440,
+      "h": 1080,
+      "title": "実績データの追加・編集",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "Guide.dc.html": {
+      "x": 4560,
+      "y": 2900,
+      "w": 1440,
+      "h": 1120,
+      "title": "CoBRA法の解説・使い方",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "SimSettings.dc.html": {
+      "x": 6080,
+      "y": 2900,
+      "w": 560,
+      "h": 640,
+      "title": "シミュレーション設定 (ダイアログ)",
+      "is_interactive": true
+    }
+  },
+  "order": [
+    "Main.dc.html",
+    "Factors.dc.html",
+    "FactorNew.dc.html",
+    "ProjectData.dc.html",
+    "Build.dc.html",
+    "Estimate.dc.html",
+    "Risk.dc.html",
+    "Report.dc.html",
+    "Flow.dc.html",
+    "Transfer.dc.html",
+    "Relations.dc.html",
+    "ProjectEdit.dc.html",
+    "Guide.dc.html",
+    "SimSettings.dc.html"
+  ],
+  "notes": {
+    "t1": {
+      "x": 0,
+      "y": -280,
+      "text": "1. 見積りモデル構築 — 変動要因・実績データ・モデル構築・要因の追加",
+      "kind": "title1",
+      "maxW": 7520
+    },
+    "t2": {
+      "x": 0,
+      "y": 1180,
+      "text": "2. 工数見積り・リスクアセスメント・レポート",
+      "kind": "title1",
+      "maxW": 5460
+    },
+    "t3": {
+      "x": 0,
+      "y": 2620,
+      "text": "3. 補助画面 — 取り込み・書き出し / 要因関係図 / 実績の追加・編集 / 解説 / シミュレーション設定",
+      "kind": "title1",
+      "maxW": 6640
+    }
+  },
+  "designSystems": []
+}

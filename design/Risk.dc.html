@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>リスクアセスメント</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Space+Grotesk:wght@500;700&display=swap">
+<style>
+body{margin:0;background:#0B0D12}
+a{color:#D4FF4F}a:hover{color:#E6FF8A}
+.n{font-family:'Space Grotesk','Noto Sans JP',sans-serif;font-weight:700;letter-spacing:-0.03em;font-variant-numeric:tabular-nums}
+.tile{background:#13161E;border:1px solid #222734;border-radius:18px;box-sizing:border-box;animation:rise .7s cubic-bezier(.2,.7,.2,1) backwards;transition:border-color .25s}
+.tile:hover{border-color:#3A4257}
+@keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+.nav{display:flex;align-items:center;gap:12px;min-height:44px;padding:0 14px;border-radius:12px;color:#8B93A5;text-decoration:none;font-size:13px;font-weight:500;transition:background .2s,color .2s}
+.nav:hover{background:#171B25;color:#F2F4F8}
+.nav.on{background:#1B2030;color:#F2F4F8}
+.curve{stroke-dasharray:1200;stroke-dashoffset:1200;animation:draw 1.6s cubic-bezier(.2,.7,.2,1) .3s forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+.fill{transition:width .7s cubic-bezier(.2,.7,.2,1),background .3s}
+.mk{transition:all .35s cubic-bezier(.2,.7,.2,1)}
+.btn{transition:transform .15s,filter .2s,background .2s}.btn:hover{filter:brightness(1.08)}.btn:active{transform:scale(.97)}
+.row{transition:background .2s}.row:hover{background:#1B2030}
+input[type=text]{font-family:'Space Grotesk','Noto Sans JP',sans-serif;font-weight:700;font-size:26px;color:#F2F4F8;background:#0B0D12;border:1px solid #2A3040;border-radius:12px;padding:8px 14px;box-sizing:border-box;width:100%;letter-spacing:-0.02em;transition:border-color .2s;font-variant-numeric:tabular-nums}
+input[type=text]:focus{outline:none;border-color:#FF7A59}
+input[type=range]{width:100%;accent-color:#FF7A59;cursor:pointer;height:28px}
+a:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid #D4FF4F;outline-offset:2px}
+@media (prefers-reduced-motion: reduce){.tile,.curve{animation:none;stroke-dashoffset:0}.fill,.mk{transition:none}}
+</style>
+</helmet>
+<div style="min-height: 100vh; background: #0B0D12; color: #F2F4F8; font-family: 'Noto Sans JP', sans-serif; font-size: 14px; display: flex; flex-wrap: wrap; align-items: stretch">
+
+  <nav aria-label="メイン" style="flex: 0 0 232px; border-right: 1px solid #1E2330; padding: 22px 14px; box-sizing: border-box; display: flex; flex-direction: column; gap: 4px">
+    <a href="Main.dc.html" style="display: flex; align-items: center; gap: 10px; padding: 4px 10px 22px; text-decoration: none; color: #F2F4F8">
+      <span style="width: 30px; height: 30px; border-radius: 9px; background: {{accent}}; display: inline-flex; align-items: center; justify-content: center"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0B0D12" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20L12 4l8 16H4z"></path></svg></span>
+      <span class="n" style="font-size: 18px">Estima</span>
+    </a>
+    <a href="Main.dc.html" class="nav"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8" rx="2"></rect><rect x="13" y="3" width="8" height="5" rx="2"></rect><rect x="13" y="11" width="8" height="10" rx="2"></rect><rect x="3" y="14" width="8" height="7" rx="2"></rect></svg>ダッシュボード</a>
+    <span style="font-size: 11px; color: #5E677A; padding: 16px 14px 6px; letter-spacing: 0.06em">MODEL</span>
+    <a href="Factors.dc.html" class="nav"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h10M4 18h6"></path></svg>変動要因</a>
+    <a href="ProjectData.dc.html" class="nav"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="8" ry="3"></ellipse><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"></path></svg>実績データ</a>
+    <a href="Build.dc.html" class="nav"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"></path></svg>モデル構築</a>
+    <a href="Transfer.dc.html" class="nav"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"></path></svg>取り込み / 書き出し</a>
+    <span style="font-size: 11px; color: #5E677A; padding: 16px 14px 6px; letter-spacing: 0.06em">ESTIMATE</span>
+    <a href="Estimate.dc.html" class="nav"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="3"></rect><path d="M8 7h8M8 12h3M13 12h3M8 17h3M13 17h3"></path></svg>工数見積り</a>
+    <a href="Risk.dc.html" aria-current="page" class="nav on"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 17H3z"></path><path d="M12 10v4M12 17.5h.01"></path></svg>リスク</a>
+    <a href="Report.dc.html" class="nav"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6M16 13H8M16 17H8"></path></svg>レポート</a>
+    <div style="flex-grow: 1"></div>
+    <a href="Guide.dc.html" class="nav"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"></path></svg>CoBRA法の解説</a>
+  </nav>
+
+  <main style="flex: 999 1 560px; min-width: 0; padding: 24px 32px 40px; box-sizing: border-box; display: flex; flex-direction: column; gap: 20px">
+    <header style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px">
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <span style="display: inline-flex; align-items: center; gap: 8px; font-size: 11px; color: #8B93A5"><span style="width: 6px; height: 6px; border-radius: 3px; background: #5EEAD4"></span>社内Web系開発 標準モデル v3 ・ G3 案B ・ 推定 42.3 人月</span>
+        <h1 class="n" style="margin: 0; font-size: 30px; line-height: 1.1">顧客ポータル刷新</h1>
+        <span style="font-size: 12px; color: #8B93A5">予算と超過確率を行き来し、どの要因を下げれば効くかを見ます。</span>
+      </div>
+      <div style="display: flex; gap: 6px">
+        <a href="Main.dc.html" style="display: inline-flex; align-items: center; min-height: 30px; padding: 0 12px; border-radius: 999px; color: #8B93A5; font-size: 12px; font-weight: 500; text-decoration: none">概要</a>
+        <a href="Estimate.dc.html" style="display: inline-flex; align-items: center; min-height: 30px; padding: 0 12px; border-radius: 999px; color: #8B93A5; font-size: 12px; font-weight: 500; text-decoration: none">条件</a>
+        <span style="display: inline-flex; align-items: center; min-height: 30px; padding: 0 12px; border-radius: 999px; background: #1B2030; color: #F2F4F8; font-size: 12px; font-weight: 500">リスク</span>
+        <a href="Report.dc.html" style="display: inline-flex; align-items: center; min-height: 30px; padding: 0 12px; border-radius: 999px; color: #8B93A5; font-size: 12px; font-weight: 500; text-decoration: none">レポート</a>
+      </div>
+    </header>
+
+    <section style="display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 16px; align-items: start">
+      <div class="tile" style="grid-column: span 8; padding: 22px 26px; display: flex; flex-direction: column; gap: 12px; min-width: 0; animation-delay: 0ms">
+        <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px">
+          <span style="font-size: 13px; font-weight: 500">工数超過確率分布</span>
+          <span style="display: inline-flex; background: #0B0D12; border-radius: 999px; padding: 3px; gap: 2px"><sc-for list="{{axisModes}}" as="a" hint-placeholder-count="2"><button type="button" onClick="{{a.pick}}" style="{{a.style}}">{{a.label}}</button></sc-for></span>
+        </div>
+        <svg role="img" aria-label="工数に対する超過確率の曲線。予算の位置にマーカー" viewBox="0 0 700 300" style="width: 100%; height: auto">
+          <rect class="mk" x="50" y="20" width="{{safeW}}" height="240" fill="{{accent}}" fill-opacity="0.05"></rect>
+          <line x1="50" y1="260" x2="680" y2="260" stroke="#222734"></line>
+          <line x1="50" y1="20" x2="50" y2="260" stroke="#222734"></line>
+          <line x1="50" y1="68" x2="680" y2="68" stroke="#222734" stroke-dasharray="3 5"></line>
+          <line x1="50" y1="140" x2="680" y2="140" stroke="#222734" stroke-dasharray="3 5"></line>
+          <line x1="50" y1="212" x2="680" y2="212" stroke="#222734" stroke-dasharray="3 5"></line>
+          <text x="44" y="24" font-size="11" fill="#5E677A" font-family="Space Grotesk, sans-serif" text-anchor="end">100%</text>
+          <text x="44" y="72" font-size="11" fill="#5E677A" font-family="Space Grotesk, sans-serif" text-anchor="end">80%</text>
+          <text x="44" y="144" font-size="11" fill="#5E677A" font-family="Space Grotesk, sans-serif" text-anchor="end">50%</text>
+          <text x="44" y="216" font-size="11" fill="#5E677A" font-family="Space Grotesk, sans-serif" text-anchor="end">20%</text>
+          <text x="44" y="262" font-size="11" fill="#5E677A" font-family="Space Grotesk, sans-serif" text-anchor="end">0%</text>
+          <path d="{{area}}" fill="#FF7A59" fill-opacity="0.10"></path>
+          <path class="curve" d="{{curve}}" fill="none" stroke="#FF7A59" stroke-width="3" stroke-linecap="round"></path>
+          <line x1="{{mxM}}" y1="140" x2="{{mxM}}" y2="260" stroke="#3A4257" stroke-width="1" stroke-dasharray="3 3"></line>
+          <text x="{{mxM}}" y="275" font-size="10" fill="#8B93A5" font-family="Space Grotesk, sans-serif" text-anchor="middle">推定 42.3</text>
+          <line class="mk" x1="{{mx}}" y1="30" x2="{{mx}}" y2="260" stroke="{{accent}}" stroke-width="1.5" stroke-dasharray="4 4"></line>
+          <circle class="mk" cx="{{mx}}" cy="{{my}}" r="7" fill="{{accent}}" stroke="#0B0D12" stroke-width="3"></circle>
+          <text class="mk" x="{{mx}}" y="{{myLabel}}" font-size="13" font-weight="700" fill="{{accent}}" font-family="Space Grotesk, sans-serif" text-anchor="middle">{{pText}}</text>
+          <sc-for list="{{ticks}}" as="t" hint-placeholder-count="5"><text x="{{t.x}}" y="290" font-size="11" fill="#5E677A" font-family="Space Grotesk, sans-serif" text-anchor="middle">{{t.label}}</text></sc-for>
+        </svg>
+        <div style="display: flex; flex-wrap: wrap; gap: 14px; font-size: 11px; color: #8B93A5"><span><span style="display: inline-block; width: 10px; height: 10px; border-radius: 3px; background: {{accent}}; opacity: .4; vertical-align: -1px; margin-right: 5px"></span>予算内の領域</span><span><span style="display: inline-block; width: 10px; height: 3px; background: #FF7A59; vertical-align: 2px; margin-right: 5px"></span>超過確率 (右へ行くほど安全)</span><span style="margin-left: auto">横軸は「工数」か「中央値を 100% とした比率」で切替</span></div>
+      </div>
+
+      <div style="grid-column: span 4; display: flex; flex-direction: column; gap: 16px; min-width: 0">
+        <div class="tile" style="padding: 22px 24px; display: flex; flex-direction: column; gap: 10px; animation-delay: 100ms">
+          <label for="r-budget" style="font-size: 12px; color: #8B93A5">工数を入れる → 超過確率</label>
+          <div style="display: flex; align-items: center; gap: 10px"><input id="r-budget" type="text" value="{{budgetText}}" onChange="{{setBudgetText}}"><span style="font-size: 12px; color: #8B93A5; white-space: nowrap">人月</span></div>
+          <input type="range" min="30" max="65" step="0.5" value="{{budget}}" onChange="{{setBudget}}" onInput="{{setBudget}}" aria-label="工数スライダー">
+          <div style="display: flex; gap: 6px; flex-wrap: wrap"><sc-for list="{{quick}}" as="qk" hint-placeholder-count="3"><button type="button" class="btn" onClick="{{qk.pick}}" style="min-height: 28px; padding: 0 10px; border-radius: 999px; border: 1px solid #2A3040; background: transparent; color: #8B93A5; font-size: 11px; cursor: pointer; font-family: inherit">{{qk.label}}</button></sc-for></div>
+          <div style="display: flex; align-items: baseline; gap: 8px; padding-top: 4px"><span class="n" style="font-size: 48px; line-height: 1; color: #FF7A59">{{pText}}</span><span style="font-size: 12px; color: #8B93A5">の確率で超過 ・ {{verdict}}</span></div>
+        </div>
+        <div class="tile" style="padding: 22px 24px; display: flex; flex-direction: column; gap: 10px; animation-delay: 180ms">
+          <span style="font-size: 12px; color: #8B93A5">超過確率を決める → 必要な工数</span>
+          <div style="display: flex; gap: 6px; flex-wrap: wrap"><sc-for list="{{probs}}" as="q" hint-placeholder-count="5"><button type="button" class="btn" onClick="{{q.pick}}" style="{{q.style}}">{{q.label}}</button></sc-for></div>
+          <div style="display: flex; align-items: baseline; gap: 8px"><span class="n" style="font-size: 48px; line-height: 1; color: {{accent}}">{{effortForP}}</span><span style="font-size: 12px; color: #8B93A5">人月で超過確率 {{pSel}}%</span></div>
+          <span style="font-size: 11px; color: #5E677A">推定値 42.3 に対して {{deltaText}}</span>
+        </div>
+      </div>
+
+      <div class="tile" style="grid-column: span 7; padding: 22px 26px; display: flex; flex-direction: column; gap: 12px; min-width: 0; animation-delay: 260ms">
+        <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px">
+          <span style="font-size: 13px; font-weight: 500">変動要因の寄与度</span>
+          <div style="display: flex; gap: 8px">
+            <span style="display: inline-flex; background: #0B0D12; border-radius: 999px; padding: 3px; gap: 2px"><sc-for list="{{sortModes}}" as="s" hint-placeholder-count="2"><button type="button" onClick="{{s.pick}}" style="{{s.style}}">{{s.label}}</button></sc-for></span>
+            <span style="display: inline-flex; background: #0B0D12; border-radius: 999px; padding: 3px; gap: 2px"><sc-for list="{{unitModes}}" as="u" hint-placeholder-count="2"><button type="button" onClick="{{u.pick}}" style="{{u.style}}">{{u.label}}</button></sc-for></span>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 8px">
+          <sc-for list="{{contribs}}" as="c" hint-placeholder-count="8">
+            <div style="display: grid; grid-template-columns: 210px minmax(0, 1fr) 64px 56px; gap: 12px; align-items: center; font-size: 12px"><span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis"><span style="color: #5E677A; font-family: 'Space Grotesk', sans-serif; margin-right: 6px">{{c.num}}</span>{{c.name}} <span class="n" style="{{c.lv}}">{{c.level}}</span></span><div style="height: 12px; background: #1B2030; border-radius: 6px"><div class="fill" style="{{c.style}}"></div></div><span class="n" style="text-align: right">{{c.value}}</span><span class="n" style="text-align: right; font-size: 11px; color: #5E677A">{{c.cum}}</span></div>
+          </sc-for>
+        </div>
+        <span style="font-size: 11px; color: #5E677A">右端は累積。上位 2 要因で上乗せの 65% を占めます。</span>
+      </div>
+
+      <div class="tile" style="grid-column: span 5; padding: 22px 24px; display: flex; flex-direction: column; gap: 10px; min-width: 0; animation-delay: 340ms">
+        <span style="font-size: 13px; font-weight: 500">効く打ち手 — レベルを 1 段下げたら</span>
+        <sc-for list="{{moves}}" as="mv" hint-placeholder-count="3">
+          <div class="row" style="display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 10px 12px; border-radius: 12px; background: #0B0D12">
+            <span style="display: flex; flex-direction: column; gap: 2px; min-width: 0"><span style="font-size: 12px; font-weight: 500">{{mv.name}} <span style="color: #5E677A">{{mv.from}} → {{mv.to}}</span></span><span style="font-size: 11px; color: #8B93A5">{{mv.how}}</span></span>
+            <span style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px"><span class="n" style="font-size: 18px; color: #7EE2B8">{{mv.delta}}</span><span style="font-size: 10px; color: #5E677A">超過確率 {{mv.pNew}}</span></span>
+          </div>
+        </sc-for>
+        <div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; padding-top: 10px; border-top: 1px solid #222734; margin-top: auto">
+          <sc-for list="{{table}}" as="tb" hint-placeholder-count="5"><div style="display: flex; flex-direction: column; gap: 2px; align-items: center; background: #0B0D12; border-radius: 10px; padding: 8px 4px"><span style="font-size: 10px; color: #8B93A5">{{tb.p}}</span><span class="n" style="font-size: 14px">{{tb.e}}</span></div></sc-for>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#D4FF4F","options":["#D4FF4F","#5EEAD4","#6E9BFF","#FFB020"]},"$preview":{"width":1440,"height":1120}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.m = 42.3; this.s = 0.18; this.overhead = 17.1; this.nominal = 25.2;
+    this.state = { budget: 45, pSel: 20, axis: 0, sort: 0, unit: 0, mounted: false };
+    this.f = [
+      { num: '01', name: '要件の安定性', level: 'L3', lv: 3, share: 0.38, how: '要件凍結のマイルストーンを契約に入れる' }, { num: '02', name: '顧客の関与度 (間接)', level: 'L2', lv: 2, share: 0.0 },
+      { num: '03', name: '開発者のスキル・経験', level: 'L1', lv: 1, share: 0.06 }, { num: '04', name: 'チーム間コミュニケーション', level: 'L2', lv: 2, share: 0.10, how: '3 社合同の週次定例を設置' },
+      { num: '05', name: '新規技術の割合', level: 'L2', lv: 2, share: 0.15, how: '認証基盤を既存製品に変更' }, { num: '06', name: '外部システム連携数', level: 'L3', lv: 3, share: 0.27, how: '未確定 2 連携をフェーズ 2 に回す' },
+      { num: '07', name: '開発プロセスの成熟度', level: 'L1', lv: 1, share: 0.02 }, { num: '08', name: '納期の厳しさ', level: 'L1', lv: 1, share: 0.02 }
+    ];
+    this.setBudget = this.setBudget.bind(this);
+    this.setBudgetText = this.setBudgetText.bind(this);
+  }
+  componentDidMount() { this.t = setTimeout(() => this.setState({ mounted: true }), 80); }
+  componentWillUnmount() { clearTimeout(this.t); }
+  phi(z) { const t = 1 / (1 + 0.2316419 * Math.abs(z)); const d = 0.3989423 * Math.exp(-z * z / 2); const p = d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274)))); return z > 0 ? 1 - p : p; }
+  inv(p) { const a = [-39.6968, 220.9461, -275.9280, 138.3578, -30.6648, 2.5066], b = [-54.4761, 161.5858, -155.6990, 66.8013, -13.2807], c = [-0.00778, -0.3224, -2.4008, -2.5497, 4.3747, 2.9382], d = [0.00778, 0.3224, 2.4458, 3.7544]; const pl = 0.02425; let q, r; if (p < pl) { q = Math.sqrt(-2 * Math.log(p)); return (((((c[0] * q + c[1]) * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) / ((((d[0] * q + d[1]) * q + d[2]) * q + d[3]) * q + 1); } if (p <= 1 - pl) { q = p - 0.5; r = q * q; return (((((a[0] * r + a[1]) * r + a[2]) * r + a[3]) * r + a[4]) * r + a[5]) * q / (((((b[0] * r + b[1]) * r + b[2]) * r + b[3]) * r + b[4]) * r + 1); } q = Math.sqrt(-2 * Math.log(1 - p)); return -(((((c[0] * q + c[1]) * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) / ((((d[0] * q + d[1]) * q + d[2]) * q + d[3]) * q + 1); }
+  pEx(x, m) { return 1 - this.phi((Math.log(x) - Math.log(m || this.m)) / this.s); }
+  setBudget(e) { this.setState({ budget: Number(e.target.value) }); }
+  setBudgetText(e) { const v = parseFloat(String(e.target.value).replace(/[^0-9.]/g, '')); if (v > 0) this.setState({ budget: Math.min(65, Math.max(30, v)) }); }
+  renderVals() {
+    const accent = this.props.accent ?? '#D4FF4F';
+    const st = this.state, m = this.m;
+    const lo = 28, hi = 66;
+    const X = (x) => 50 + (x - lo) / (hi - lo) * 630, Y = (p) => 260 - p * 240;
+    let curve = '', area = 'M' + X(lo).toFixed(1) + ',260';
+    for (let i = 0; i <= 60; i++) { const x = lo + (hi - lo) * i / 60; const pt = X(x).toFixed(1) + ',' + Y(this.pEx(x)).toFixed(1); curve += (i ? ' L' : 'M') + pt; area += ' L' + pt; }
+    area += ' L' + X(hi).toFixed(1) + ',260 Z';
+    const p = this.pEx(st.budget);
+    const ticks = [30, 40, 50, 60].map((v) => ({ x: X(v).toFixed(1), label: st.axis === 0 ? v + '' : Math.round(v / m * 100) + '%' }));
+    const seg = (list, cur, key) => list.map((l, i) => ({ label: l, pick: () => { const o = {}; o[key] = i; this.setState(o); }, style: { minHeight: '28px', padding: '0 12px', borderRadius: '999px', border: '0', cursor: 'pointer', fontFamily: 'inherit', fontSize: '11px', fontWeight: '700', background: cur === i ? '#1B2030' : 'transparent', color: cur === i ? '#F2F4F8' : '#8B93A5' } }));
+    const probs = [5, 10, 20, 30, 50].map((q) => ({ label: q + '%', pick: () => this.setState({ pSel: q }), style: { minHeight: '34px', padding: '0 12px', borderRadius: '999px', border: '0', cursor: 'pointer', fontFamily: 'Space Grotesk, sans-serif', fontSize: '12px', fontWeight: '700', background: st.pSel === q ? accent : '#1B2030', color: st.pSel === q ? '#0B0D12' : '#8B93A5' } }));
+    const effFor = (q) => m * Math.exp(this.inv(1 - q / 100) * this.s);
+    const eff = effFor(st.pSel);
+    let items = this.f.map((f) => Object.assign({}, f, { v: f.share * this.overhead }));
+    if (st.sort === 0) items = items.slice().sort((a, b) => b.v - a.v);
+    const maxV = Math.max(...items.map((i) => i.v)) || 1;
+    let cum = 0;
+    const contribs = items.map((f, i) => { cum += f.share; return { num: f.num, name: f.name, level: f.level, cum: Math.round(cum * 100) + '%', value: st.unit === 0 ? Math.round(f.share * 100) + '%' : f.v.toFixed(1), lv: { fontSize: '10px', padding: '1px 6px', borderRadius: '5px', background: f.lv === 3 ? '#FF7A59' : '#1B2030', color: f.lv === 3 ? '#0B0D12' : '#8B93A5', marginLeft: '4px' }, style: { width: (st.mounted ? Math.round(f.v / maxV * 100) : 0) + '%', height: '100%', borderRadius: '6px', background: f.share >= 0.25 ? accent : f.share > 0 ? '#6E9BFF' : '#2A3040', transitionDelay: (i * 50) + 'ms' } }; });
+    const moves = this.f.filter((f) => f.how && f.lv > 0).map((f) => { const d = f.share * this.overhead / f.lv; const m2 = m - d; return { name: f.name, from: 'L' + f.lv, to: 'L' + (f.lv - 1), how: f.how, d, delta: '−' + d.toFixed(1) + ' 人月', pNew: Math.round(this.pEx(st.budget, m2) * 100) + '%' }; }).sort((a, b) => b.d - a.d).slice(0, 3);
+    const quick = [{ label: '推定値 42.3', v: 42.3 }, { label: 'P80 49.1', v: 49.1 }, { label: '予算 45', v: 45 }].map((q) => ({ label: q.label, pick: () => this.setState({ budget: q.v }) }));
+    const verdict = p > 0.5 ? '推定値を下回る予算' : p > 0.3 ? 'やや楽観的' : p > 0.15 ? '妥当な余裕' : '十分な余裕';
+    return {
+      accent, curve, area, mx: X(st.budget).toFixed(1), my: Y(p).toFixed(1), myLabel: (Y(p) - 16).toFixed(1), mxM: X(m).toFixed(1), pText: Math.round(p * 100) + '%', ticks,
+      safeW: Math.max(0, X(st.budget) - 50).toFixed(1),
+      axisModes: seg(['工数', '中央値比 %'], st.axis, 'axis'), sortModes: seg(['寄与度順', '番号順'], st.sort, 'sort'), unitModes: seg(['%', '人月'], st.unit, 'unit'),
+      budget: st.budget, budgetText: st.budget.toFixed(1), setBudget: this.setBudget, setBudgetText: this.setBudgetText, quick, verdict,
+      probs, pSel: st.pSel, effortForP: eff.toFixed(1), deltaText: '+' + (eff - m).toFixed(1) + ' 人月 (+' + Math.round((eff / m - 1) * 100) + '%) の余裕', contribs, moves,
+      table: [50, 30, 20, 10, 5].map((q) => ({ p: q + '%', e: effFor(q).toFixed(1) }))
+    };
+  }
+}
+</script>
+</body>
+</html>

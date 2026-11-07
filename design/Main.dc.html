@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>ダッシュボード</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Space+Grotesk:wght@500;700&display=swap">
+<style>
+body{margin:0;background:#0B0D12}
+a{color:#D4FF4F}a:hover{color:#E6FF8A}
+.n{font-family:'Space Grotesk','Noto Sans JP',sans-serif;font-weight:700;letter-spacing:-0.03em;font-variant-numeric:tabular-nums}
+.tile{background:#13161E;border:1px solid #222734;border-radius:18px;box-sizing:border-box;animation:rise .7s cubic-bezier(.2,.7,.2,1) backwards;transition:transform .25s ease,border-color .25s ease,box-shadow .25s ease}
+.tile:hover{transform:translateY(-2px);border-color:#3A4257;box-shadow:0 12px 32px rgba(0,0,0,.35)}
+@keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+.nav{display:flex;align-items:center;gap:12px;min-height:44px;padding:0 14px;border-radius:12px;color:#8B93A5;text-decoration:none;font-size:13px;font-weight:500;transition:background .2s,color .2s}
+.nav:hover{background:#171B25;color:#F2F4F8}
+.nav.on{background:#1B2030;color:#F2F4F8}
+.bar{flex:1;border-radius:3px 3px 0 0;transition:height .9s cubic-bezier(.2,.7,.2,1),background .4s}
+.ring{transition:stroke-dasharray 1s cubic-bezier(.2,.7,.2,1)}
+.fill{transition:width .8s cubic-bezier(.2,.7,.2,1)}
+.mk{transition:left .35s cubic-bezier(.2,.7,.2,1),opacity .4s}
+.pulse{animation:pulse 1.8s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(212,255,79,.55)}60%{box-shadow:0 0 0 7px rgba(212,255,79,0)}}
+.btn{transition:transform .15s,filter .2s,background .2s}.btn:hover{filter:brightness(1.08)}.btn:active{transform:scale(.97)}
+.row{transition:background .2s,transform .2s,border-color .2s}.row:hover{background:#1B2030;transform:translateX(2px)}
+.line{stroke-dasharray:400;stroke-dashoffset:400;animation:draw 1.4s cubic-bezier(.2,.7,.2,1) .4s forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+.feed{animation:rise .6s cubic-bezier(.2,.7,.2,1) backwards}
+input[type=range]{width:100%;accent-color:#FF7A59;cursor:pointer;height:28px}
+input[type=search]{font-family:inherit;font-size:13px;color:#F2F4F8;background:#13161E;border:1px solid #222734;border-radius:10px;padding:0 14px 0 36px;min-height:40px;width:260px;box-sizing:border-box;transition:border-color .2s}
+input[type=search]:focus{outline:none;border-color:#D4FF4F}
+a:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid #D4FF4F;outline-offset:2px}
+@media (prefers-reduced-motion: reduce){.tile,.pulse,.line,.feed{animation:none}.line{stroke-dashoffset:0}.bar,.ring,.fill,.tile,.mk{transition:none}}
+</style>
+</helmet>
+<div style="min-height: 100vh; background: #0B0D12; color: #F2F4F8; font-family: 'Noto Sans JP', sans-serif; font-size: 14px; display: flex; flex-wrap: wrap; align-items: stretch">
+
+  <nav aria-label="メイン" style="flex: 0 0 232px; border-right: 1px solid #1E2330; padding: 22px 14px; box-sizing: border-box; display: flex; flex-direction: column; gap: 4px">
+    <a href="Main.dc.html" style="display: flex; align-items: center; gap: 10px; padding: 4px 10px 22px; text-decoration: none; color: #F2F4F8">
+      <span style="width: 30px; height: 30px; border-radius: 9px; background: {{accent}}; display: inline-flex; align-items: center; justify-content: center"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0B0D12" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20L12 4l8 16H4z"></path></svg></span>
+      <span class="n" style="font-size: 18px">Estima</span>
+    </a>
+    <a href="Main.dc.html" aria-current="page" class="nav on"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8" rx="2"></rect><rect x="13" y="3" width="8" height="5" rx="2"></rect><rect x="13" y="11" width="8" height="10" rx="2"></rect><rect x="3" y="14" width="8" height="7" rx="2"></rect></svg>ダッシュボード</a>
+    <span style="font-size: 11px; color: #5E677A; padding: 16px 14px 6px; letter-spacing: 0.06em">MODEL</span>
+    <a href="Factors.dc.html" class="nav"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h10M4 18h6"></path></svg>変動要因</a>
+    <a href="ProjectData.dc.html" class="nav"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="8" ry="3"></ellipse><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"></path></svg>実績データ</a>
+    <a href="Build.dc.html" class="nav"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"></path></svg>モデル構築</a>
+    <a href="Transfer.dc.html" class="nav"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"></path></svg>取り込み / 書き出し</a>
+    <span style="font-size: 11px; color: #5E677A; padding: 16px 14px 6px; letter-spacing: 0.06em">ESTIMATE</span>
+    <a href="Estimate.dc.html" class="nav"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="3"></rect><path d="M8 7h8M8 12h3M13 12h3M8 17h3M13 17h3"></path></svg>工数見積り</a>
+    <a href="Risk.dc.html" class="nav"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 17H3z"></path><path d="M12 10v4M12 17.5h.01"></path></svg>リスク</a>
+    <a href="Report.dc.html" class="nav"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6M16 13H8M16 17H8"></path></svg>レポート</a>
+    <div style="flex-grow: 1"></div>
+    <a href="Guide.dc.html" class="nav"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"></path></svg>CoBRA法の解説</a>
+    <div style="display: flex; align-items: center; gap: 10px; padding: 12px 14px 4px">
+      <span style="width: 30px; height: 30px; border-radius: 15px; background: #2A3040; color: #F2F4F8; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700">KC</span>
+      <span style="display: flex; flex-direction: column"><span style="font-size: 12px; font-weight: 500">K. Cai</span><span style="font-size: 11px; color: #5E677A">PMO</span></span>
+    </div>
+  </nav>
+
+  <main style="flex: 999 1 560px; min-width: 0; padding: 24px 32px 40px; box-sizing: border-box; display: flex; flex-direction: column; gap: 20px">
+
+    <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px">
+      <div style="position: relative; display: inline-flex; align-items: center">
+        <svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#5E677A" stroke-width="2.2" stroke-linecap="round" style="position: absolute; left: 13px"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+        <input type="search" aria-label="見積り・モデルを検索" placeholder="見積り、モデル、プロジェクトを検索">
+        <span style="position: absolute; right: 10px; font-size: 10px; color: #5E677A; border: 1px solid #2A3040; border-radius: 5px; padding: 1px 5px; font-family: 'Space Grotesk', sans-serif">⌘K</span>
+      </div>
+      <div style="flex-grow: 1"></div>
+      <span style="display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 0 12px; border-radius: 10px; background: #13161E; border: 1px solid #222734; font-size: 12px; color: #8B93A5"><span style="width: 7px; height: 7px; border-radius: 4px; background: #FF7A59"></span>要確認 1 件</span>
+      <a href="Transfer.dc.html" class="btn" style="min-height: 36px; padding: 0 12px; border-radius: 10px; border: 1px solid #222734; background: #13161E; color: #F2F4F8; font-size: 12px; font-weight: 500; cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; text-decoration: none">インポート / エクスポート</a>
+      <a href="Estimate.dc.html" class="btn" style="display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 0 14px; border-radius: 10px; background: {{accent}}; color: #0B0D12; font-size: 12px; font-weight: 700; text-decoration: none">+ 新しい見積り</a>
+    </div>
+
+    <header style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px">
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <button type="button" class="btn" style="display: inline-flex; align-items: center; gap: 8px; align-self: flex-start; min-height: 28px; padding: 0 10px 0 8px; border-radius: 8px; border: 1px solid #222734; background: #13161E; color: #8B93A5; font-size: 11px; cursor: pointer; font-family: inherit"><span style="width: 6px; height: 6px; border-radius: 3px; background: #5EEAD4"></span>社内Web系開発 標準モデル v3<svg aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 9l6 6 6-6"></path></svg></button>
+        <h1 class="n" style="margin: 0; font-size: 30px; line-height: 1.1">顧客ポータル刷新</h1>
+        <span style="font-size: 12px; color: #8B93A5">11/5 モデル構築 ・ α 0.0210 ・ 要因 8 ・ 実績 11/12 件 ・ 見積り 3 世代</span>
+      </div>
+      <div style="display: flex; gap: 6px">
+        <span style="display: inline-flex; align-items: center; min-height: 30px; padding: 0 12px; border-radius: 999px; background: #1B2030; color: #F2F4F8; font-size: 12px; font-weight: 500">概要</span>
+        <a href="Estimate.dc.html" style="display: inline-flex; align-items: center; min-height: 30px; padding: 0 12px; border-radius: 999px; color: #8B93A5; font-size: 12px; font-weight: 500; text-decoration: none">条件</a>
+        <a href="Risk.dc.html" style="display: inline-flex; align-items: center; min-height: 30px; padding: 0 12px; border-radius: 999px; color: #8B93A5; font-size: 12px; font-weight: 500; text-decoration: none">リスク</a>
+        <a href="Report.dc.html" style="display: inline-flex; align-items: center; min-height: 30px; padding: 0 12px; border-radius: 999px; color: #8B93A5; font-size: 12px; font-weight: 500; text-decoration: none">レポート</a>
+      </div>
+    </header>
+
+    <section aria-label="ダッシュボード" style="display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 16px">
+
+      <div class="tile" style="grid-column: span 5; padding: 24px 26px; display: flex; flex-direction: column; gap: 16px; min-width: 0; animation-delay: 0ms">
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px">
+          <span style="display: inline-flex; align-items: center; gap: 8px; font-size: 12px; color: #8B93A5"><span class="pulse" style="width: 8px; height: 8px; border-radius: 4px; background: {{accent}}"></span>{{g.id}} ・ {{g.name}}</span>
+          <span style="font-size: 12px; color: #5E677A">{{g.date}}</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 4px">
+          <span style="font-size: 12px; color: #8B93A5">推定工数 (超過確率 50%)</span>
+          <div style="display: flex; align-items: flex-end; gap: 14px; flex-wrap: wrap">
+            <span class="n" style="font-size: 84px; line-height: 0.95; color: {{accent}}">{{shown}}<span style="font-size: 22px; margin-left: 8px; color: #8B93A5; font-weight: 500; letter-spacing: 0">人月</span></span>
+            <span style="{{deltaStyle}}">{{deltaText}}</span>
+          </div>
+          <span style="font-size: 12px; color: #8B93A5">規模 {{g.sizeText}} FP ・ ΣCO {{g.scoText}} ・ 名目 {{nominal}} + 上乗せ {{overhead}}</span>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 8px">
+          <div style="display: flex; justify-content: space-between; font-size: 11px; color: #5E677A"><span>P20 {{p20}}</span><span>P50 {{p50}}</span><span>P80 {{p80}}</span><span>P95 {{p95}}</span></div>
+          <div style="position: relative; height: 14px; border-radius: 7px; background: #1B2030">
+            <div class="mk" style="{{bandStyle}}"></div>
+            <div class="mk" style="{{bandDimStyle}}"></div>
+            <div class="mk" style="{{p50MarkStyle}}"></div>
+            <div class="mk" style="{{budgetMarkStyle}}"></div>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 11px; color: #5E677A; font-family: 'Space Grotesk', sans-serif"><span>30</span><span style="color: #FF7A59">予算 {{budgetText}}</span><span>65 人月</span></div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 10px; margin-top: auto">
+          <div style="height: 4px; border-radius: 2px; background: #1B2030; overflow: hidden"><div class="fill" style="{{progressStyle}}"></div></div>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center">
+            <button type="button" class="btn" onClick="{{run}}" style="display: inline-flex; align-items: center; gap: 8px; min-height: 38px; padding: 0 14px; border-radius: 10px; border: 0; background: #1B2030; color: #F2F4F8; font-size: 12px; font-weight: 500; cursor: pointer; font-family: inherit">
+              <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"></path><path d="M21 3v6h-6"></path></svg>
+              <sc-if value="{{idle}}" hint-placeholder-val="{{true}}"><span>シミュレーションを再実行</span></sc-if>
+              <sc-if value="{{running}}" hint-placeholder-val="{{false}}"><span>実行中 {{progress}}% ・ {{runs}} / 10,000</span></sc-if>
+            </button>
+            <a href="Risk.dc.html" class="btn" style="display: inline-flex; align-items: center; min-height: 38px; padding: 0 14px; border-radius: 10px; background: #1B2030; color: #F2F4F8; text-decoration: none; font-size: 12px; font-weight: 500">リスクを見る</a>
+            <a href="Report.dc.html" class="btn" style="display: inline-flex; align-items: center; min-height: 38px; padding: 0 14px; border-radius: 10px; border: 1px solid #222734; color: #8B93A5; text-decoration: none; font-size: 12px; font-weight: 500">レポート</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="tile" style="grid-column: span 4; padding: 22px 24px; display: flex; flex-direction: column; gap: 12px; min-width: 0; animation-delay: 80ms">
+        <div style="display: flex; align-items: center; justify-content: space-between"><span style="font-size: 13px; font-weight: 500">工数の分布</span><span style="font-size: 12px; color: #5E677A">10,000 回 ・ 対数正規</span></div>
+        <div style="position: relative; height: 160px">
+          <div role="img" aria-label="見積り工数のヒストグラム。推定値付近が最頻で、右に裾を引く" style="position: absolute; left: 0; right: 0; bottom: 0; display: flex; align-items: flex-end; gap: 4px; height: 150px">
+            <sc-for list="{{bins}}" as="b" hint-placeholder-count="24"><div class="bar" style="{{b.style}}"></div></sc-for>
+          </div>
+          <div class="mk" style="{{histBudgetStyle}}"></div>
+          <span class="mk" style="{{histBudgetLabelStyle}}">予算 {{budgetText}}</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 11px; color: #5E677A; font-family: 'Space Grotesk', sans-serif"><span>{{axis0}}</span><span>{{axis1}}</span><span>{{axis2}}</span><span>{{axis3}}</span></div>
+        <div style="display: flex; gap: 14px; font-size: 11px; color: #8B93A5; padding-top: 10px; border-top: 1px solid #222734; flex-wrap: wrap"><span><span style="display: inline-block; width: 10px; height: 10px; border-radius: 3px; background: {{accent}}; vertical-align: -1px; margin-right: 6px"></span>P50〜P80</span><span><span style="display: inline-block; width: 10px; height: 10px; border-radius: 3px; background: #FF7A59; vertical-align: -1px; margin-right: 6px"></span>予算を超える領域 {{pExceed}}%</span></div>
+      </div>
+
+      <div class="tile" style="grid-column: span 3; padding: 22px 24px; display: flex; flex-direction: column; gap: 10px; align-items: center; min-width: 0; animation-delay: 160ms">
+        <span style="font-size: 13px; font-weight: 500; align-self: flex-start">予算 <span class="n" style="color: #FF7A59; font-size: 16px">{{budgetText}}</span> 人月 の超過確率</span>
+        <svg role="img" aria-label="超過確率を示すリング" viewBox="0 0 140 140" style="width: 136px; height: 136px">
+          <circle cx="70" cy="70" r="56" fill="none" stroke="#222734" stroke-width="14"></circle>
+          <circle class="ring" cx="70" cy="70" r="56" fill="none" stroke="#FF7A59" stroke-width="14" stroke-linecap="round" stroke-dasharray="{{ringDash}}" transform="rotate(-90 70 70)"></circle>
+          <text x="70" y="66" text-anchor="middle" font-size="30" font-weight="700" fill="#F2F4F8" font-family="Space Grotesk, sans-serif">{{pExceed}}%</text>
+          <text x="70" y="86" text-anchor="middle" font-size="11" fill="#8B93A5" font-family="Noto Sans JP, sans-serif">超過する確率</text>
+        </svg>
+        <label for="budget" style="font-size: 11px; color: #8B93A5; align-self: stretch; display: flex; justify-content: space-between"><span>30</span><span>予算を動かす</span><span>65</span></label>
+        <input id="budget" type="range" min="30" max="65" step="0.5" value="{{budget}}" onChange="{{setBudget}}" onInput="{{setBudget}}">
+        <span style="font-size: 12px; color: #8B93A5; text-align: center; line-height: 1.6; margin-top: auto">80% で収めるなら <span class="n" style="color: #F2F4F8; font-size: 14px">{{p80}}</span> 人月</span>
+      </div>
+
+      <div class="tile" style="grid-column: span 3; padding: 22px 24px; display: flex; flex-direction: column; gap: 6px; min-width: 0; animation-delay: 240ms">
+        <span style="font-size: 12px; color: #8B93A5">生産性 α</span>
+        <span class="n" style="font-size: 40px; line-height: 1">0.0210</span>
+        <span style="font-size: 11px; color: #5E677A">人月 / FP ・ 95% CI 0.0186 – 0.0237</span>
+        <svg role="img" aria-label="α の推移。v1 0.0232、v2 0.0198、v3 0.0210" viewBox="0 0 220 60" style="width: 100%; height: auto; margin-top: auto">
+          <polyline class="line" points="20,18 110,46 200,30" fill="none" stroke="{{accent}}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></polyline>
+          <circle cx="20" cy="18" r="4" fill="#2A3040" stroke="{{accent}}" stroke-width="2"></circle>
+          <circle cx="110" cy="46" r="4" fill="#2A3040" stroke="{{accent}}" stroke-width="2"></circle>
+          <circle cx="200" cy="30" r="5" fill="{{accent}}"></circle>
+          <text x="20" y="58" font-size="10" fill="#5E677A" font-family="Space Grotesk, sans-serif" text-anchor="middle">v1</text>
+          <text x="110" y="58" font-size="10" fill="#5E677A" font-family="Space Grotesk, sans-serif" text-anchor="middle">v2</text>
+          <text x="200" y="58" font-size="10" fill="#8B93A5" font-family="Space Grotesk, sans-serif" text-anchor="middle">v3</text>
+        </svg>
+      </div>
+
+      <div class="tile" style="grid-column: span 3; padding: 22px 24px; display: flex; flex-direction: column; gap: 6px; min-width: 0; animation-delay: 320ms">
+        <span style="font-size: 12px; color: #8B93A5">見積り精度 MMRE</span>
+        <span class="n" style="font-size: 40px; line-height: 1">18.4%</span>
+        <span style="font-size: 11px; color: #5E677A">交差検証 (1件抜き) ・ 11 件</span>
+        <div style="display: flex; align-items: center; gap: 12px; margin-top: auto">
+          <svg role="img" aria-label="PRED(25) 75%" viewBox="0 0 48 48" style="width: 44px; height: 44px"><circle cx="24" cy="24" r="18" fill="none" stroke="#222734" stroke-width="7"></circle><circle class="ring" cx="24" cy="24" r="18" fill="none" stroke="#6E9BFF" stroke-width="7" stroke-linecap="round" stroke-dasharray="{{predDash}}" transform="rotate(-90 24 24)"></circle></svg>
+          <span style="display: flex; flex-direction: column"><span class="n" style="font-size: 18px">75%</span><span style="font-size: 11px; color: #8B93A5">PRED(25) 誤差25%以内</span></span>
+        </div>
+      </div>
+
+      <div class="tile" style="grid-column: span 6; padding: 22px 24px; display: flex; flex-direction: column; gap: 12px; min-width: 0; animation-delay: 400ms">
+        <div style="display: flex; align-items: center; justify-content: space-between"><span style="font-size: 13px; font-weight: 500">要因の寄与度 — どこで工数が増えているか</span><span style="font-size: 12px; color: #5E677A">{{g.id}} ・ 上乗せ {{overhead}} 人月の内訳</span></div>
+        <div style="display: flex; flex-direction: column; gap: 9px">
+          <sc-for list="{{contribs}}" as="c" hint-placeholder-count="6">
+            <div style="display: grid; grid-template-columns: 196px minmax(0, 1fr) 52px; gap: 12px; align-items: center; font-size: 12px"><span style="display: flex; align-items: center; gap: 8px"><span class="n" style="{{c.lvStyle}}">{{c.level}}</span>{{c.name}}</span><div style="height: 12px; background: #1B2030; border-radius: 6px"><div class="fill" style="{{c.style}}"></div></div><span class="n" style="text-align: right">{{c.value}}</span></div>
+          </sc-for>
+        </div>
+      </div>
+
+      <div class="tile" style="grid-column: span 7; padding: 22px 24px; display: flex; flex-direction: column; gap: 8px; min-width: 0; animation-delay: 480ms">
+        <div style="display: flex; align-items: center; justify-content: space-between"><span style="font-size: 13px; font-weight: 500">見積りの世代 — クリックで切替</span><a href="Estimate.dc.html" style="font-size: 12px; font-weight: 500">5世代まで比較 →</a></div>
+        <sc-for list="{{gens}}" as="r" hint-placeholder-count="3">
+          <button type="button" class="row" onClick="{{r.pick}}" style="{{r.style}}"><span class="n" style="{{r.idStyle}}">{{r.id}}</span><span style="font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left">{{r.name}}</span><span style="font-size: 11px; color: #8B93A5">{{r.sizeText}} FP ・ {{r.scoText}}</span><span style="display: flex; align-items: center; gap: 6px"><span style="width: 90px; height: 6px; border-radius: 3px; background: #1B2030"><span class="fill" style="{{r.trackStyle}}"></span></span></span><span class="n" style="{{r.valStyle}}">{{r.medianText}}</span></button>
+        </sc-for>
+        <div style="display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px; border-radius: 12px; background: #2A1A16; color: #FFB4A0; margin-top: auto">
+          <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF7A59" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 2px"><path d="M12 3l9 17H3z"></path><path d="M12 10v4M12 17.5h.01"></path></svg>
+          <span style="font-size: 12px; line-height: 1.6"><span style="font-weight: 700; color: #FFD1C4">モデルの確認事項 1 件</span> — PJ-007 の ΣCO と実績生産性が食い違っています。<a href="Build.dc.html" style="color: #FF9F84; font-weight: 500">モデル構築で確認</a></span>
+        </div>
+      </div>
+
+      <div class="tile" style="grid-column: span 5; padding: 22px 24px; display: flex; flex-direction: column; gap: 12px; min-width: 0; animation-delay: 560ms">
+        <span style="font-size: 13px; font-weight: 500">最近の操作</span>
+        <div style="display: flex; flex-direction: column; gap: 0">
+          <div class="feed" style="display: grid; grid-template-columns: 18px minmax(0, 1fr) 64px; gap: 12px; align-items: start; padding: 8px 0; animation-delay: 650ms"><span style="width: 10px; height: 10px; border-radius: 5px; background: {{accent}}; margin-top: 4px; margin-left: 4px"></span><span style="font-size: 12px; line-height: 1.5"><span style="font-weight: 500">G3 を実行</span> — 案B、規模 1,200 FP、ΣCO +68%</span><span style="font-size: 11px; color: #5E677A; text-align: right">11/6 15:20</span></div>
+          <div class="feed" style="display: grid; grid-template-columns: 18px minmax(0, 1fr) 64px; gap: 12px; align-items: start; padding: 8px 0; border-top: 1px solid #1B2030; animation-delay: 720ms"><span style="width: 10px; height: 10px; border-radius: 5px; background: #6E9BFF; margin-top: 4px; margin-left: 4px"></span><span style="font-size: 12px; line-height: 1.5"><span style="font-weight: 500">要因 06 のレベルを L2 → L3</span> — 外部連携の仕様未確定が判明</span><span style="font-size: 11px; color: #5E677A; text-align: right">11/6 15:12</span></div>
+          <div class="feed" style="display: grid; grid-template-columns: 18px minmax(0, 1fr) 64px; gap: 12px; align-items: start; padding: 8px 0; border-top: 1px solid #1B2030; animation-delay: 790ms"><span style="width: 10px; height: 10px; border-radius: 5px; background: #6E9BFF; margin-top: 4px; margin-left: 4px"></span><span style="font-size: 12px; line-height: 1.5"><span style="font-weight: 500">G2 を実行</span> — 案A、規模 1,050 FP</span><span style="font-size: 11px; color: #5E677A; text-align: right">11/6 14:02</span></div>
+          <div class="feed" style="display: grid; grid-template-columns: 18px minmax(0, 1fr) 64px; gap: 12px; align-items: start; padding: 8px 0; border-top: 1px solid #1B2030; animation-delay: 860ms"><span style="width: 10px; height: 10px; border-radius: 5px; background: #FF7A59; margin-top: 4px; margin-left: 4px"></span><span style="font-size: 12px; line-height: 1.5"><span style="font-weight: 500">PJ-007 を除外</span> — ΣCO と生産性の不整合を検出</span><span style="font-size: 11px; color: #5E677A; text-align: right">11/5 10:42</span></div>
+          <div class="feed" style="display: grid; grid-template-columns: 18px minmax(0, 1fr) 64px; gap: 12px; align-items: start; padding: 8px 0; border-top: 1px solid #1B2030; animation-delay: 930ms"><span style="width: 10px; height: 10px; border-radius: 5px; background: #5EEAD4; margin-top: 4px; margin-left: 4px"></span><span style="font-size: 12px; line-height: 1.5"><span style="font-weight: 500">モデル v3 を構築</span> — α 0.0210、MMRE 18.4%</span><span style="font-size: 11px; color: #5E677A; text-align: right">11/5 10:42</span></div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#D4FF4F","options":["#D4FF4F","#5EEAD4","#6E9BFF","#FFB020"]},"$preview":{"width":1440,"height":1060}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { gen: 2, budget: 45, shown: 0, mounted: false, running: false, progress: 0, seed: 0 };
+    this.sigma = 0.18;
+    this.alpha = 0.0210;
+    this.run = this.run.bind(this);
+    this.setBudget = this.setBudget.bind(this);
+  }
+  gens() {
+    return [
+      { id: 'G1', name: '初回', size: 1050, sco: 0.74, median: 38.4, date: '11/5 11:10', levels: ['L3', 'L2', 'L2', 'L2', 'L1', '—'] },
+      { id: 'G2', name: '案A', size: 1050, sco: 0.61, median: 35.5, date: '11/6 14:02', levels: ['L2', 'L1', 'L2', 'L2', 'L1', '—'] },
+      { id: 'G3', name: '案B (外部連携あり)', size: 1200, sco: 0.68, median: 42.3, date: '11/6 15:20', levels: ['L3', 'L3', 'L2', 'L2', 'L1', '—'] }
+    ];
+  }
+  componentDidMount() {
+    this.countTo(this.gens()[this.state.gen].median);
+    this.mountTimer = setTimeout(() => this.setState({ mounted: true }), 80);
+  }
+  componentWillUnmount() { cancelAnimationFrame(this.raf); clearInterval(this.timer); clearTimeout(this.mountTimer); }
+  countTo(target) {
+    cancelAnimationFrame(this.raf);
+    const start = performance.now(), from = this.state.shown || 0, dur = 1100;
+    const step = (t) => {
+      const k = Math.min(1, (t - start) / dur), e = 1 - Math.pow(1 - k, 3);
+      this.setState({ shown: from + (target - from) * e });
+      if (k < 1) this.raf = requestAnimationFrame(step);
+    };
+    this.raf = requestAnimationFrame(step);
+  }
+  pick(i) {
+    if (i === this.state.gen) return;
+    this.setState({ gen: i, seed: this.state.seed + 1 });
+    this.countTo(this.gens()[i].median);
+  }
+  run() {
+    if (this.state.running) return;
+    this.setState({ running: true, progress: 0 });
+    const start = performance.now();
+    clearInterval(this.timer);
+    this.timer = setInterval(() => {
+      const k = Math.min(1, (performance.now() - start) / 1600), e = 1 - Math.pow(1 - k, 2);
+      this.setState({ progress: Math.round(e * 100) });
+      if (k >= 1) {
+        clearInterval(this.timer);
+        this.setState({ running: false, seed: this.state.seed + 1, shown: this.state.shown * 0.97 });
+        this.countTo(this.gens()[this.state.gen].median);
+      }
+    }, 40);
+  }
+  setBudget(e) { this.setState({ budget: Number(e.target.value) }); }
+  phi(z) {
+    const t = 1 / (1 + 0.2316419 * Math.abs(z)), d = 0.3989423 * Math.exp(-z * z / 2);
+    const p = d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274))));
+    return z > 0 ? 1 - p : p;
+  }
+  renderVals() {
+    const accent = this.props.accent ?? '#D4FF4F';
+    const gens = this.gens(), gi = this.state.gen, g = gens[gi];
+    const m = g.median, s = this.sigma, mounted = this.state.mounted, seed = this.state.seed;
+    const q = (z) => m * Math.exp(z * s);
+    const p20 = q(-0.8416), p80 = q(0.8416), p95 = q(1.645);
+    const nominal = this.alpha * g.size, overhead = m - nominal;
+    const fmt = (v) => v.toLocaleString('en-US');
+    const budget = this.state.budget;
+    const pEx = 1 - this.phi((Math.log(budget) - Math.log(m)) / s);
+
+    const lo = m * 0.66, hi = m * 1.52, n = 24, raw = [];
+    for (let i = 0; i < n; i++) {
+      const x = lo + (hi - lo) * (i + 0.5) / n, z = (Math.log(x) - Math.log(m)) / s;
+      raw.push({ x, pdf: Math.exp(-z * z / 2) / x * (1 + 0.08 * Math.sin(seed * 7.3 + i * 2.1)) });
+    }
+    const max = Math.max(...raw.map((r) => r.pdf));
+    const bins = raw.map((r, i) => {
+      const h = mounted ? Math.max(2, Math.round(r.pdf / max * 100)) : 0;
+      const col = r.x > budget ? '#4A2A22' : (r.x >= m && r.x <= p80 ? accent : '#2A3040');
+      return { style: { height: h + '%', background: r.x > budget && r.x >= m && r.x <= p80 ? '#FF7A59' : col, transitionDelay: (i * 18) + 'ms' } };
+    });
+    const axis = (k) => Math.round(lo + (hi - lo) * k);
+    const hb = Math.min(100, Math.max(0, (budget - lo) / (hi - lo) * 100));
+
+    const circ = 2 * Math.PI * 56, circ2 = 2 * Math.PI * 18;
+    const ringDash = (mounted ? pEx * circ : 0).toFixed(1) + ' ' + circ.toFixed(1);
+    const predDash = (mounted ? 0.75 * circ2 : 0).toFixed(1) + ' ' + circ2.toFixed(1);
+
+    const pct = (x) => Math.min(100, Math.max(0, (x - 30) / 35 * 100));
+    const bandStyle = { position: 'absolute', top: '0', bottom: '0', left: pct(p20) + '%', width: (pct(p80) - pct(p20)) + '%', background: accent, borderRadius: '7px', opacity: mounted ? 0.9 : 0 };
+    const bandDimStyle = { position: 'absolute', top: '0', bottom: '0', left: pct(p80) + '%', width: (pct(p95) - pct(p80)) + '%', background: '#4A5368', borderRadius: '0 7px 7px 0', opacity: mounted ? 1 : 0 };
+    const p50MarkStyle = { position: 'absolute', top: '-3px', bottom: '-3px', left: 'calc(' + pct(m) + '% - 2px)', width: '4px', borderRadius: '2px', background: '#0B0D12', border: '1px solid ' + accent, opacity: mounted ? 1 : 0 };
+    const budgetMarkStyle = { position: 'absolute', top: '-5px', bottom: '-5px', left: 'calc(' + pct(budget) + '% - 2px)', width: '4px', borderRadius: '2px', background: '#FF7A59', opacity: mounted ? 1 : 0 };
+
+    const prev = gi > 0 ? gens[gi - 1] : null;
+    const delta = prev ? m - prev.median : 0;
+    const deltaText = prev ? (delta >= 0 ? '+' : '') + delta.toFixed(1) + ' vs ' + prev.id : '初回';
+    const deltaStyle = { display: 'inline-flex', alignItems: 'center', minHeight: '26px', padding: '0 10px', borderRadius: '999px', fontSize: '12px', fontWeight: '700', marginBottom: '10px', fontFamily: 'Space Grotesk, sans-serif', background: delta > 0 ? '#2A1A16' : '#15241C', color: delta > 0 ? '#FF9F84' : '#7EE2B8' };
+
+    const shares = [0.38, 0.27, 0.15, 0.10, 0.06, 0.04];
+    const names = ['要件の安定性', '外部システム連携数', '新規技術の割合', 'チーム間コミュニケーション', '開発者のスキル', 'その他 3 要因'];
+    const contribs = shares.map((sh, i) => ({
+      name: names[i], level: g.levels[i], value: (overhead * sh).toFixed(1),
+      lvStyle: { minWidth: '26px', height: '20px', borderRadius: '6px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', background: g.levels[i] === 'L3' ? '#FF7A59' : '#1B2030', color: g.levels[i] === 'L3' ? '#0B0D12' : '#8B93A5' },
+      style: { width: (mounted ? Math.round(sh * 100) : 0) + '%', height: '100%', borderRadius: '6px', background: i < 2 ? accent : '#6E9BFF', transitionDelay: (i * 60) + 'ms' }
+    }));
+
+    const maxMed = Math.max(...gens.map((r) => r.median));
+    const rows = gens.map((r, i) => {
+      const on = i === gi;
+      return {
+        id: r.id, name: r.name, sizeText: fmt(r.size), scoText: '+' + Math.round(r.sco * 100) + '%', medianText: r.median.toFixed(1), pick: () => this.pick(i),
+        style: { display: 'grid', gridTemplateColumns: '40px minmax(0, 1fr) 120px 90px 60px', gap: '12px', alignItems: 'center', padding: '10px 12px', borderRadius: '12px', background: on ? '#1B2030' : 'transparent', border: on ? '1px solid #2F3747' : '1px solid transparent', color: '#F2F4F8', fontSize: '13px', fontFamily: 'inherit', cursor: 'pointer', width: '100%', textAlign: 'left', minHeight: '44px' },
+        idStyle: { color: on ? accent : '#5E677A' },
+        valStyle: { fontSize: '18px', textAlign: 'right', color: on ? '#F2F4F8' : '#8B93A5' },
+        trackStyle: { display: 'block', height: '100%', borderRadius: '3px', width: (mounted ? Math.round(r.median / maxMed * 100) : 0) + '%', background: on ? accent : '#3A4257' }
+      };
+    }).reverse();
+
+    return {
+      accent,
+      g: { id: g.id, name: g.name, date: g.date, sizeText: fmt(g.size), scoText: '+' + Math.round(g.sco * 100) + '%' },
+      shown: this.state.shown.toFixed(1), deltaText, deltaStyle,
+      p20: p20.toFixed(1), p50: m.toFixed(1), p80: p80.toFixed(1), p95: p95.toFixed(1),
+      nominal: nominal.toFixed(1), overhead: overhead.toFixed(1),
+      bandStyle, bandDimStyle, p50MarkStyle, budgetMarkStyle,
+      bins, axis0: axis(0), axis1: axis(1 / 3), axis2: axis(2 / 3), axis3: axis(1) + ' 人月',
+      histBudgetStyle: { position: 'absolute', top: '0', bottom: '0', left: hb + '%', width: '2px', background: '#FF7A59', opacity: mounted ? 0.9 : 0 },
+      histBudgetLabelStyle: { position: 'absolute', top: '-2px', left: 'calc(' + hb + '% + 6px)', fontSize: '10px', color: '#FF7A59', fontFamily: 'Space Grotesk, sans-serif', fontWeight: '700', whiteSpace: 'nowrap', opacity: mounted ? 1 : 0 },
+      budget, budgetText: budget.toFixed(1), setBudget: this.setBudget,
+      pExceed: Math.round(pEx * 100), ringDash, predDash,
+      contribs, gens: rows,
+      run: this.run, idle: !this.state.running, running: this.state.running,
+      progress: this.state.progress, runs: fmt(this.state.progress * 100),
+      progressStyle: { width: (this.state.running ? this.state.progress : 0) + '%', height: '100%', background: accent, borderRadius: '2px', opacity: this.state.running ? 1 : 0 }
+    };
+  }
+}
+</script>
+</body>
+</html>

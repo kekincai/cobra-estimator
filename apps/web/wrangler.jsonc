@@ -1,0 +1,27 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "cobra-estimator",
+  "main": "./worker/index.ts",
+  "compatibility_date": "2026-11-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"]
+  },
+  "routes": [{ "pattern": "cobra.kejincai.dev", "custom_domain": true }],
+  "workers_dev": true,
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "cobra-estimator",
+      "database_id": "dac92362-3282-46e1-bf6b-f71434c527c0",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "vars": {
+    // "production": 書き込み API は Cloudflare Access の JWT が必要（未設定なら読み取り専用）
+    // ローカルは .dev.vars で AUTH_MODE=dev
+    "AUTH_MODE": "production"
+  },
+  "observability": { "enabled": true }
+}

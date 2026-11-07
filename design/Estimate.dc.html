@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>工数見積り</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Space+Grotesk:wght@500;700&display=swap">
+<style>
+body{margin:0;background:#0B0D12}
+a{color:#D4FF4F}a:hover{color:#E6FF8A}
+.n{font-family:'Space Grotesk','Noto Sans JP',sans-serif;font-weight:700;letter-spacing:-0.03em;font-variant-numeric:tabular-nums}
+.tile{background:#13161E;border:1px solid #222734;border-radius:18px;box-sizing:border-box;animation:rise .7s cubic-bezier(.2,.7,.2,1) backwards;transition:border-color .25s ease}
+.tile:hover{border-color:#3A4257}
+@keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+.nav{display:flex;align-items:center;gap:12px;min-height:44px;padding:0 14px;border-radius:12px;color:#8B93A5;text-decoration:none;font-size:13px;font-weight:500;transition:background .2s,color .2s}
+.nav:hover{background:#171B25;color:#F2F4F8}
+.nav.on{background:#1B2030;color:#F2F4F8}
+.bar{flex:1;border-radius:3px 3px 0 0;transition:height .9s cubic-bezier(.2,.7,.2,1),background .4s}
+.fill{transition:width .7s cubic-bezier(.2,.7,.2,1),background .3s}
+.mk{transition:left .4s cubic-bezier(.2,.7,.2,1),width .4s cubic-bezier(.2,.7,.2,1),opacity .4s}
+.seg{transition:background .2s,color .2s,transform .15s}.seg:hover{transform:scale(1.08)}
+.btn{transition:transform .15s,filter .2s}.btn:hover{filter:brightness(1.08)}.btn:active{transform:scale(.97)}
+.gen{animation:pop .5s cubic-bezier(.2,.7,.2,1) backwards}
+@keyframes pop{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:none}}
+.frow{transition:background .2s;border-radius:10px}.frow:hover{background:#171B25}
+input[type=text],textarea{font-family:inherit;font-size:13px;color:#F2F4F8;background:#0B0D12;border:1px solid #2A3040;border-radius:10px;padding:10px 12px;box-sizing:border-box;width:100%;transition:border-color .2s}
+input[type=text]:focus,textarea:focus{outline:none;border-color:#D4FF4F}
+a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid #D4FF4F;outline-offset:2px}
+@media (prefers-reduced-motion: reduce){.tile,.gen{animation:none}.bar,.fill,.seg,.mk{transition:none}}
+</style>
+</helmet>
+<div style="min-height: 100vh; background: #0B0D12; color: #F2F4F8; font-family: 'Noto Sans JP', sans-serif; font-size: 14px; display: flex; flex-wrap: wrap; align-items: stretch">
+
+  <nav aria-label="メイン" style="flex: 0 0 232px; border-right: 1px solid #1E2330; padding: 22px 14px; box-sizing: border-box; display: flex; flex-direction: column; gap: 4px">
+    <a href="Main.dc.html" style="display: flex; align-items: center; gap: 10px; padding: 4px 10px 22px; text-decoration: none; color: #F2F4F8">
+      <span style="width: 30px; height: 30px; border-radius: 9px; background: {{accent}}; display: inline-flex; align-items: center; justify-content: center"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0B0D12" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20L12 4l8 16H4z"></path></svg></span>
+      <span class="n" style="font-size: 18px">Estima</span>
+    </a>
+    <a href="Main.dc.html" class="nav"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8" rx="2"></rect><rect x="13" y="3" width="8" height="5" rx="2"></rect><rect x="13" y="11" width="8" height="10" rx="2"></rect><rect x="3" y="14" width="8" height="7" rx="2"></rect></svg>ダッシュボード</a>
+    <span style="font-size: 11px; color: #5E677A; padding: 16px 14px 6px; letter-spacing: 0.06em">MODEL</span>
+    <a href="Factors.dc.html" class="nav"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h10M4 18h6"></path></svg>変動要因</a>
+    <a href="ProjectData.dc.html" class="nav"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="8" ry="3"></ellipse><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"></path></svg>実績データ</a>
+    <a href="Build.dc.html" class="nav"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"></path></svg>モデル構築</a>
+    <a href="Transfer.dc.html" class="nav"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"></path></svg>取り込み / 書き出し</a>
+    <span style="font-size: 11px; color: #5E677A; padding: 16px 14px 6px; letter-spacing: 0.06em">ESTIMATE</span>
+    <a href="Estimate.dc.html" aria-current="page" class="nav on"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="3"></rect><path d="M8 7h8M8 12h3M13 12h3M8 17h3M13 17h3"></path></svg>工数見積り</a>
+    <a href="Risk.dc.html" class="nav"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 17H3z"></path><path d="M12 10v4M12 17.5h.01"></path></svg>リスク</a>
+    <a href="Report.dc.html" class="nav"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6M16 13H8M16 17H8"></path></svg>レポート</a>
+    <div style="flex-grow: 1"></div>
+    <a href="Guide.dc.html" class="nav"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"></path></svg>CoBRA法の解説</a>
+  </nav>
+
+  <main style="flex: 999 1 560px; min-width: 0; padding: 24px 32px 40px; box-sizing: border-box; display: flex; flex-direction: column; gap: 20px">
+
+    <header style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px">
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <span style="display: inline-flex; align-items: center; gap: 8px; font-size: 11px; color: #8B93A5"><span style="width: 6px; height: 6px; border-radius: 3px; background: #5EEAD4"></span>社内Web系開発 標準モデル v3 ・ α 0.0210 人月/FP</span>
+        <h1 class="n" style="margin: 0; font-size: 30px; line-height: 1.1">顧客ポータル刷新</h1>
+        <span style="font-size: 12px; color: #8B93A5">条件を動かすと右側が即時に再計算されます。実行すると世代として保存されます。</span>
+      </div>
+      <div style="display: flex; gap: 6px">
+        <a href="Main.dc.html" style="display: inline-flex; align-items: center; min-height: 30px; padding: 0 12px; border-radius: 999px; color: #8B93A5; font-size: 12px; font-weight: 500; text-decoration: none">概要</a>
+        <span style="display: inline-flex; align-items: center; min-height: 30px; padding: 0 12px; border-radius: 999px; background: #1B2030; color: #F2F4F8; font-size: 12px; font-weight: 500">条件</span>
+        <a href="Risk.dc.html" style="display: inline-flex; align-items: center; min-height: 30px; padding: 0 12px; border-radius: 999px; color: #8B93A5; font-size: 12px; font-weight: 500; text-decoration: none">リスク</a>
+        <a href="Report.dc.html" style="display: inline-flex; align-items: center; min-height: 30px; padding: 0 12px; border-radius: 999px; color: #8B93A5; font-size: 12px; font-weight: 500; text-decoration: none">レポート</a>
+      </div>
+    </header>
+
+    <section style="display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 16px; align-items: start">
+
+      <div class="tile" style="grid-column: span 5; padding: 22px 24px; display: flex; flex-direction: column; gap: 14px; min-width: 0; animation-delay: 0ms">
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px">
+          <span style="font-size: 13px; font-weight: 500">見積り条件</span>
+          <div style="display: flex; gap: 6px">
+            <button type="button" class="btn" onClick="{{resetG3}}" style="min-height: 28px; padding: 0 10px; border-radius: 999px; border: 1px solid #2A3040; background: transparent; color: #8B93A5; font-size: 11px; cursor: pointer; font-family: inherit">G3 の条件に戻す</button>
+            <button type="button" class="btn" onClick="{{allZero}}" style="min-height: 28px; padding: 0 10px; border-radius: 999px; border: 1px solid #2A3040; background: transparent; color: #8B93A5; font-size: 11px; cursor: pointer; font-family: inherit">すべて L0</button>
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: minmax(0, 1fr) 150px; gap: 10px">
+          <div style="display: flex; flex-direction: column; gap: 6px"><label for="e-name" style="font-size: 11px; color: #8B93A5">見積り名</label><input id="e-name" type="text" value="{{name}}" onChange="{{setName}}"></div>
+          <div style="display: flex; flex-direction: column; gap: 6px"><label for="e-size" style="font-size: 11px; color: #8B93A5">規模 (FP)</label><input id="e-size" type="text" class="n" value="{{sizeText}}" onChange="{{setSize}}" onInput="{{setSize}}" style="font-size: 20px; padding: 6px 12px; letter-spacing: -0.02em"></div>
+        </div>
+        <input type="range" min="200" max="2400" step="10" value="{{size}}" onChange="{{setSizeRange}}" onInput="{{setSizeRange}}" aria-label="規模スライダー" style="width: 100%; accent-color: {{accent}}; cursor: pointer; height: 24px; margin-top: -6px">
+
+        <div style="display: flex; flex-direction: column; gap: 2px; padding-top: 8px; border-top: 1px solid #222734">
+          <div style="display: flex; align-items: center; justify-content: space-between; padding-bottom: 6px"><span style="font-size: 11px; color: #8B93A5">変動要因のレベル (0 = 影響なし → 3 = 最大)</span><span style="font-size: 11px; color: #8B93A5">ΣCO <span class="n" style="color: {{accent}}; font-size: 15px">{{scoText}}</span></span></div>
+          <sc-for list="{{groups}}" as="grp" hint-placeholder-count="3">
+            <span style="font-size: 10px; color: #5E677A; letter-spacing: 0.08em; padding: 8px 6px 2px">{{grp.label}}</span>
+            <sc-for list="{{grp.items}}" as="f" hint-placeholder-count="3">
+              <div class="frow" style="display: grid; grid-template-columns: minmax(0, 1fr) 150px 56px; gap: 10px; align-items: center; padding: 5px 6px">
+                <span style="display: flex; flex-direction: column; gap: 3px; min-width: 0">
+                  <span style="font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{f.name}}</span>
+                  <span style="height: 3px; border-radius: 2px; background: #1B2030; width: 100%"><span class="fill" style="{{f.coStyle}}"></span></span>
+                </span>
+                <span style="display: inline-flex; background: #0B0D12; border-radius: 999px; padding: 3px; gap: 2px; justify-self: end">
+                  <sc-for list="{{f.opts}}" as="o" hint-placeholder-count="4"><button type="button" class="seg" onClick="{{o.pick}}" style="{{o.style}}" aria-label="{{o.aria}}">{{o.label}}</button></sc-for>
+                </span>
+                <span class="n" style="{{f.coTextStyle}}">{{f.coText}}</span>
+              </div>
+            </sc-for>
+          </sc-for>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 6px; padding-top: 8px; border-top: 1px solid #222734"><label for="e-memo" style="font-size: 11px; color: #8B93A5">前提メモ (レポートの「判断の根拠」に載ります)</label><textarea id="e-memo" rows="2" placeholder="例: 外部連携 6 システムのうち 2 つは仕様未確定">外部連携 6 システムのうち 2 つは仕様未確定。認証基盤は新規採用。</textarea></div>
+
+        <div style="height: 4px; border-radius: 2px; background: #1B2030; overflow: hidden"><div class="fill" style="{{progressStyle}}"></div></div>
+        <div style="display: flex; gap: 8px; align-items: center">
+          <button type="button" class="btn" onClick="{{run}}" style="flex: 1; min-height: 46px; border-radius: 12px; border: 0; background: {{accent}}; color: #0B0D12; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit">
+            <sc-if value="{{idle}}" hint-placeholder-val="{{true}}"><span>見積りを実行 — {{nextGen}} として保存</span></sc-if>
+            <sc-if value="{{running}}" hint-placeholder-val="{{false}}"><span>シミュレーション中 {{progress}}% ・ {{runs}} / 10,000</span></sc-if>
+          </button>
+          <span style="font-size: 11px; color: #5E677A; white-space: nowrap">10,000 回 ・ 乱数固定 ・ <a href="SimSettings.dc.html">設定</a></span>
+        </div>
+      </div>
+
+      <div style="grid-column: span 7; display: flex; flex-direction: column; gap: 16px; min-width: 0">
+        <div class="tile" style="padding: 24px 28px; display: flex; flex-direction: column; gap: 18px; animation-delay: 100ms">
+          <div style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px">
+            <div style="display: flex; flex-direction: column; gap: 4px">
+              <span style="font-size: 12px; color: #8B93A5">推定工数 (超過確率 50%)</span>
+              <div style="display: flex; align-items: flex-end; gap: 14px; flex-wrap: wrap">
+                <span class="n" style="font-size: 80px; line-height: 0.95; color: {{accent}}">{{shown}}<span style="font-size: 22px; margin-left: 8px; color: #8B93A5; font-weight: 500; letter-spacing: 0">人月</span></span>
+                <span style="{{deltaStyle}}">{{deltaText}}</span>
+              </div>
+            </div>
+            <div style="display: flex; gap: 22px">
+              <div style="display: flex; flex-direction: column; gap: 2px; align-items: flex-end"><span style="font-size: 11px; color: #8B93A5">楽観 P20</span><span class="n" style="font-size: 22px">{{p20}}</span></div>
+              <div style="display: flex; flex-direction: column; gap: 2px; align-items: flex-end"><span style="font-size: 11px; color: #8B93A5">安全側 P80</span><span class="n" style="font-size: 22px">{{p80}}</span></div>
+              <div style="display: flex; flex-direction: column; gap: 2px; align-items: flex-end"><span style="font-size: 11px; color: #8B93A5">最悪 P95</span><span class="n" style="font-size: 22px">{{p95}}</span></div>
+            </div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 6px">
+            <div style="display: flex; justify-content: space-between; font-size: 11px; color: #5E677A"><span>P20 {{p20}}</span><span>P50 {{p50}}</span><span>P80 {{p80}}</span><span>P95 {{p95}}</span></div>
+            <div style="position: relative; height: 12px; border-radius: 6px; background: #1B2030">
+              <div class="mk" style="{{bandStyle}}"></div>
+              <div class="mk" style="{{bandDimStyle}}"></div>
+              <div class="mk" style="{{p50MarkStyle}}"></div>
+              <div class="mk" style="{{g3MarkStyle}}"></div>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 11px; color: #5E677A; font-family: 'Space Grotesk', sans-serif"><span>{{rangeLo}}</span><span style="color: #8B93A5">▲ 保存済み G3 42.3</span><span>{{rangeHi}} 人月</span></div>
+          </div>
+
+          <div style="position: relative; height: 150px">
+            <div role="img" aria-label="見積り工数の分布ヒストグラム" style="position: absolute; left: 0; right: 0; bottom: 0; display: flex; align-items: flex-end; gap: 4px; height: 140px">
+              <sc-for list="{{bins}}" as="b" hint-placeholder-count="26"><div class="bar" style="{{b.style}}"></div></sc-for>
+            </div>
+            <div class="mk" style="{{histP50Style}}"></div><span class="mk" style="{{histP50LabelStyle}}">P50</span>
+            <div class="mk" style="{{histP80Style}}"></div><span class="mk" style="{{histP80LabelStyle}}">P80</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 11px; color: #5E677A; font-family: 'Space Grotesk', sans-serif"><span>{{axis0}}</span><span>{{axis1}}</span><span>{{axis2}}</span><span>{{axis3}} 人月</span></div>
+        </div>
+
+        <div class="tile" style="padding: 20px 24px; display: flex; flex-direction: column; gap: 12px; animation-delay: 200ms">
+          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px"><span style="font-size: 13px; font-weight: 500">工数の積み上げ — 名目 + 各要因の上乗せ</span><span style="font-size: 12px; color: #5E677A">名目 {{nominal}} + 上乗せ {{overhead}} = {{p50}} 人月</span></div>
+          <div style="display: flex; height: 26px; border-radius: 8px; overflow: hidden; background: #1B2030">
+            <sc-for list="{{stack}}" as="s" hint-placeholder-count="7"><div class="fill" style="{{s.style}}" title="{{s.title}}"></div></sc-for>
+          </div>
+          <div style="display: flex; flex-wrap: wrap; gap: 6px 16px">
+            <sc-for list="{{legend}}" as="l" hint-placeholder-count="7"><span style="display: inline-flex; align-items: center; gap: 6px; font-size: 11px; color: #8B93A5"><span style="{{l.dot}}"></span>{{l.name}} <span class="n" style="color: #F2F4F8">{{l.value}}</span></span></sc-for>
+          </div>
+        </div>
+
+        <div class="tile" style="padding: 20px 24px; display: flex; flex-direction: column; gap: 12px; animation-delay: 300ms">
+          <div style="display: flex; align-items: center; justify-content: space-between"><span style="font-size: 13px; font-weight: 500">世代の比較 — 最大 5 世代</span><span style="font-size: 12px; color: #5E677A">実行するたびに右へ追加 ・ レポートにする世代を選べます</span></div>
+          <div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px">
+            <sc-for list="{{gens}}" as="g" hint-placeholder-count="3">
+              <div class="gen" style="{{g.style}}">
+                <span style="display: flex; justify-content: space-between; align-items: center"><span class="n" style="{{g.idStyle}}">{{g.id}}</span><span style="font-size: 10px; color: #5E677A">{{g.date}}</span></span>
+                <span class="n" style="font-size: 24px">{{g.median}}</span>
+                <span style="font-size: 11px; color: #8B93A5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{g.size}} FP ・ {{g.sco}}</span>
+                <span style="height: 5px; border-radius: 3px; background: #1B2030; margin-top: auto"><span class="fill" style="{{g.trackStyle}}"></span></span>
+              </div>
+            </sc-for>
+            <sc-for list="{{empties}}" as="e" hint-placeholder-count="2">
+              <div style="border: 1px dashed #2A3040; border-radius: 14px; padding: 14px; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 11px; color: #5E677A; min-height: 112px; box-sizing: border-box">{{e.label}}</div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#D4FF4F","options":["#D4FF4F","#5EEAD4","#6E9BFF","#FFB020"]},"$preview":{"width":1440,"height":1160}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.alpha = 0.0210;
+    this.g3 = { size: 1200, levels: [3, 2, 1, 2, 2, 3, 1, 1], median: 42.3 };
+    this.defs = [
+      { name: '01 要件の安定性', cat: '要件', co: 0.42, color: '#D4FF4F' },
+      { name: '02 顧客の関与度 (間接 → 01)', cat: '要件', co: 0.30, indirect: 0, color: '#8FB0FF' },
+      { name: '08 納期の厳しさ', cat: '要件', co: 0.26, color: '#C9A6FF' },
+      { name: '03 開発者のスキル・経験', cat: '人・体制', co: 0.30, color: '#5EEAD4' },
+      { name: '04 チーム間のコミュニケーション', cat: '人・体制', co: 0.20, color: '#3FB8A0' },
+      { name: '07 開発プロセスの成熟度', cat: '人・体制', co: 0.22, color: '#2A8C7A' },
+      { name: '05 新規技術の割合', cat: '技術', co: 0.36, color: '#FFB020' },
+      { name: '06 外部システム連携数', cat: '技術', co: 0.34, color: '#FF7A59' }
+    ];
+    this.order = [0, 1, 7, 2, 3, 6, 4, 5];
+    this.state = {
+      name: '案B: 外部連携あり', size: 1200, levels: [3, 2, 1, 1, 2, 1, 2, 3],
+      shown: 0, mounted: false, running: false, progress: 0, seed: 0,
+      gens: [
+        { id: 'G1', median: 38.4, size: 1050, sco: 0.74, date: '11/5' },
+        { id: 'G2', median: 35.5, size: 1050, sco: 0.61, date: '11/6' },
+        { id: 'G3', median: 42.3, size: 1200, sco: 0.68, date: '11/6' }
+      ]
+    };
+    this.run = this.run.bind(this);
+    this.setName = this.setName.bind(this);
+    this.setSize = this.setSize.bind(this);
+    this.setSizeRange = this.setSizeRange.bind(this);
+    this.resetG3 = this.resetG3.bind(this);
+    this.allZero = this.allZero.bind(this);
+  }
+  componentDidMount() { this.countTo(this.calc().median); this.mountTimer = setTimeout(() => this.setState({ mounted: true }), 80); }
+  componentWillUnmount() { cancelAnimationFrame(this.raf); clearInterval(this.timer); clearTimeout(this.mountTimer); }
+  calc(levels, size) {
+    levels = levels || this.state.levels; size = size || this.state.size;
+    const cos = this.defs.map(() => 0);
+    let sco = 0;
+    this.defs.forEach((d, i) => {
+      if (d.indirect !== undefined) return;
+      let co = d.co * levels[i] / 3;
+      const ind = this.defs.findIndex((x) => x.indirect === i);
+      if (ind >= 0) co *= 1 + this.defs[ind].co * levels[ind] / 3;
+      cos[i] = co; sco += co;
+    });
+    const nominal = this.alpha * size, median = nominal * (1 + sco);
+    return { sco, nominal, median, sigma: 0.12 + 0.08 * sco, cos };
+  }
+  countTo(target) {
+    cancelAnimationFrame(this.raf);
+    const start = performance.now(), from = this.state.shown || 0, dur = 900;
+    const step = (t) => { const k = Math.min(1, (t - start) / dur), e = 1 - Math.pow(1 - k, 3); this.setState({ shown: from + (target - from) * e }); if (k < 1) this.raf = requestAnimationFrame(step); };
+    this.raf = requestAnimationFrame(step);
+  }
+  applyLevels(levels, size) {
+    const st = { levels, seed: this.state.seed + 1 }; if (size) st.size = size;
+    this.setState(st); this.countTo(this.calc(levels, size).median);
+  }
+  setLevel(i, v) { const l = this.state.levels.slice(); l[i] = v; this.applyLevels(l); }
+  resetG3() { this.setState({ name: '案B: 外部連携あり' }); this.applyLevels([3, 2, 1, 1, 2, 1, 2, 3], 1200); }
+  allZero() { this.applyLevels([0, 0, 0, 0, 0, 0, 0, 0]); }
+  setName(e) { this.setState({ name: e.target.value }); }
+  setSize(e) { const v = Number(String(e.target.value).replace(/[^0-9]/g, '')) || 0; this.setState({ size: v, seed: this.state.seed + 1 }); this.countTo(this.calc(null, v).median); }
+  setSizeRange(e) { const v = Number(e.target.value); this.setState({ size: v, seed: this.state.seed + 1 }); this.countTo(this.calc(null, v).median); }
+  run() {
+    if (this.state.running) return;
+    this.setState({ running: true, progress: 0 });
+    const start = performance.now();
+    clearInterval(this.timer);
+    this.timer = setInterval(() => {
+      const k = Math.min(1, (performance.now() - start) / 1500), e = 1 - Math.pow(1 - k, 2);
+      this.setState({ progress: Math.round(e * 100) });
+      if (k >= 1) {
+        clearInterval(this.timer);
+        const c = this.calc(), now = new Date();
+        const gens = this.state.gens.concat([{ id: 'G' + (this.state.gens.length + 1), median: c.median, size: this.state.size, sco: c.sco, date: (now.getMonth() + 1) + '/' + now.getDate() }]).slice(-5);
+        this.setState({ running: false, gens, seed: this.state.seed + 1, shown: this.state.shown * 0.96 });
+        this.countTo(c.median);
+      }
+    }, 40);
+  }
+  renderVals() {
+    const accent = this.props.accent ?? '#D4FF4F';
+    const st = this.state, mounted = st.mounted;
+    const c = this.calc(), m = c.median || 1, s = c.sigma;
+    const q = (z) => m * Math.exp(z * s);
+    const p20 = q(-0.8416), p80 = q(0.8416), p95 = q(1.645);
+    const fmt = (v) => Math.round(v).toLocaleString('en-US');
+
+    const lo = m * 0.62, hi = m * 1.58, n = 26, raw = [];
+    for (let i = 0; i < n; i++) { const x = lo + (hi - lo) * (i + 0.5) / n, z = (Math.log(x) - Math.log(m)) / s; raw.push({ x, pdf: Math.exp(-z * z / 2) / x * (1 + 0.07 * Math.sin(st.seed * 5.1 + i * 1.7)) }); }
+    const max = Math.max(...raw.map((r) => r.pdf)) || 1;
+    const bins = raw.map((r, i) => ({ style: { height: (mounted ? Math.max(2, Math.round(r.pdf / max * 100)) : 0) + '%', background: r.x >= m && r.x <= p80 ? accent : '#2A3040', transitionDelay: (i * 15) + 'ms' } }));
+    const axis = (k) => Math.round(lo + (hi - lo) * k);
+    const hx = (x) => Math.min(100, Math.max(0, (x - lo) / (hi - lo) * 100));
+    const vline = (x, col) => ({ position: 'absolute', top: '0', bottom: '0', left: hx(x) + '%', width: '2px', background: col, opacity: mounted ? 0.8 : 0 });
+    const vlabel = (x, col) => ({ position: 'absolute', top: '-2px', left: 'calc(' + hx(x) + '% + 5px)', fontSize: '10px', color: col, fontFamily: 'Space Grotesk, sans-serif', fontWeight: '700', opacity: mounted ? 1 : 0 });
+
+    const rLo = Math.max(5, Math.floor(Math.min(p20, this.g3.median) * 0.8 / 5) * 5), rHi = Math.ceil(Math.max(p95, this.g3.median) * 1.1 / 5) * 5;
+    const pct = (x) => Math.min(100, Math.max(0, (x - rLo) / (rHi - rLo) * 100));
+    const bandStyle = { position: 'absolute', top: '0', bottom: '0', left: pct(p20) + '%', width: (pct(p80) - pct(p20)) + '%', background: accent, borderRadius: '6px', opacity: mounted ? 0.9 : 0 };
+    const bandDimStyle = { position: 'absolute', top: '0', bottom: '0', left: pct(p80) + '%', width: (pct(p95) - pct(p80)) + '%', background: '#4A5368', borderRadius: '0 6px 6px 0', opacity: mounted ? 1 : 0 };
+    const p50MarkStyle = { position: 'absolute', top: '-3px', bottom: '-3px', left: 'calc(' + pct(m) + '% - 2px)', width: '4px', borderRadius: '2px', background: '#0B0D12', border: '1px solid ' + accent, opacity: mounted ? 1 : 0 };
+    const g3MarkStyle = { position: 'absolute', top: '14px', left: 'calc(' + pct(this.g3.median) + '% - 5px)', width: '0', height: '0', borderLeft: '5px solid transparent', borderRight: '5px solid transparent', borderBottom: '6px solid #8B93A5', opacity: mounted ? 1 : 0 };
+
+    const delta = m - this.g3.median;
+    const deltaText = Math.abs(delta) < 0.05 ? 'G3 と同じ' : (delta > 0 ? '+' : '') + delta.toFixed(1) + ' vs 保存済み G3';
+    const deltaStyle = { display: 'inline-flex', alignItems: 'center', minHeight: '26px', padding: '0 10px', borderRadius: '999px', fontSize: '12px', fontWeight: '700', marginBottom: '10px', fontFamily: 'Space Grotesk, sans-serif', background: Math.abs(delta) < 0.05 ? '#1B2030' : delta > 0 ? '#2A1A16' : '#15241C', color: Math.abs(delta) < 0.05 ? '#8B93A5' : delta > 0 ? '#FF9F84' : '#7EE2B8' };
+
+    const maxCo = 0.6;
+    const mkFactor = (i) => {
+      const d = this.defs[i], lv = st.levels[i], co = d.indirect !== undefined ? d.co * lv / 3 : c.cos[i];
+      return {
+        name: d.name,
+        coText: d.indirect !== undefined ? '×' + (1 + co).toFixed(2) : '+' + Math.round(co * 100) + '%',
+        coTextStyle: { fontSize: '12px', textAlign: 'right', color: lv === 0 ? '#5E677A' : lv === 3 ? '#FF7A59' : '#F2F4F8' },
+        coStyle: { display: 'block', height: '100%', borderRadius: '2px', width: Math.min(100, Math.round(co / maxCo * 100)) + '%', background: lv === 3 ? '#FF7A59' : d.indirect !== undefined ? '#6E9BFF' : accent },
+        opts: [0, 1, 2, 3].map((v) => ({ label: String(v), aria: d.name + ' レベル' + v, pick: () => this.setLevel(i, v), style: { width: '32px', height: '28px', borderRadius: '999px', border: '0', cursor: 'pointer', fontFamily: 'Space Grotesk, sans-serif', fontWeight: '700', fontSize: '12px', background: lv === v ? (v === 3 ? '#FF7A59' : accent) : 'transparent', color: lv === v ? '#0B0D12' : '#8B93A5' } }))
+      };
+    };
+    const groups = ['要件', '人・体制', '技術'].map((label) => ({ label, items: this.defs.map((d, i) => d.cat === label ? mkFactor(i) : null).filter(Boolean) }));
+
+    const total = m;
+    const stack = [{ name: '名目 (α × 規模)', v: c.nominal, color: '#3A4257' }].concat(this.defs.map((d, i) => ({ name: d.name.slice(3), v: c.nominal * c.cos[i], color: d.color })).filter((x) => x.v > 0.01));
+    const stackStyles = stack.map((x, i) => ({ title: x.name + ' ' + x.v.toFixed(1), style: { width: (mounted ? x.v / total * 100 : 0) + '%', height: '100%', background: x.color, borderRight: i < stack.length - 1 ? '2px solid #13161E' : '0', boxSizing: 'border-box', transitionDelay: (i * 40) + 'ms' } }));
+    const legend = stack.map((x) => ({ name: x.name, value: x.v.toFixed(1), dot: { width: '10px', height: '10px', borderRadius: '3px', background: x.color, display: 'inline-block' } }));
+
+    const maxMed = Math.max(...st.gens.map((g) => g.median), m);
+    const gens = st.gens.map((g, i) => {
+      const last = i === st.gens.length - 1;
+      return {
+        id: g.id, date: g.date, median: g.median.toFixed(1), size: fmt(g.size), sco: '+' + Math.round(g.sco * 100) + '%',
+        style: { background: '#0B0D12', border: last ? '1px solid ' + accent : '1px solid #222734', borderRadius: '14px', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: '4px', minHeight: '112px', boxSizing: 'border-box', animationDelay: (i * 80) + 'ms' },
+        idStyle: { color: last ? accent : '#5E677A', fontSize: '13px' },
+        trackStyle: { display: 'block', height: '100%', borderRadius: '3px', width: (mounted ? Math.round(g.median / maxMed * 100) : 0) + '%', background: last ? accent : '#3A4257' }
+      };
+    });
+    const empties = [];
+    for (let i = st.gens.length; i < 5; i++) empties.push({ label: i === st.gens.length ? 'G' + (i + 1) + ' — 次の実行で保存' : 'G' + (i + 1) });
+
+    return {
+      accent, name: st.name, setName: this.setName, size: st.size, sizeText: fmt(st.size), setSize: this.setSize, setSizeRange: this.setSizeRange,
+      resetG3: this.resetG3, allZero: this.allZero,
+      scoText: '+' + Math.round(c.sco * 100) + '%', groups,
+      shown: st.shown.toFixed(1), deltaText, deltaStyle, p20: p20.toFixed(1), p50: m.toFixed(1), p80: p80.toFixed(1), p95: p95.toFixed(1),
+      bandStyle, bandDimStyle, p50MarkStyle, g3MarkStyle, rangeLo: rLo, rangeHi: rHi,
+      bins, axis0: axis(0), axis1: axis(1 / 3), axis2: axis(2 / 3), axis3: axis(1),
+      histP50Style: vline(m, accent), histP50LabelStyle: vlabel(m, accent), histP80Style: vline(p80, '#8B93A5'), histP80LabelStyle: vlabel(p80, '#8B93A5'),
+      nominal: c.nominal.toFixed(1), overhead: (c.median - c.nominal).toFixed(1), stack: stackStyles, legend,
+      gens, empties, nextGen: st.gens.length >= 5 ? 'G5 を更新' : '第' + (st.gens.length + 1) + '世代',
+      run: this.run, idle: !st.running, running: st.running, progress: st.progress, runs: fmt(st.progress * 100),
+      progressStyle: { width: (st.running ? st.progress : 0) + '%', height: '100%', background: accent, borderRadius: '2px', opacity: st.running ? 1 : 0 }
+    };
+  }
+}
+</script>
+</body>
+</html>

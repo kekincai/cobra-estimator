@@ -1,0 +1,106 @@
+@import 'tailwindcss';
+
+/* デザイントークン（IMPLEMENTATION_BRIEF.md §4）。Tailwind では bg-bg / text-sub / border-line / text-accent などで使う */
+@theme {
+  --color-bg: #0b0d12;
+  --color-card: #13161e;
+  --color-card-2: #171b25;
+  --color-raised: #1b2030;
+  --color-line: #222734;
+  --color-line-strong: #3a4257;
+  --color-nav-line: #1e2330;
+  --color-text: #f2f4f8;
+  --color-sub: #8b93a5;
+  --color-weak: #5e677a;
+  --color-muted: #2a3040;
+  --color-accent: var(--accent);
+  --color-coral: #ff7a59;
+  --color-coral-soft: #ff9f84;
+  --color-ok: #7ee2b8;
+  --color-info: #6e9bff;
+  --color-warn: #ffb020;
+  --radius-tile: 18px;
+  --font-sans: 'Noto Sans JP', system-ui, sans-serif;
+  --font-num: 'Space Grotesk', 'Noto Sans JP', sans-serif;
+  --ease-out-rise: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+:root {
+  /* 切替可能な強調色: #D4FF4F / #5EEAD4 / #6E9BFF / #FFB020 */
+  --accent: #d4ff4f;
+  color-scheme: dark;
+}
+
+html,
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  font-size: 14px;
+}
+
+a { color: var(--accent); }
+
+/* 数字・見出し */
+.n {
+  font-family: var(--font-num);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+.tile {
+  background: var(--color-card);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-tile);
+  box-sizing: border-box;
+  animation: rise 0.7s var(--ease-out-rise) backwards;
+  transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+.tile:hover {
+  transform: translateY(-2px);
+  border-color: var(--color-line-strong);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+}
+@keyframes rise {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: none; }
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 12px;
+  color: var(--color-sub);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+  transition: background 0.2s, color 0.2s;
+}
+.nav:hover { background: var(--color-card-2); color: var(--color-text); }
+.nav.on { background: var(--color-raised); color: var(--color-text); }
+
+.btn { transition: transform 0.15s, filter 0.2s, background 0.2s; }
+.btn:hover { filter: brightness(1.08); }
+.btn:active { transform: scale(0.97); }
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
