@@ -1,5 +1,7 @@
-import { Placeholder } from '../ui/Placeholder';
+import { useParams } from 'react-router';
+import { RiskScreen } from '../features/risk/RiskScreen';
 
 export default function RiskPage() {
-  return <Placeholder title="リスクアセスメント" design="Risk.dc.html" />;
+  const { id = '' } = useParams();
+  return <RiskScreen id={id} />;
 }

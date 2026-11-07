@@ -1,0 +1,112 @@
+/* 見積りレポート（白地 A4）。色は index.css の紙・インク系トークンのみ。 */
+.rp-wrap {
+  min-height: 100vh;
+  background: var(--color-paper-track);
+  color-scheme: light;
+  padding: 0 0 48px;
+}
+.rp-page {
+  width: 900px;
+  max-width: 100%;
+  box-sizing: border-box;
+  margin: 0 auto;
+  padding: 56px 72px 48px;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: 11pt;
+  line-height: 1.6;
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+  box-shadow: 0 1px 3px rgba(17, 20, 24, 0.08), 0 12px 40px rgba(17, 20, 24, 0.08);
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+.rp-page a { color: var(--color-ink); }
+.rp-page .n { letter-spacing: -0.02em; }
+.rp-m {
+  font-family: var(--font-num);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.rp-lab { font-size: 9pt; color: var(--color-ink-sub); letter-spacing: 0.02em; }
+.rp-page section { break-inside: avoid; }
+/* 長い表は行の途中で切らずにページをまたいでよい */
+.rp-page section.rp-flow { break-inside: auto; }
+.rp-page h2 { break-after: avoid; }
+.rp-page h2 { margin: 0; font-size: 12.5pt; font-weight: 700; display: flex; align-items: baseline; gap: 10px; }
+.rp-page h2 .no { font-family: var(--font-num); font-size: 10pt; color: var(--color-ink-sub); font-weight: 700; }
+.rp-page table { border-collapse: collapse; width: 100%; }
+.rp-page th {
+  font-size: 9.5pt;
+  color: var(--color-ink-sub);
+  font-weight: 500;
+  text-align: left;
+  padding: 6px 8px;
+  border-bottom: 1.5px solid var(--color-ink);
+  white-space: nowrap;
+}
+.rp-page td { font-size: 10.5pt; padding: 7px 8px; border-bottom: 1px solid var(--color-paper-line); vertical-align: middle; }
+.rp-page tr { break-inside: avoid; }
+.rp-page .r { text-align: right; }
+.rp-kv { display: flex; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--color-paper-line); padding: 5px 0; font-size: 10pt; }
+.rp-kv > span:first-child { color: var(--color-ink-sub); white-space: nowrap; }
+.rp-kv > span:last-child { text-align: right; }
+.rp-bar { height: 8px; border-radius: 4px; background: var(--color-paper-track); position: relative; overflow: hidden; }
+.rp-bar > i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--color-lime); border-right: 2px solid var(--color-ink); }
+.rp-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 900px;
+  max-width: 100%;
+  box-sizing: border-box;
+  margin: 0 auto 16px;
+  padding: 14px 0;
+  background: var(--color-paper-track);
+  font-size: 13px;
+  color: var(--color-ink-sub);
+}
+.rp-toolbar a { color: var(--color-ink); }
+.rp-print {
+  min-height: 36px;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 0;
+  background: var(--color-ink);
+  color: var(--color-paper);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.rp-print:focus-visible, .rp-toolbar a:focus-visible { outline: 2px solid var(--color-ink); outline-offset: 2px; }
+
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm 12mm 14mm;
+    @bottom-right {
+      content: counter(page) ' / ' counter(pages);
+      font-size: 8pt;
+    }
+  }
+  html, body { background: var(--color-paper) !important; }
+  .rp-wrap { background: none; padding: 0; min-height: 0; }
+  .rp-toolbar { display: none; }
+  /* 印刷では用紙幅に合わせて流す（固定幅を外す）。図は viewBox で縮む */
+  /* 2 ページに収まるよう少し詰める */
+  .rp-page { width: auto; max-width: none; margin: 0; padding: 0; box-shadow: none; gap: 14px; font-size: 10pt; line-height: 1.5; }
+  .rp-page th { padding: 4px 6px; }
+  .rp-page td { padding: 4px 6px; }
+  .rp-results th { white-space: normal; }
+  .rp-title { font-size: 22pt !important; }
+  .rp-hero { font-size: 38pt !important; }
+  .rp-kv { font-size: 9.5pt; }
+  .rp-results { grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr) !important; gap: 20px !important; }
+  .rp-model { grid-template-columns: minmax(0, 1fr) 196px !important; gap: 20px !important; }
+}

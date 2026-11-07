@@ -1,5 +1,7 @@
-import { Placeholder } from '../ui/Placeholder';
+import { useParams } from 'react-router';
+import { EstimateScreen } from '../features/estimate/EstimateScreen';
 
 export default function EstimatePage() {
-  return <Placeholder title="工数見積り" design="Estimate.dc.html" />;
+  const { id = '' } = useParams();
+  return <EstimateScreen id={id} />;
 }
