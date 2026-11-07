@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="Shift_JIS"?>
+<!-- 旧 Excel 版（簡易見積りモデルツール）の書き出しを想定したサンプル。実物が無いため構造は推定。 -->
+<CoBRAModel name="簡易見積りモデル 田中" author="S. Tanaka" exportedAt="2026-10-02T09:00:00Z" toolVersion="1.3">
+  <Alpha value="0.0218" ciLow="0.0190" ciHigh="0.0247"/>
+  <Groups>
+    <Group id="C" name="簡易ツール"/>
+  </Groups>
+  <Factors>
+    <Factor no="1" name="要件の安定性" category="プロダクト" type="直接" origin="standard">
+      <Definition>着手時点で要件がどの程度確定しているか</Definition>
+      <Level value="0">着手時に確定</Level>
+      <Level value="1">一部に変更の余地</Level>
+      <Level value="2">主要機能に未確定あり</Level>
+      <Level value="3">要件の3割以上が未確定</Level>
+      <Triangle expert="S.T." min="0.18" mode="0.26" max="0.40"/>
+      <Triangle expert="Y.T." min="0.15" mode="0.25" max="0.36"/>
+    </Factor>
+    <Factor no="2" name="開発者のスキル・経験" category="人" type="直接" origin="standard">
+      <Definition>同種システム・技術の経験者の割合</Definition>
+      <Level value="0">全員が経験者</Level>
+      <Level value="1">半数が経験者</Level>
+      <Level value="2">一部に経験者</Level>
+      <Level value="3">経験者ほぼなし</Level>
+      <Triangle expert="S.T." min="0.06" mode="0.12" max="0.80"/>
+      <Triangle expert="Y.T." min="0.05" mode="0.10" max="0.20"/>
+    </Factor>
+    <Factor no="3" name="新規技術の割合" category="技術" type="直接" origin="standard">
+      <Definition>初めて使う技術・製品の範囲</Definition>
+      <Level value="0">なし</Level>
+      <Level value="1">周辺に新規</Level>
+      <Level value="2">基盤に新規</Level>
+      <Level value="3">大半が新規</Level>
+      <Triangle expert="S.T." min="0.08" mode="0.15" max="0.25"/>
+      <Triangle expert="Y.T." min="0.07" mode="0.14" max="0.22"/>
+    </Factor>
+    <Factor no="4" name="帳票の数" category="プロダクト" type="直接" origin="custom">
+      <Definition>新規に作る帳票の数</Definition>
+      <Level value="0">なし</Level>
+      <Level value="1">1から5</Level>
+      <Level value="2">6から20</Level>
+      <Level value="3">21 以上</Level>
+      <Triangle expert="S.T." min="0.03" mode="0.08" max="0.15"/>
+      <Triangle expert="Y.T." min="0.04" mode="0.07" max="0.12"/>
+    </Factor>
+    <Factor no="5" name="運用部門の協力度" category="人" type="間接" origin="custom" target="4">
+      <Definition>運用部門のレビュー・受入れの速さ</Definition>
+      <Level value="0">専任の窓口あり</Level>
+      <Level value="1">兼任の窓口あり</Level>
+      <Level value="2">窓口が不明確</Level>
+      <Level value="3">協力を得られない</Level>
+      <Triangle expert="S.T." min="0.05" mode="0.10" max="0.18"/>
+      <Triangle expert="Y.T." min="0.04" mode="0.09" max="0.16"/>
+    </Factor>
+    <Factor no="6" name="データ移行の量" category="プロダクト" type="直接" origin="custom">
+      <Definition>旧システムから移行するデータの種類と量</Definition>
+      <Level value="0">移行なし</Level>
+      <Level value="1">マスタのみ</Level>
+      <Level value="2">マスタと一部履歴</Level>
+      <Level value="3">全履歴を変換して移行</Level>
+      <Triangle expert="S.T." min="0.04" mode="0.10" max="0.20"/>
+      <Triangle expert="Y.T." min="0.05" mode="0.09" max="0.18"/>
+    </Factor>
+  </Factors>
+  <Relations>
+    <Relation indirect="5" direct="4" k="0.225"/>
+  </Relations>
+  <Accuracy mmre="0.205" pred25="0.667"/>
+  <Projects>
+    <Project id="T-01" name="人事システム 帳票追加" group="C" size="520" effort="11.8">
+      <Levels>1 0 1 2 1 0</Levels>
+      <Note>帳票 12 本</Note>
+    </Project>
+    <Project id="T-02" name="販売管理 再構築" group="C" size="1,340" effort="33.0">
+      <Levels>2 1 1 2 2 3</Levels>
+    </Project>
+    <Project id="T-03" name="会計 移行" group="C" size="880" effort="27.4" excluded="true" reason="移行量が想定外">
+      <Levels>1 1 0 0 0 3</Levels>
+    </Project>
+  </Projects>
+</CoBRAModel>
