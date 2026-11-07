@@ -1,0 +1,46 @@
+/* 変動要因・要因追加・関係図の画面専用スタイル（設計稿の <helmet><style> 由来） */
+
+.tri-shape { transition: all 0.6s var(--ease-out-rise); }
+
+/* 一覧カード: 横に少し動く（共通 .tile の持ち上がりは打ち消す） */
+.tile.fx-card { transition: transform 0.2s, border-color 0.2s, background 0.2s, opacity 0.3s; cursor: pointer; }
+.tile.fx-card:hover { transform: translateX(3px); border-color: var(--color-line-strong); box-shadow: none; }
+.tile.fx-static:hover { transform: none; border-color: var(--color-line); box-shadow: none; }
+.fx-chip { transition: background 0.2s, color 0.2s; }
+
+.fx-field {
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--color-text);
+  background: var(--color-bg);
+  border: 1px solid var(--color-muted);
+  border-radius: 10px;
+  padding: 9px 12px;
+  box-sizing: border-box;
+  width: 100%;
+  transition: border-color 0.2s;
+}
+.fx-field:focus { border-color: var(--accent); }
+.fx-field::placeholder { color: var(--color-weak); }
+.fx-field:disabled { opacity: 0.6; }
+.fx-field.n { font-size: 14px; padding: 7px 10px; }
+textarea.fx-field { resize: vertical; line-height: 1.6; }
+.fx-field.fx-bad { border-color: var(--color-coral); }
+
+.fx-pane { animation: fx-fade 0.35s ease both; }
+@keyframes fx-fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+/* 関係図 */
+.fx-node { animation: fx-pop 0.5s var(--ease-out-rise) backwards; transition: border-color 0.25s, box-shadow 0.25s, transform 0.25s, opacity 0.25s, background 0.25s; }
+.fx-node:hover { border-color: var(--color-line-strong) !important; transform: translateY(-2px); }
+@keyframes fx-pop { from { opacity: 0; transform: scale(0.85); } to { opacity: 1; transform: none; } }
+.fx-ln { transition: stroke 0.3s, stroke-width 0.3s, opacity 0.3s; }
+.fx-flow { stroke-dasharray: 5 7; animation: fx-dash 1.1s linear infinite; }
+@keyframes fx-dash { to { stroke-dashoffset: -24; } }
+.fx-detail { animation: fx-rise-sm 0.4s var(--ease-out-rise) backwards; }
+@keyframes fx-rise-sm { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .tri-shape, .tile.fx-card, .fx-node, .fx-ln { transition: none; }
+  .fx-flow, .fx-node, .fx-detail, .fx-pane { animation: none; }
+}
