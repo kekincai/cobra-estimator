@@ -13,7 +13,7 @@
     "db:seed-sql:update": "tsx scripts/seed-sql.ts --update",
     "db:migrate:local": "wrangler d1 migrations apply cobra-estimator --local",
     "db:migrate:remote": "wrangler d1 migrations apply cobra-estimator --remote",
-    "deploy": "pnpm build && wrangler d1 migrations apply cobra-estimator --remote && wrangler deploy",
+    "deploy": "pnpm build && CI=1 wrangler d1 migrations apply cobra-estimator --remote && wrangler deploy",
     "cf-typegen": "wrangler types"
   },
   "devDependencies": {

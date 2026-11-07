@@ -1,5 +1,5 @@
 // Web Worker への薄いラッパ。画面からは runSimulation / runBuild / runLevers を await する。
-import type { BuildResult, BuildStage, EstimateInput, Lever, ModelSpec, ProjectRecord, SimulationResult } from 'cobra-core';
+import type { BuildOptions, BuildResult, BuildStage, EstimateInput, Lever, ModelSpec, ProjectRecord, SimulationResult } from 'cobra-core';
 import type { WorkerRequest, WorkerResponse } from './cobra-protocol';
 
 export type Progress = (stage: BuildStage, done: number, total: number) => void;
@@ -38,7 +38,7 @@ function call<T>(req: DistOmit<WorkerRequest, 'id'>, onProgress?: Progress): Pro
 export const runSimulation = (model: ModelSpec, input: EstimateInput, opts: { runs: number; seed: number }, onProgress?: Progress) =>
   call<SimulationResult>({ type: 'simulate', model, input, opts }, onProgress);
 
-export const runBuild = (model: ModelSpec, projects: ProjectRecord[], opts: { runs: number; seed: number }, onProgress?: Progress) =>
+export const runBuild = (model: ModelSpec, projects: ProjectRecord[], opts: Omit<BuildOptions, 'onProgress'>, onProgress?: Progress) =>
   call<BuildResult>({ type: 'build', model, projects, opts }, onProgress);
 
 export const runLevers = (model: ModelSpec, input: EstimateInput, opts: { runs: number; seed: number; budget?: number; top?: number }) =>

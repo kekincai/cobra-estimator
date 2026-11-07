@@ -1,4 +1,6 @@
-// ΣCO と生産性の不整合（|α_j / α − 1| > 25%）。採用中・除外中の両方を対象に、表示中の版の α で判定する。
+// ΣCO と生産性の不整合（|α_j / α − 1| > 25%、cobra-core `projectGap` / `isInconsistent`）。
+// 採用中・除外中の両方を対象に、表示中の版の α で判定する（構築時の `BuildOptions.excluded` と同じ範囲）。
+// 文言は gap の符号で変える: gap > 0 = レベルの割に工数が多い、gap < 0 = レベルの割に工数が少ない。
 // 自動では除外しない（IMPLEMENTATION_BRIEF §2.4）。ボタンで除外 / 除外のまま確認済みにする。
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
@@ -34,7 +36,18 @@ export function InconsistencyCard({ items, canEdit }: { items: InconsistentItem[
 
   const first = items[0]!;
   const calm = dismissed && adoptedOnes.length === 0;
-  const anyHigh = items.some((i) => i.gap > 0);
+  const nHigh = items.filter((i) => i.gap > 0).length;
+  const mixed = nHigh > 0 && nHigh < items.length;
+  const lead = mixed
+    ? 'レベル値の割に工数が多い実績と少ない実績があります。'
+    : nHigh > 0
+      ? '要因レベルが低いのに工数が多い。'
+      : '要因レベルが高いのに工数が少ない。';
+  const tail = adoptedOnes.length === 0
+    ? 'レベル値を付け直すか、除外のままにするか判断してください。'
+    : nHigh === items.length
+      ? 'レベル値を付け直すか、除外するか判断してください。'
+      : '規模の計測漏れやレベル値を確認し、除外するか判断してください。';
   return (
     <div
       className={`tile flex flex-col gap-2 px-[22px] py-5 ${calm ? '' : '!border-coral-line !bg-coral-bg'}`}
@@ -47,18 +60,18 @@ export function InconsistencyCard({ items, canEdit }: { items: InconsistentItem[
         <div key={stat.row.id} className={`flex items-center justify-between gap-2.5 text-[13px] ${calm ? 'text-sub' : 'text-coral-ink'}`}>
           <span className="min-w-0 truncate">
             <span className="n">{stat.row.id}</span> {stat.row.name}
+            {mixed && <span className="ml-1.5 text-[11px] opacity-80">{gap > 0 ? '工数が多い' : '工数が少ない'}</span>}
             {!stat.row.adopted && <span className="ml-1.5 text-[11px] opacity-80">(除外中)</span>}
           </span>
-          <span className="n shrink-0" title={`α_j / α − 1 = ${(gap * 100).toFixed(0)}%`}>
-            ΣCO +{Math.round(stat.sco * 100)}% ・ {stat.prod.toFixed(3)}
+          <span className="n shrink-0" title={`α_j / α − 1 = ${gap > 0 ? '+' : '−'}${Math.abs(gap * 100).toFixed(0)}%`}>
+            ΣCO {stat.sco < 0 ? '−' : '+'}{Math.abs(Math.round(stat.sco * 100))}% ・ {stat.prod.toFixed(3)}
           </span>
         </div>
       ))}
       {!calm && (
         <p className="m-0 text-[12px] leading-[1.6] text-coral-ink">
-          {anyHigh
-            ? '要因レベルが低いのに工数が多い。レベル値を付け直すか、除外のままにするか判断してください。'
-            : '要因レベルが高いのに工数が少ない。規模の計測漏れやレベル値を確認し、除外するか判断してください。'}
+          {lead}
+          {tail}
         </p>
       )}
       <div className="flex flex-wrap gap-2">
