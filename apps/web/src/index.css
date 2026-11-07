@@ -113,6 +113,8 @@ textarea:focus-visible {
   --color-coral-bg-2: #1a1210;
   --color-coral-dim: #4a2a22;
   --color-coral-strong: #ffd1c4;
+  /* 解説の注意カードの枠（設計稿 #4A2520）。coral-line は他ブロックと共有のため別名 */
+  --color-coral-frame: #4a2520;
   --color-accent-bg: #161c10;
   --color-accent-line: #2f3a1e;
   --color-accent-ink: #e6ff8a;

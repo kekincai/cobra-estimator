@@ -1,5 +1,5 @@
 // ダッシュボードのデータ取得と、選択中の世代のシミュレーション（Web Worker）。
-import { DEFAULT_RUNS, DEFAULT_SEED, type ExpertMode } from 'cobra-core';
+import { DEFAULT_RUNS, DEFAULT_SEED, predictiveSigma, type ExpertMode } from 'cobra-core';
 import { SEED_G3 } from 'cobra-core/seed';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toModelSpec, type GenerationRow, type ModelBundle, type ModelVersionRow } from '../../../shared/types';
@@ -16,6 +16,8 @@ export interface GenView {
   runs: number;
   seed: number;
   alpha: number;
+  /** 予測のモデル誤差 σ（LOO 残差の対数 RMS）。0 ならモデル誤差なし */
+  sigma: number;
   expertMode: ExpertMode;
   createdAt: string | null;
   /** 保存済みの結果（初回描画用）。サンプル表示では null */
@@ -24,11 +26,16 @@ export interface GenView {
 
 const AVG: ExpertMode = { kind: 'average' };
 
+/** 世代のモデル版の LOO から σ を求める。LOO を持たない版（過去の構築履歴）は有効版の σ を使う */
+function sigmaOf(v: ModelVersionRow | null | undefined, active: ModelVersionRow | null): number {
+  return predictiveSigma(v?.loo ?? []) || predictiveSigma(active?.loo ?? []);
+}
+
 function toGenView(g: GenerationRow, versions: ModelVersionRow[], active: ModelVersionRow | null): GenView {
   const v = versions.find((x) => x.id === g.modelVersionId) ?? active;
   return {
     id: g.id, label: g.label, name: g.name, sizeFP: g.sizeFP, levels: g.levels, runs: g.runs, seed: g.seed,
-    alpha: v?.alpha ?? 0, expertMode: v?.expertMode ?? AVG, createdAt: g.createdAt, stored: fromStored(g.results),
+    alpha: v?.alpha ?? 0, sigma: sigmaOf(v, active), expertMode: v?.expertMode ?? AVG, createdAt: g.createdAt, stored: fromStored(g.results),
   };
 }
 
@@ -36,7 +43,7 @@ function toGenView(g: GenerationRow, versions: ModelVersionRow[], active: ModelV
 function sampleGen(active: ModelVersionRow | null): GenView {
   return {
     id: 'sample', label: 'サンプル', name: '既定条件で試算', sizeFP: SEED_G3.sizeFP, levels: { ...SEED_G3.levels }, runs: DEFAULT_RUNS, seed: DEFAULT_SEED,
-    alpha: active?.alpha ?? 0, expertMode: active?.expertMode ?? AVG, createdAt: null, stored: null,
+    alpha: active?.alpha ?? 0, sigma: sigmaOf(active, active), expertMode: active?.expertMode ?? AVG, createdAt: null, stored: null,
   };
 }
 
@@ -81,7 +88,7 @@ function useGenerationSim(bundle: ModelBundle | undefined, gen: GenView | null) 
   const seq = useRef(0);
 
   const factorsKey = bundle?.factors.map((f) => `${f.id}:${f.updatedAt}`).join('|') ?? '';
-  const key = gen && bundle ? `${gen.id}|${gen.alpha}|${gen.runs}|${gen.seed}|${JSON.stringify(gen.expertMode)}|${factorsKey}` : '';
+  const key = gen && bundle ? `${gen.id}|${gen.alpha}|${gen.sigma}|${gen.runs}|${gen.seed}|${JSON.stringify(gen.expertMode)}|${factorsKey}` : '';
 
   const run = useCallback(
     async (withProgress: boolean) => {
@@ -95,7 +102,7 @@ function useGenerationSim(bundle: ModelBundle | undefined, gen: GenView | null) 
       try {
         // 実行が一瞬で終わっても進捗が読めるよう、表示は最低 700ms
         const [r] = await Promise.all([
-          runSimulation(spec, { alpha: gen.alpha, sizeFP: gen.sizeFP, levels: gen.levels }, { runs: gen.runs, seed: gen.seed }, (_s, done) => {
+          runSimulation(spec, { alpha: gen.alpha, sigma: gen.sigma, sizeFP: gen.sizeFP, levels: gen.levels }, { runs: gen.runs, seed: gen.seed }, (_s, done) => {
             if (withProgress && my === seq.current) setProgress(done);
           }),
           withProgress ? new Promise((res) => setTimeout(res, 700)) : null,

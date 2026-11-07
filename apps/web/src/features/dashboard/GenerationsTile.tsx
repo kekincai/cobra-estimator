@@ -1,4 +1,5 @@
 import { Link } from 'react-router';
+import { inconsistencyText } from './inconsistency';
 import type { Inconsistency } from 'cobra-core';
 import { fmtInt } from '../../ui/format';
 import { fmtSco } from './format';
@@ -71,7 +72,7 @@ export function GenerationsTile({ estimateId, gens, selectedId, resultOf, isSamp
             <path d="M12 10v4M12 17.5h.01" />
           </svg>
           <span className="text-[12px] leading-[1.6]">
-            <span className="font-bold text-coral-strong">モデルの確認事項 {inconsistencies.length} 件</span> — {inconsistencies.map((x) => x.projectId).join('、')} の ΣCO と実績生産性が食い違っています。
+            <span className="font-bold text-coral-strong">モデルの確認事項 {inconsistencies.length} 件</span> — {inconsistencyText(inconsistencies)}
             <Link to="/model/build" className="font-medium text-coral-soft">
               モデル構築で確認
             </Link>

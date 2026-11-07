@@ -49,7 +49,7 @@ export function FormulaPlayground() {
           </span>
         </div>
         <div className="flex items-center justify-center text-weak">+</div>
-        <div className={`${box} border-coral-line bg-coral-bg-2`}>
+        <div className={`${box} border-coral-frame bg-coral-bg-2`}>
           <span className="text-[10px] text-weak">上乗せ 名目 × ΣCO</span>
           <span className="n text-[18px] text-coral-soft">
             {over.toFixed(1)} <span className="text-[11px] font-medium text-sub">人月</span>
