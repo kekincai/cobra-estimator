@@ -40,7 +40,7 @@ pnpm check     # typecheck + test + build
 ## デプロイ
 
 ```bash
-pnpm deploy    # build → D1 migrations (remote) → wrangler deploy
+pnpm run deploy    # build → D1 migrations (remote) → wrangler deploy
 ```
 
 本番では、書き込み API に Cloudflare Access の認証が必要です（未設定のあいだは読み取り専用）。
