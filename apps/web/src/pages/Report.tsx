@@ -1,5 +1,7 @@
-import { Placeholder } from '../ui/Placeholder';
+import { useParams } from 'react-router';
+import { ReportScreen } from '../features/report/ReportScreen';
 
 export default function ReportPage() {
-  return <Placeholder title="見積りレポート" design="Report.dc.html" />;
+  const { id = '' } = useParams();
+  return <ReportScreen id={id} />;
 }

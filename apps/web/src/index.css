@@ -104,3 +104,58 @@ textarea:focus-visible {
     transition-duration: 0.001ms !important;
   }
 }
+
+/* ---- 見積り・リスク・レポート画面（追記） ---- */
+@theme {
+  --color-teal: #5eead4;
+  --color-dim: #4a5368;
+  --color-coral-bg: #2a1a16;
+  --color-ok-bg: #15241c;
+  /* 要因ごとの系列色（要因番号 1〜8 で循環） */
+  --color-factor-1: var(--accent);
+  --color-factor-2: #8fb0ff;
+  --color-factor-3: #5eead4;
+  --color-factor-4: #3fb8a0;
+  --color-factor-5: #ffb020;
+  --color-factor-6: #ff7a59;
+  --color-factor-7: #2a8c7a;
+  --color-factor-8: #c9a6ff;
+  /* レポート（白地・印刷）。強調は青柠を小面積だけ */
+  --color-paper: #ffffff;
+  --color-paper-soft: #f7f8fa;
+  --color-paper-tint: #fafbe8;
+  --color-paper-track: #f0f2f4;
+  --color-paper-band: #d9dce1;
+  --color-paper-line: #e3e6ea;
+  --color-paper-pill: #c9cdd3;
+  --color-ink: #111418;
+  --color-ink-body: #3a414d;
+  --color-ink-sub: #5a6270;
+  --color-ink-faint: #9aa1ad;
+  --color-ink-invert-sub: #b9bfcb;
+  --color-lime: #d4ff4f;
+}
+
+/* 棒・帯・マーカーの CSS トランジション（reduced-motion は上の一括指定で無効） */
+.bar-v { transition: height 0.9s var(--ease-out-rise), background 0.4s; }
+.fill { transition: width 0.7s var(--ease-out-rise), background 0.3s; }
+.mk { transition: all 0.4s var(--ease-out-rise); }
+.seg { transition: background 0.2s, color 0.2s, transform 0.15s; }
+.seg:hover { transform: scale(1.08); }
+.pop { animation: pop 0.5s var(--ease-out-rise) backwards; }
+@keyframes pop {
+  from { opacity: 0; transform: scale(0.92); }
+  to { opacity: 1; transform: none; }
+}
+.row-hover { transition: background 0.2s; }
+.row-hover:hover { background: var(--color-card-2); }
+.curve-draw { stroke-dasharray: 1200; stroke-dashoffset: 1200; animation: draw 1.6s var(--ease-out-rise) 0.3s forwards; }
+@keyframes draw { to { stroke-dashoffset: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .curve-draw { stroke-dashoffset: 0; animation: none; }
+  .seg:hover { transform: none; }
+}
+
+/* 見積り画面の「概要 / 条件 / リスク / レポート」切替（a の既定色を上書きするため層の外に置く） */
+.tab-link { color: var(--color-sub); text-decoration: none; transition: color 0.2s; }
+.tab-link:hover { color: var(--color-text); }
