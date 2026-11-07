@@ -39,7 +39,8 @@ export function useBuildRunner(onDone: (r: BuildResult, meta: { runs: number; se
     };
   }, []);
 
-  const run = useCallback((spec: ModelSpec, projects: ProjectRecord[], opts: { runs: number; seed: number }) => {
+  /** excluded: 不採用の実績。α には使わず、不整合の判定だけ行う（cobra-core `BuildOptions.excluded`） */
+  const run = useCallback((spec: ModelSpec, projects: ProjectRecord[], opts: { runs: number; seed: number }, excluded: ProjectRecord[] = []) => {
     cancelAnimationFrame(raf.current);
     real.current = 0;
     let shown = 0;
@@ -69,7 +70,7 @@ export function useBuildRunner(onDone: (r: BuildResult, meta: { runs: number; se
     };
     raf.current = requestAnimationFrame(tick);
 
-    runBuild(spec, projects, opts, onProgress).then(
+    runBuild(spec, projects, { ...opts, excluded }, onProgress).then(
       (r) => {
         elapsedMs = performance.now() - t0;
         result = r;

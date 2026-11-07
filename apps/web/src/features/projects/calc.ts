@@ -1,6 +1,6 @@
 // 実績データ画面の軽い確定計算（期待値ベース）。数件×8 要因なので UI スレッドで十分。
 // モンテカルロ・ブートストラップを伴う構築は cobra-client（Web Worker）側で行う。
-import { expectedCO, INCONSISTENCY_THRESHOLD, type ModelSpec } from 'cobra-core';
+import { expectedCO, isInconsistent, type ModelSpec } from 'cobra-core';
 import type { ProjectRow } from '../../../shared/types';
 
 export interface ProjectStat {
@@ -25,9 +25,10 @@ export function alphaOf(stats: ProjectStat[]): number | null {
   return used.length ? used.reduce((a, s) => a + s.alphaJ, 0) / used.length : null;
 }
 
-/** α_j / α − 1 */
+/** α_j / α − 1（cobra-core `projectGap` と同じ式。ΣCO を計算済みの stat から求める） */
 export const gapOf = (s: ProjectStat, alpha: number) => s.alphaJ / alpha - 1;
-export const isInconsistent = (gap: number) => Math.abs(gap) > INCONSISTENCY_THRESHOLD;
+/** 判定は cobra-core に一本化（|gap| > 25%） */
+export { isInconsistent };
 
 /** 表示用: 要因の並び（no 順）にレベルを並べる */
 export function levelArray(model: ModelSpec, levels: Record<string, number>): number[] {

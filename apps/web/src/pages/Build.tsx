@@ -1,6 +1,6 @@
 // モデル構築（design/Build.dc.html）
 import { useQueryClient } from '@tanstack/react-query';
-import type { BuildResult, BuildStage, ExpertMode, Inconsistency, LooPoint } from 'cobra-core';
+import { predictiveSigma, type BuildResult, type BuildStage, type ExpertMode, type Inconsistency, type LooPoint } from 'cobra-core';
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router';
 import { toModelSpec, type ModelBundle, type ModelVersionRow, type ProjectRow } from '../../shared/types';
@@ -146,10 +146,9 @@ function BuildView({ bundle, rows }: { bundle: ModelBundle; rows: ProjectRow[] }
     if (!canBuild) return;
     setSaveError(null);
     const spec = toModelSpec(bundle, expertMode);
-    runner.run(spec, adopted.map((r) => ({ id: r.id, sizeFP: r.sizeFP, effortMM: r.effortMM, levels: r.levels })), {
-      runs: sim.runs,
-      seed: sim.seedForRun(),
-    });
+    const rec = (r: ProjectRow) => ({ id: r.id, sizeFP: r.sizeFP, effortMM: r.effortMM, levels: r.levels });
+    // 除外中の実績も渡す: α には使わず、不整合の判定だけ行う（保存される inconsistencies に excluded: true で入る）
+    runner.run(spec, adopted.map(rec), { runs: sim.runs, seed: sim.seedForRun() }, excluded.map(rec));
   };
 
   // 3 段の表示
@@ -172,6 +171,8 @@ function BuildView({ bundle, rows }: { bundle: ModelBundle; rows: ProjectRow[] }
   const prevLabel = prev ? `v${prev.version}` : null;
   const predN = shown?.pred25 != null ? Math.round(shown.pred25 * shown.n) : null;
   const outIds = shown?.loo.filter((l) => l.mre > 0.25).map((l) => l.projectId) ?? [];
+  // 予測のモデル誤差 σ（LOO 残差の対数 RMS）。保存済みの版は loo から再計算できる（BuildResult.sigma と同じ値）
+  const sigma = shown && shown.loo.length > 0 ? predictiveSigma(shown.loo) : null;
   const lastBuilt = bundle.versions[0]?.builtAt;
   const revStyle = { opacity: revealed ? 1 : 0, transform: revealed ? 'none' : 'translateY(8px)', transition: 'opacity .6s, transform .6s var(--ease-out-rise)' };
   const shownExcluded = shown ? rows.filter((r) => inGroup(r, shown.groupId) && !r.adopted).length : 0;
@@ -357,6 +358,9 @@ function BuildView({ bundle, rows }: { bundle: ModelBundle; rows: ProjectRow[] }
                 <span className="text-[12px] text-sub" style={revStyle}>
                   α = {shown.alpha.toFixed(4)} 人月 / FP
                   {shown.ci95[0] != null && shown.ci95[1] != null && ` ・ 95% CI ${shown.ci95[0].toFixed(4)} – ${shown.ci95[1].toFixed(4)}`}
+                  {sigma !== null && (
+                    <span title="予測のモデル誤差 (1 件抜き残差の対数 RMS)。見積りの分布の幅に加わります。"> ・ σ {sigma.toFixed(3)}</span>
+                  )}
                   {dAlpha !== null && (
                     <>
                       {' '}・ 前回 {prevLabel} 比 <span className={dAlpha >= 0 ? 'text-coral-soft' : 'text-ok'}>{signed(dAlpha, 4)}</span>

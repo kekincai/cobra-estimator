@@ -1,5 +1,5 @@
 // 実績を追加・編集（design/ProjectEdit.dc.html）
-import { DEFAULT_UNITS, expectedCO, INCONSISTENCY_THRESHOLD, toFP, toMM, type ModelSpec, type UnitFactors } from 'cobra-core';
+import { DEFAULT_UNITS, expectedCO, isInconsistent, projectGap, toFP, toMM, type ModelSpec, type UnitFactors } from 'cobra-core';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
 import { toModelSpec, type ModelBundle, type ProjectRow } from '../../shared/types';
@@ -82,12 +82,13 @@ function ProjectForm({ bundle, all, initial }: { bundle: ModelBundle; all: Proje
   const existing = all.filter((p) => p.groupId === groupId && p.id !== initial?.id);
   const alpha = bundle.activeVersion?.alpha ?? alphaOf(projectStats(spec, existing));
   const expected = alpha !== null ? alpha * (1 + sco) : 0;
-  const gap = expected > 0 && prod > 0 ? prod / expected - 1 : 0;
+  // gap = α_j / α − 1（cobra-core の判定と同じ式。構築時の不整合カードと一致させる）
+  const gap = alpha !== null && alpha > 0 && sizeFP > 0 && effMM > 0 ? projectGap(spec, alpha, { id: initial?.id ?? 'new', sizeFP, effortMM: effMM, levels }) : 0;
 
   const nameOk = name.trim().length > 0;
   const sizeOk = sizeFP > 0;
   const effOk = effMM > 0;
-  const gapOk = Math.abs(gap) <= INCONSISTENCY_THRESHOLD;
+  const gapOk = !isInconsistent(gap);
   const allOk = nameOk && sizeOk && effOk;
   const busy = save.isPending || del.isPending;
   const fmtInt = (v: number) => Math.round(v).toLocaleString('en-US');
