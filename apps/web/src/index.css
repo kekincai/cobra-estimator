@@ -141,3 +141,15 @@ textarea:focus-visible {
 .no-spin::-webkit-outer-spin-button,
 .no-spin::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 .no-spin { -moz-appearance: textfield; }
+/* 追加トークン（変動要因・関係図の設計稿で使う色） */
+@theme {
+  --color-panel: #0f1218;
+  --color-text-2: #c7cdd9;
+  --color-teal: #5eead4;
+  --color-info-soft: #1f2a4a;
+  --color-info-text: #9db4ff;
+  --color-ok-soft: #15241c;
+  --color-coral-soft-bg: #2a1714;
+  --color-coral-line: #5a3328;
+  --color-line-dashed: #2f3747;
+}

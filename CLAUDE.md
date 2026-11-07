@@ -16,7 +16,7 @@
 - 複数画面で使えそうな部品（ヒストグラム、P 帯、セグメントボタンなど）は `src/ui/` に**新規ファイル**として追加する。
 - API が足りないときは `apps/web/worker/routes/<area>.ts` に追加する。
 - スキーマ変更は最小限にとどめ、`pnpm --filter web db:generate` で新しいマイグレーションを作り、PR に明記する。番号が衝突したらマージ時に作り直す。
-- seed を変えるときは `cobra-core/src/seed.ts` を直し、`pnpm --filter web db:seed-sql` で `0001_seed.sql` を作り直す。本番に適用済みの場合は、差分を新しいマイグレーションにする。
+- seed を変えるときは `cobra-core/src/seed.ts` を直す。`0001_seed.sql` は本番に適用済みなので作り直さず、`pnpm --filter web --silent db:seed-sql:update > apps/web/migrations/000N_<name>.sql` で UPDATE の差分マイグレーションを足す（例: `0002_seed_calibration.sql`）。新しい DB でも 0001 → 000N の順に当たり、`db:seed-sql` の全件出力と同じ状態になる。
 
 ## ローカル
 - `pnpm dev` → http://localhost:5173（Vite + Workers ランタイム + ローカル D1）
