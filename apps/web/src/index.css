@@ -40,10 +40,6 @@ body {
   font-size: 14px;
 }
 
-/* base レイヤーに置き、Tailwind の text-* で上書きできるようにする */
-@layer base {
-  a { color: var(--accent); }
-}
 /* base レイヤーに置く（unlayered だと Tailwind の text-* より強くなり、リンクの色指定が効かない） */
 @layer base { a { color: var(--accent); } }
 
@@ -110,22 +106,18 @@ textarea:focus-visible {
   }
 }
 
-/* 追加トークン（ダッシュボード / 解説 / 業務フロー）。設計稿の補助色 */
+/* 追加トークン（ダッシュボード / 解説 / 業務フロー）。共通名の補助色は他ブロックで定義済み */
 @theme {
-  --color-teal: #5eead4;
-  --color-body: #c7cdd9;
   --color-slate: #4a5368;
   --color-line-active: #2f3747;
-  --color-coral-bg: #2a1a16;
   --color-coral-bg-2: #1a1210;
-  --color-coral-line: #4a2520;
   --color-coral-dim: #4a2a22;
-  --color-coral-ink: #ffb4a0;
   --color-coral-strong: #ffd1c4;
-  --color-ok-bg: #15241c;
   --color-accent-bg: #161c10;
   --color-accent-line: #2f3a1e;
   --color-accent-ink: #e6ff8a;
+}
+
 /* --- 実績データ / モデル構築 / シミュレーション設定 で追加（設計稿の補助色） --- */
 @theme {
   --color-body: #c7cdd9;
