@@ -17,6 +17,7 @@ const icons = {
   estimate: <I d={<><rect x="4" y="2" width="16" height="20" rx="3" /><path d="M8 7h8M8 12h3M13 12h3M8 17h3M13 17h3" /></>} />,
   risk: <I d={<><path d="M12 3l9 17H3z" /><path d="M12 10v4M12 17.5h.01" /></>} />,
   report: <I d={<><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6M16 13H8M16 17H8" /></>} />,
+  users: <I d={<><circle cx="9" cy="8" r="4" /><path d="M2 21c0-3.9 3.1-7 7-7s7 3.1 7 7M16 4.1a4 4 0 0 1 0 7.8M22 21c0-3-1.8-5.6-4.5-6.6" /></>} />,
   guide: <I d={<><circle cx="12" cy="12" r="10" /><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01" /></>} />,
 };
 
@@ -54,6 +55,7 @@ export function Layout() {
         <NavLink to={`/estimate/${CURRENT_ESTIMATE_ID}/risk`} className={navCls}>{icons.risk}リスク</NavLink>
         <NavLink to={`/estimate/${CURRENT_ESTIMATE_ID}/report`} className={navCls}>{icons.report}レポート</NavLink>
         <div className="grow" />
+        {user?.role === 'admin' && <NavLink to="/admin/users" className={navCls}>{icons.users}利用者</NavLink>}
         <NavLink to="/guide" className={navCls}>{icons.guide}CoBRA法の解説</NavLink>
         <div className="flex items-center gap-2.5 px-[14px] pt-3 pb-1">
           <span className="inline-flex size-[30px] items-center justify-center rounded-full bg-muted text-[11px] font-bold">{initials}</span>

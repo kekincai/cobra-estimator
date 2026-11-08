@@ -14,6 +14,7 @@ import { factorsRoute } from './routes/factors';
 import { modelRoute } from './routes/model';
 import { projectsRoute } from './routes/projects';
 import { transferRoute } from './routes/transfer';
+import { usersRoute } from './routes/users';
 
 const app = new Hono<AppEnv>().basePath('/api');
 
@@ -34,7 +35,8 @@ const routes = app
   .route('/projects', projectsRoute)
   .route('/estimates', estimatesRoute)
   .route('/transfer', transferRoute)
-  .route('/audit', auditRoute);
+  .route('/audit', auditRoute)
+  .route('/users', usersRoute);
 
 app.onError((err, c) => {
   console.error(err);
