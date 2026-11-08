@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { CALC_ERROR, PendingCalls, toCalcError } from './cobra-pending';
+import { CALC_ERROR, PendingCalls, abortError, isAbortError, toCalcError } from './cobra-pending';
 
 const deferred = () => {
   const resolve = vi.fn();
@@ -127,5 +127,40 @@ describe('PendingCalls', () => {
     expect(b.resolve).not.toHaveBeenCalled();
     p.reject(2, new Error('again'));
     expect(b.reject).toHaveBeenCalledOnce();
+  });
+
+  it('resendable は req を持つ依頼だけを ID 順に返し、依頼は残す', () => {
+    const p = new PendingCalls();
+    p.add(3, { ...deferred(), req: { id: 3, type: 'levers' } });
+    p.add(1, { ...deferred(), req: { id: 1, type: 'simulate' } });
+    p.add(2, deferred());
+    expect(p.resendable()).toEqual([
+      { id: 1, req: { id: 1, type: 'simulate' } },
+      { id: 3, req: { id: 3, type: 'levers' } },
+    ]);
+    expect(p.size).toBe(3);
+    p.reject(1, abortError());
+    expect(p.resendable().map((x) => x.id)).toEqual([3]);
+    expect(new PendingCalls().resendable()).toEqual([]);
+  });
+});
+
+describe('abortError / isAbortError', () => {
+  it('AbortError は日本語の文言で、name で判定できる。理由は cause に残す', () => {
+    const e = abortError('user');
+    expect(e).toBeInstanceOf(Error);
+    expect(e.name).toBe('AbortError');
+    expect(e.message).toBe(CALC_ERROR.aborted);
+    expect(e.cause).toBe('user');
+    expect(abortError().cause).toBeUndefined();
+    expect(isAbortError(e)).toBe(true);
+  });
+  it('DOMException の AbortError も取りやめ扱い。それ以外の失敗は違う', () => {
+    expect(isAbortError(new DOMException('aborted', 'AbortError'))).toBe(true);
+    expect(isAbortError(toCalcError('x'))).toBe(false);
+    expect(isAbortError(new Error(CALC_ERROR.aborted))).toBe(false);
+    expect(isAbortError(null)).toBe(false);
+    expect(isAbortError(undefined)).toBe(false);
+    expect(isAbortError('AbortError')).toBe(false);
   });
 });

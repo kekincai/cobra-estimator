@@ -39,11 +39,49 @@ pnpm check     # typecheck + test + build
 
 ## デプロイ
 
+### 自動デプロイ（GitHub Actions）
+
+`main` に push（PR のマージを含む）すると、`.github/workflows/ci.yml` が次の順に実行します。
+
+1. `check` ジョブ: `pnpm check`（typecheck + test + build）
+2. `deploy` ジョブ: `check` が通ったときだけ `pnpm run deploy`（build → D1 マイグレーション（remote）→ `wrangler deploy`）
+
+- デプロイは `deploy-production` という concurrency グループで 1 本ずつ実行します。実行中のデプロイは途中で止めず、後から来たものは待ちます。
+- `deploy` ジョブは GitHub の Environment `production` で動きます。承認者や対象ブランチを絞りたいときは Settings → Environments → `production` で保護ルールを追加してください。
+- PR では `check` と `impeccable`（`npx impeccable@4.8.0 detect --github apps/web/src`）だけが動き、デプロイはしません。impeccable の指摘は PR 上に注釈で出て、1 件でもあるとジョブが失敗します。誤検知は該当行に `/* impeccable-disable-line <rule> -- 理由 */` を付けて抑止します。
+
+### 必要なシークレット
+
+Settings → Secrets and variables → Actions の **Repository secrets**（または Settings → Environments → `production` の **Environment secrets**）に追加します。
+
+| 名前 | 値 |
+|---|---|
+| `CLOUDFLARE_API_TOKEN` | 下記の手順で作った API トークン |
+| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare ダッシュボードの Workers & Pages 概要の右側にある Account ID |
+
+どちらかが未設定だと、`deploy` ジョブは最初のステップで「シークレットが未設定です」と表示して**失敗**します（黙ってスキップすると、本番が古いまま main が緑に見えてしまうため）。シークレットを追加したら、失敗した `deploy` ジョブを Re-run してください。
+
+### Cloudflare API トークンの作り方
+
+1. Cloudflare ダッシュボード → My Profile → API Tokens → Create Token
+2. テンプレート **Edit Cloudflare Workers** を選ぶ（Workers Scripts: Edit、Account Settings: Read、Zone の Workers Routes: Edit などが入っています）
+3. Permissions に **Account → D1 → Edit** を追加する（`wrangler d1 migrations apply --remote` に必要）
+4. Account Resources を自分のアカウントだけに、Zone Resources を `kejincai.dev`（カスタムドメイン `cobra.kejincai.dev` のゾーン）だけに絞る
+5. 作成したトークンを `CLOUDFLARE_API_TOKEN` に登録する
+
+カスタムドメインの付け替えで権限エラーが出たときは、同じゾーンに Zone → DNS → Edit と Zone → Zone → Read を追加してください。
+
+### 手動デプロイ（予備）
+
 ```bash
 pnpm run deploy    # build → D1 migrations (remote) → wrangler deploy
 ```
 
-本番では、書き込み API に Cloudflare Access の認証が必要です（未設定のあいだは読み取り専用）。
+ローカルでは `wrangler login` 済みのアカウントでデプロイされます。
+
+### 本番のログイン
+
+本番は GitHub でログインした、`users` 表に登録済みの利用者だけが使えます。`GITHUB_CLIENT_SECRET` と `SESSION_SECRET` は Worker のシークレットとして `wrangler secret put` で設定します（GitHub Actions には登録不要です）。
 
 ## ライセンス
 

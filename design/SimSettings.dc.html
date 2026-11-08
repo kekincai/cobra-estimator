@@ -6,6 +6,10 @@
 <script src="./support.js"></script>
 </head>
 <body>
+<!--
+  実装メモ（PR #15 以降。設計稿に描いていない振る舞い。一覧と経緯は design/README.md）
+  - 画面の高さが足りないときは本体だけをスクロールし、見出しと「キャンセル / 保存」は固定。シードの不正値は「シードは 0〜4,294,967,295 の整数で入力してください。」で保存不可。
+-->
 <x-dc>
 <helmet>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Space+Grotesk:wght@500;700&display=swap">
@@ -28,36 +32,36 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid #D4FF
   <div class="card" role="dialog" aria-labelledby="sim-title" style="width: 512px; box-sizing: border-box; padding: 24px 26px; border-radius: 20px; background: #13161E; border: 1px solid #2A3040; box-shadow: 0 30px 80px rgba(0,0,0,.6); display: flex; flex-direction: column; gap: 18px">
     <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px">
       <div style="display: flex; flex-direction: column; gap: 4px">
-        <span style="font-size: 11px; color: #5E677A; letter-spacing: 0.08em">モンテカルロ・シミュレーション</span>
+        <span style="font-size: 11px; color: #7F889B; letter-spacing: 0.08em">モンテカルロ・シミュレーション</span>
         <h1 id="sim-title" class="n" style="margin: 0; font-size: 20px">シミュレーション設定</h1>
       </div>
-      <a href="Build.dc.html" aria-label="閉じる" class="btn" style="width: 32px; height: 32px; border-radius: 10px; border: 1px solid #2A3040; background: transparent; color: #8B93A5; display: inline-flex; align-items: center; justify-content: center; text-decoration: none; font-size: 16px">×</a>
+      <a href="Build.dc.html" aria-label="閉じる" class="btn" style="width: 32px; height: 32px; border-radius: 10px; border: 1px solid #2A3040; background: transparent; color: #98A0B1; display: inline-flex; align-items: center; justify-content: center; text-decoration: none; font-size: 16px">×</a>
     </div>
 
     <div style="display: flex; flex-direction: column; gap: 8px">
-      <span style="font-size: 11px; color: #8B93A5">適用先</span>
+      <span style="font-size: 11px; color: #98A0B1">適用先</span>
       <div style="display: inline-flex; background: #0B0D12; border: 1px solid #222734; border-radius: 10px; padding: 3px; gap: 2px; align-self: flex-start"><sc-for list="{{targets}}" as="t" hint-placeholder-count="3"><button type="button" class="btn" onClick="{{t.pick}}" style="{{t.style}}">{{t.label}}</button></sc-for></div>
     </div>
 
     <div style="display: flex; flex-direction: column; gap: 8px">
-      <div style="display: flex; justify-content: space-between; align-items: baseline"><span style="font-size: 11px; color: #8B93A5">シミュレーション回数</span><span style="font-size: 11px; color: #5E677A">多いほど結果が安定、時間は比例</span></div>
+      <div style="display: flex; justify-content: space-between; align-items: baseline"><span style="font-size: 11px; color: #98A0B1">シミュレーション回数</span><span style="font-size: 11px; color: #7F889B">多いほど結果が安定、時間は比例</span></div>
       <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
         <sc-for list="{{runs}}" as="r" hint-placeholder-count="3">
           <button type="button" class="opt" onClick="{{r.pick}}" style="{{r.style}}">
             <span class="n" style="{{r.numStyle}}">{{r.label}}</span>
-            <span style="font-size: 11px; color: #8B93A5">{{r.tag}}</span>
-            <span style="display: flex; justify-content: space-between; font-size: 10.5px; color: #5E677A; width: 100%"><span>約 {{r.time}}</span><span>P50 ±{{r.err}}</span></span>
+            <span style="font-size: 11px; color: #98A0B1">{{r.tag}}</span>
+            <span style="display: flex; justify-content: space-between; font-size: 11px; color: #7F889B; width: 100%"><span>約 {{r.time}}</span><span>P50 ±{{r.err}}</span></span>
           </button>
         </sc-for>
       </div>
-      <div style="display: flex; align-items: center; gap: 10px; font-size: 11px; color: #8B93A5"><span style="white-space: nowrap">推定値のぶれ</span><div style="flex: 1; height: 6px; border-radius: 3px; background: #0B0D12; overflow: hidden"><div class="fill" style="{{errBar}}"></div></div><span class="n" style="color: #F2F4F8; width: 44px; text-align: right">±{{errText}}</span></div>
+      <div style="display: flex; align-items: center; gap: 10px; font-size: 11px; color: #98A0B1"><span style="white-space: nowrap">推定値のぶれ</span><div style="flex: 1; height: 6px; border-radius: 3px; background: #0B0D12; overflow: hidden"><div class="fill" style="{{errBar}}"></div></div><span class="n" style="color: #F2F4F8; width: 44px; text-align: right">±{{errText}}</span></div>
     </div>
 
     <div style="display: flex; flex-direction: column; gap: 8px">
-      <span style="font-size: 11px; color: #8B93A5">乱数</span>
+      <span style="font-size: 11px; color: #98A0B1">乱数</span>
       <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
         <sc-for list="{{seedModes}}" as="m" hint-placeholder-count="2">
-          <button type="button" class="opt" onClick="{{m.pick}}" style="{{m.style}}"><span style="font-size: 13px; font-weight: 700">{{m.label}}</span><span style="font-size: 11px; color: #8B93A5; line-height: 1.5; text-align: left">{{m.desc}}</span></button>
+          <button type="button" class="opt" onClick="{{m.pick}}" style="{{m.style}}"><span style="font-size: 13px; font-weight: 700">{{m.label}}</span><span style="font-size: 11px; color: #98A0B1; line-height: 1.5; text-align: left">{{m.desc}}</span></button>
         </sc-for>
       </div>
       <sc-if value="{{fixed}}" hint-placeholder-val="{{true}}">
@@ -65,7 +69,7 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid #D4FF
           <input type="text" value="{{seed}}" onInput="{{setSeed}}" aria-label="シード値" inputmode="numeric">
           <button type="button" class="btn" onClick="{{newSeed}}" style="min-height: 40px; padding: 0 14px; border-radius: 10px; border: 1px solid #2A3040; background: transparent; color: #F2F4F8; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; white-space: nowrap">新しいシード</button>
         </div>
-        <span style="font-size: 11px; color: #5E677A; line-height: 1.5">同じシード・同じ条件なら同じ結果。レポートに載せる前は固定にしておくと、レビューで再現できます。</span>
+        <span style="font-size: 11px; color: #7F889B; line-height: 1.5">同じシード・同じ条件なら同じ結果。レポートに載せる前は固定にしておくと、レビューで再現できます。</span>
       </sc-if>
       <sc-if value="{{rolling}}" hint-placeholder-val="{{false}}">
         <div style="display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 10px; background: #2A1F14; border: 1px solid #4A3320"><span style="width: 8px; height: 8px; border-radius: 4px; background: #FFB020; margin-top: 5px; flex-shrink: 0"></span><span style="font-size: 11.5px; color: #FFD58A; line-height: 1.6">実行のたびに結果が少し変わります (推定値で ±{{errText}} 程度)。世代を比べるときは固定を推奨。</span></div>
@@ -73,9 +77,9 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid #D4FF
     </div>
 
     <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; padding-top: 6px">
-      <span style="font-size: 11px; color: #5E677A">{{summary}}</span>
+      <span style="font-size: 11px; color: #7F889B">{{summary}}</span>
       <div style="display: flex; gap: 8px">
-        <a href="Build.dc.html" class="btn" style="min-height: 38px; padding: 0 14px; border-radius: 10px; border: 1px solid #2A3040; background: transparent; color: #8B93A5; font-size: 12px; display: inline-flex; align-items: center; text-decoration: none">キャンセル</a>
+        <a href="Build.dc.html" class="btn" style="min-height: 38px; padding: 0 14px; border-radius: 10px; border: 1px solid #2A3040; background: transparent; color: #98A0B1; font-size: 12px; display: inline-flex; align-items: center; text-decoration: none">キャンセル</a>
         <a href="Build.dc.html" class="btn" style="min-height: 38px; padding: 0 16px; border-radius: 10px; border: 0; background: {{accent}}; color: #0B0D12; font-size: 13px; font-weight: 700; display: inline-flex; align-items: center; text-decoration: none">保存</a>
       </div>
     </div>
@@ -96,7 +100,7 @@ class Component extends DCLogic {
     const st = this.state, r = this.runDefs[st.runs];
     return {
       accent,
-      targets: ['モデル構築', '工数見積り', '両方'].map((l, i) => ({ label: l, pick: () => this.setState({ target: i }), style: { minHeight: '32px', padding: '0 12px', borderRadius: '8px', border: '0', cursor: 'pointer', fontFamily: 'inherit', fontSize: '12px', fontWeight: '700', background: st.target === i ? accent : 'transparent', color: st.target === i ? '#0B0D12' : '#8B93A5' } })),
+      targets: ['モデル構築', '工数見積り', '両方'].map((l, i) => ({ label: l, pick: () => this.setState({ target: i }), style: { minHeight: '32px', padding: '0 12px', borderRadius: '8px', border: '0', cursor: 'pointer', fontFamily: 'inherit', fontSize: '12px', fontWeight: '700', background: st.target === i ? accent : 'transparent', color: st.target === i ? '#0B0D12' : '#98A0B1' } })),
       runs: this.runDefs.map((d, i) => ({ label: d[0], tag: d[1], time: d[2], err: d[3], pick: () => this.setState({ runs: i }), style: { display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '4px', padding: '12px 14px', borderRadius: '12px', border: '1px solid ' + (st.runs === i ? accent : '#222734'), background: st.runs === i ? '#171B25' : '#0B0D12', color: '#F2F4F8', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left' }, numStyle: { fontSize: '18px', color: st.runs === i ? accent : '#F2F4F8' } })),
       errBar: { width: (r[4] / 1.2 * 100) + '%', height: '100%', background: r[4] > 0.5 ? '#FF7A59' : accent, borderRadius: '3px' }, errText: r[3],
       seedModes: [['シードを固定', '再現可能。レポート向き'], ['実行ごとに更新', '毎回ちがう乱数列で試す']].map((m, i) => ({ label: m[0], desc: m[1], pick: () => this.setState({ seedMode: i }), style: { display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '3px', padding: '12px 14px', borderRadius: '12px', border: '1px solid ' + (st.seedMode === i ? accent : '#222734'), background: st.seedMode === i ? '#171B25' : '#0B0D12', color: '#F2F4F8', cursor: 'pointer', fontFamily: 'inherit' } })),

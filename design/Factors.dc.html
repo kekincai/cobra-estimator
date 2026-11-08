@@ -6,6 +6,11 @@
 <script src="./support.js"></script>
 </head>
 <body>
+<!--
+  実装メモ（PR #15 以降。設計稿に描いていない振る舞い。一覧と経緯は design/README.md）
+  - 削除は確認ダイアログ（ConfirmDialog）。間接要因から参照されている要因は削除できず、その理由と「『xx』を開く」を出す。
+  - 入力エラーは各欄の下に表示（aria-invalid）。保存ボタンは押せるままにし、押したら最初の誤りへフォーカス。未保存の要因は一覧に「未保存」バッジ、画面を離れるときは確認。
+-->
 <x-dc>
 <helmet>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Space+Grotesk:wght@500;700&display=swap">
@@ -15,7 +20,7 @@ a{color:#D4FF4F}a:hover{color:#E6FF8A}
 .n{font-family:'Space Grotesk','Noto Sans JP',sans-serif;font-weight:700;letter-spacing:-0.03em;font-variant-numeric:tabular-nums}
 .tile{background:#13161E;border:1px solid #222734;border-radius:18px;box-sizing:border-box;animation:rise .7s cubic-bezier(.2,.7,.2,1) backwards}
 @keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
-.nav{display:flex;align-items:center;gap:12px;min-height:44px;padding:0 14px;border-radius:12px;color:#8B93A5;text-decoration:none;font-size:13px;font-weight:500;transition:background .2s,color .2s}
+.nav{display:flex;align-items:center;gap:12px;min-height:44px;padding:0 14px;border-radius:12px;color:#98A0B1;text-decoration:none;font-size:13px;font-weight:500;transition:background .2s,color .2s}
 .nav:hover{background:#171B25;color:#F2F4F8}
 .nav.on{background:#1B2030;color:#F2F4F8}
 .card{transition:transform .2s,border-color .2s,background .2s;cursor:pointer}
@@ -37,12 +42,12 @@ a:focus-visible,button:focus-visible{outline:2px solid #D4FF4F;outline-offset:2p
       <span class="n" style="font-size: 18px">Estima</span>
     </a>
     <a href="Main.dc.html" class="nav"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8" rx="2"></rect><rect x="13" y="3" width="8" height="5" rx="2"></rect><rect x="13" y="11" width="8" height="10" rx="2"></rect><rect x="3" y="14" width="8" height="7" rx="2"></rect></svg>ダッシュボード</a>
-    <span style="font-size: 11px; color: #5E677A; padding: 16px 14px 6px; letter-spacing: 0.06em">MODEL</span>
+    <span style="font-size: 11px; color: #7F889B; padding: 16px 14px 6px; letter-spacing: 0.06em">MODEL</span>
     <a href="Factors.dc.html" aria-current="page" class="nav on"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h10M4 18h6"></path></svg>変動要因</a>
     <a href="ProjectData.dc.html" class="nav"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="8" ry="3"></ellipse><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"></path></svg>実績データ</a>
     <a href="Build.dc.html" class="nav"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"></path></svg>モデル構築</a>
     <a href="Transfer.dc.html" class="nav"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"></path></svg>取り込み / 書き出し</a>
-    <span style="font-size: 11px; color: #5E677A; padding: 16px 14px 6px; letter-spacing: 0.06em">ESTIMATE</span>
+    <span style="font-size: 11px; color: #7F889B; padding: 16px 14px 6px; letter-spacing: 0.06em">ESTIMATE</span>
     <a href="Estimate.dc.html" class="nav"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="3"></rect><path d="M8 7h8M8 12h3M13 12h3M8 17h3M13 17h3"></path></svg>工数見積り</a>
     <a href="Risk.dc.html" class="nav"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 17H3z"></path><path d="M12 10v4M12 17.5h.01"></path></svg>リスク</a>
     <a href="Report.dc.html" class="nav"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6M16 13H8M16 17H8"></path></svg>レポート</a>
@@ -54,9 +59,9 @@ a:focus-visible,button:focus-visible{outline:2px solid #D4FF4F;outline-offset:2p
 
     <header style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px">
       <div style="display: flex; flex-direction: column; gap: 6px">
-        <span style="display: inline-flex; align-items: center; gap: 8px; font-size: 11px; color: #8B93A5"><span style="width: 6px; height: 6px; border-radius: 3px; background: #5EEAD4"></span>社内Web系開発 標準モデル v3</span>
-        <h1 class="n" style="margin: 0; font-size: 30px; line-height: 1.1">変動要因 <span style="color: #5E677A; font-weight: 500; font-size: 16px; letter-spacing: 0">8 要因 ・ 直接 6 ・ 間接 2 ・ 三角分布 2 名</span></h1>
-        <span style="font-size: 12px; color: #8B93A5">工数を押し上げる要因と、その程度 (三角分布) を定義します。間接要因は直接要因の影響を強めます。</span>
+        <span style="display: inline-flex; align-items: center; gap: 8px; font-size: 11px; color: #98A0B1"><span style="width: 6px; height: 6px; border-radius: 3px; background: #5EEAD4"></span>社内Web系開発 標準モデル v3</span>
+        <h1 class="n" style="margin: 0; font-size: 30px; line-height: 1.1">変動要因 <span style="color: #7F889B; font-weight: 500; font-size: 16px; letter-spacing: 0">8 要因 ・ 直接 6 ・ 間接 2 ・ 三角分布 2 名</span></h1>
+        <span style="font-size: 12px; color: #98A0B1">工数を押し上げる要因と、その程度 (三角分布) を定義します。間接要因は直接要因の影響を強めます。</span>
       </div>
       <div style="display: flex; flex-wrap: wrap; gap: 8px">
         <a href="FactorNew.dc.html" class="btn" style="display: inline-flex; align-items: center; min-height: 40px; padding: 0 14px; border-radius: 10px; border: 1px solid #2A3040; background: #13161E; color: #F2F4F8; font-size: 13px; font-weight: 500; text-decoration: none">標準要因から選ぶ</a>
@@ -70,7 +75,7 @@ a:focus-visible,button:focus-visible{outline:2px solid #D4FF4F;outline-offset:2p
         <div style="display: flex; flex-wrap: wrap; gap: 6px; padding: 0 2px 4px; align-items: center">
           <sc-for list="{{cats}}" as="ct" hint-placeholder-count="4"><button type="button" class="chip" onClick="{{ct.pick}}" style="{{ct.style}}">{{ct.label}}</button></sc-for>
           <div style="flex-grow: 1"></div>
-          <span style="font-size: 11px; color: #5E677A">分布の担当者:</span>
+          <span style="font-size: 11px; color: #7F889B">分布の担当者:</span>
           <span style="display: inline-flex; background: #0B0D12; border-radius: 999px; padding: 3px; gap: 2px"><sc-for list="{{experts}}" as="x" hint-placeholder-count="3"><button type="button" class="chip" onClick="{{x.pick}}" style="{{x.style}}">{{x.label}}</button></sc-for></span>
         </div>
         <sc-for list="{{factors}}" as="f" hint-placeholder-count="8">
@@ -78,7 +83,7 @@ a:focus-visible,button:focus-visible{outline:2px solid #D4FF4F;outline-offset:2p
             <span class="n" style="{{f.numStyle}}">{{f.num}}</span>
             <span style="display: flex; flex-direction: column; gap: 4px; min-width: 0; text-align: left">
               <span style="display: flex; align-items: center; gap: 8px"><span style="font-size: 15px; font-weight: 700">{{f.name}}</span><span style="{{f.kindStyle}}">{{f.kindShort}}</span></span>
-              <span style="font-size: 11px; color: #8B93A5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{f.meta}}</span>
+              <span style="font-size: 11px; color: #98A0B1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{f.meta}}</span>
             </span>
             <span style="display: flex; align-items: flex-end; gap: 2px; height: 26px; width: 90px">
               <span style="width: 20%; height: 20%; background: #2A3040; border-radius: 2px"></span><span style="width: 20%; height: 55%; background: #3A4257; border-radius: 2px"></span><span class="tri" style="{{f.peakStyle}}"></span><span style="width: 20%; height: 65%; background: #3A4257; border-radius: 2px"></span><span style="width: 20%; height: 30%; background: #2A3040; border-radius: 2px"></span>
@@ -91,27 +96,27 @@ a:focus-visible,button:focus-visible{outline:2px solid #D4FF4F;outline-offset:2p
       <aside aria-label="要因の詳細" class="tile" style="grid-column: span 5; padding: 24px 26px; display: flex; flex-direction: column; gap: 14px; min-width: 0; animation-delay: 240ms">
         <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
           <h2 class="n" style="margin: 0; font-size: 20px">{{sel.num}} {{sel.name}}</h2>
-          <div style="display: flex; gap: 6px; align-items: center"><span style="padding: 4px 10px; border-radius: 999px; background: #1B2030; color: #8B93A5; font-size: 11px; font-weight: 700; white-space: nowrap">{{sel.kind}}</span><button type="button" class="btn" aria-label="この要因を削除" style="width: 32px; height: 32px; border-radius: 16px; border: 1px solid #2A3040; background: transparent; color: #8B93A5; cursor: pointer; display: inline-flex; align-items: center; justify-content: center"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"></path></svg></button></div>
+          <div style="display: flex; gap: 6px; align-items: center"><span style="padding: 4px 10px; border-radius: 999px; background: #1B2030; color: #98A0B1; font-size: 11px; font-weight: 700; white-space: nowrap">{{sel.kind}}</span><button type="button" class="btn" aria-label="この要因を削除" style="width: 32px; height: 32px; border-radius: 16px; border: 1px solid #2A3040; background: transparent; color: #98A0B1; cursor: pointer; display: inline-flex; align-items: center; justify-content: center"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"></path></svg></button></div>
         </div>
         <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
-          <div style="background: #0B0D12; border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 10px; color: #8B93A5">現在の見積り G3</span><span class="n" style="font-size: 16px">{{sel.g3}}</span></div>
-          <div style="background: #0B0D12; border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 10px; color: #8B93A5">実績での L3 件数</span><span class="n" style="font-size: 16px">{{sel.l3n}} / 12</span></div>
-          <div style="background: #0B0D12; border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 10px; color: #8B93A5">寄与 (G3)</span><span class="n" style="font-size: 16px">{{sel.contrib}}</span></div>
+          <div style="background: #0B0D12; border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 11px; color: #98A0B1">現在の見積り G3</span><span class="n" style="font-size: 16px">{{sel.g3}}</span></div>
+          <div style="background: #0B0D12; border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 11px; color: #98A0B1">実績での L3 件数</span><span class="n" style="font-size: 16px">{{sel.l3n}} / 12</span></div>
+          <div style="background: #0B0D12; border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 11px; color: #98A0B1">寄与 (G3)</span><span class="n" style="font-size: 16px">{{sel.contrib}}</span></div>
         </div>
-        <div style="display: flex; flex-direction: column; gap: 6px"><span style="font-size: 11px; color: #8B93A5">定義</span><textarea rows="2" aria-label="定義" value="{{sel.def}}" onChange="{{setDef}}"></textarea></div>
+        <div style="display: flex; flex-direction: column; gap: 6px"><span style="font-size: 11px; color: #98A0B1">定義</span><textarea rows="2" aria-label="定義" value="{{sel.def}}" onChange="{{setDef}}"></textarea></div>
         <div style="display: flex; flex-direction: column; gap: 6px">
-          <span style="font-size: 11px; color: #8B93A5">レベル定義 0 → 3</span>
+          <span style="font-size: 11px; color: #98A0B1">レベル定義 0 → 3</span>
           <sc-for list="{{sel.levels}}" as="l" hint-placeholder-count="4">
             <div style="display: flex; gap: 10px; align-items: center"><span class="n" style="{{l.style}}">{{l.id}}</span><input type="text" value="{{l.text}}" onChange="{{l.set}}" aria-label="{{l.id}}"></div>
           </sc-for>
         </div>
         <sc-if value="{{sel.hasRel}}" hint-placeholder-val="{{true}}">
-          <div style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; background: #0B0D12; font-size: 12px"><span style="padding: 3px 8px; border-radius: 999px; background: #1B2030; color: #8B93A5; font-size: 10px">{{sel.relFrom}}</span><span style="color: #5E677A">→ 強める →</span><span style="padding: 3px 8px; border-radius: 999px; background: #1B2030; color: #F2F4F8; font-size: 10px">{{sel.relTo}}</span><a href="Relations.dc.html" style="margin-left: auto; font-size: 11px">関係図</a></div>
+          <div style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; background: #0B0D12; font-size: 12px"><span style="padding: 3px 8px; border-radius: 999px; background: #1B2030; color: #98A0B1; font-size: 11px">{{sel.relFrom}}</span><span style="color: #7F889B">→ 強める →</span><span style="padding: 3px 8px; border-radius: 999px; background: #1B2030; color: #F2F4F8; font-size: 11px">{{sel.relTo}}</span><a href="Relations.dc.html" style="margin-left: auto; font-size: 11px">関係図</a></div>
         </sc-if>
 
         <div style="display: flex; flex-direction: column; gap: 8px; padding-top: 10px; border-top: 1px solid #222734">
-          <span style="font-size: 11px; color: #8B93A5">三角分布 — レベル 3 での工数増加率 (%)。担当者ごとに入力</span>
-          <div style="display: grid; grid-template-columns: 70px repeat(3, minmax(0, 1fr)); gap: 8px; font-size: 10px; color: #5E677A"><span></span><span>最良</span><span>最頻</span><span>最悪</span></div>
+          <span style="font-size: 11px; color: #98A0B1">三角分布 — レベル 3 での工数増加率 (%)。担当者ごとに入力</span>
+          <div style="display: grid; grid-template-columns: 70px repeat(3, minmax(0, 1fr)); gap: 8px; font-size: 11px; color: #7F889B"><span></span><span>最良</span><span>最頻</span><span>最悪</span></div>
           <sc-for list="{{sel.rows}}" as="r" hint-placeholder-count="2">
             <div style="display: grid; grid-template-columns: 70px repeat(3, minmax(0, 1fr)); gap: 8px; align-items: center"><span style="{{r.nameStyle}}">{{r.name}}</span><input type="text" class="n" value="{{r.b}}" onChange="{{r.setB}}" aria-label="最良" style="padding: 7px 10px; font-size: 14px"><input type="text" class="n" value="{{r.l}}" onChange="{{r.setL}}" aria-label="最頻" style="padding: 7px 10px; font-size: 14px"><input type="text" class="n" value="{{r.w}}" onChange="{{r.setW}}" aria-label="最悪" style="padding: 7px 10px; font-size: 14px"></div>
           </sc-for>
@@ -120,17 +125,17 @@ a:focus-visible,button:focus-visible{outline:2px solid #D4FF4F;outline-offset:2p
             <polygon class="tri" points="{{ghost}}" fill="none" stroke="#3A4257" stroke-width="2" stroke-dasharray="5 4"></polygon>
             <polygon class="tri" points="{{poly}}" fill="{{accent}}" fill-opacity="0.16" stroke="{{accent}}" stroke-width="2.5" stroke-linejoin="round"></polygon>
             <circle class="tri" cx="{{peakX}}" cy="18" r="4" fill="{{accent}}"></circle>
-            <text x="20" y="112" font-size="11" fill="#5E677A" font-family="Space Grotesk, sans-serif">0%</text>
-            <text x="200" y="112" font-size="11" fill="#5E677A" font-family="Space Grotesk, sans-serif" text-anchor="middle">60%</text>
-            <text x="380" y="112" font-size="11" fill="#5E677A" font-family="Space Grotesk, sans-serif" text-anchor="end">120%</text>
+            <text x="20" y="112" font-size="11" fill="#7F889B" font-family="Space Grotesk, sans-serif">0%</text>
+            <text x="200" y="112" font-size="11" fill="#7F889B" font-family="Space Grotesk, sans-serif" text-anchor="middle">60%</text>
+            <text x="380" y="112" font-size="11" fill="#7F889B" font-family="Space Grotesk, sans-serif" text-anchor="end">120%</text>
           </svg>
-          <span style="font-size: 11px; color: #5E677A">実線は {{curName}}、点線は {{otherName}}。モデル構築で「平均」を選ぶと両者の平均を使います。</span>
+          <span style="font-size: 11px; color: #7F889B">実線は {{curName}}、点線は {{otherName}}。モデル構築で「平均」を選ぶと両者の平均を使います。</span>
         </div>
 
         <div style="display: flex; flex-wrap: wrap; gap: 8px; padding-top: 4px; align-items: center">
           <button type="button" class="btn" style="min-height: 42px; padding: 0 18px; border-radius: 10px; border: 0; background: {{accent}}; color: #0B0D12; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit">保存</button>
           <button type="button" class="btn" style="min-height: 42px; padding: 0 14px; border-radius: 10px; border: 1px solid #2A3040; background: transparent; color: #F2F4F8; font-size: 13px; font-weight: 500; cursor: pointer; font-family: inherit">元に戻す</button>
-          <span style="margin-left: auto; font-size: 11px; color: #5E677A">変更後はモデルの再構築が必要</span>
+          <span style="margin-left: auto; font-size: 11px; color: #7F889B">変更後はモデルの再構築が必要</span>
         </div>
       </aside>
     </section>
@@ -162,22 +167,22 @@ class Component extends DCLogic {
     const X = (v) => (20 + Math.min(120, Math.max(0, v)) / 120 * 360).toFixed(1);
     const poly = (t) => X(t[0]) + ',94 ' + X(t[1]) + ',18 ' + X(t[2]) + ',94';
     const catNames = ['すべて', '要件', '人・体制', '技術'];
-    const cats = catNames.map((l, i) => ({ label: l + (i === 0 ? ' ' + data.length : ' ' + data.filter((d) => d.cat === l).length), pick: () => this.setState({ cat: i }), style: { minHeight: '32px', padding: '0 12px', borderRadius: '999px', border: '0', cursor: 'pointer', fontFamily: 'inherit', fontSize: '12px', fontWeight: '500', background: st.cat === i ? '#1B2030' : 'transparent', color: st.cat === i ? '#F2F4F8' : '#8B93A5' } }));
+    const cats = catNames.map((l, i) => ({ label: l + (i === 0 ? ' ' + data.length : ' ' + data.filter((d) => d.cat === l).length), pick: () => this.setState({ cat: i }), style: { minHeight: '32px', padding: '0 12px', borderRadius: '999px', border: '0', cursor: 'pointer', fontFamily: 'inherit', fontSize: '12px', fontWeight: '500', background: st.cat === i ? '#1B2030' : 'transparent', color: st.cat === i ? '#F2F4F8' : '#98A0B1' } }));
     const factors = data.map((d, i) => ({ d, i })).filter((x) => st.cat === 0 || x.d.cat === catNames[st.cat]).map((x, k) => {
       const d = x.d, i = x.i, on = i === st.sel, t = triOf(d, ex);
       return {
         num: String(i + 1).padStart(2, '0'), name: d.name, meta: d.cat + ' ・ ' + d.meta, tri: '+' + t[0] + ' / +' + t[1] + ' / +' + t[2] + '%',
-        kindShort: d.kind === '直接要因' ? '直接' : '間接', kindStyle: { padding: '2px 7px', borderRadius: '999px', fontSize: '10px', fontWeight: '700', background: d.kind === '直接要因' ? '#1B2030' : '#1F2A4A', color: d.kind === '直接要因' ? '#8B93A5' : '#9DB4FF' },
+        kindShort: d.kind === '直接要因' ? '直接' : '間接', kindStyle: { padding: '2px 7px', borderRadius: '999px', fontSize: '11px', fontWeight: '700', background: d.kind === '直接要因' ? '#1B2030' : '#1F2A4A', color: d.kind === '直接要因' ? '#98A0B1' : '#9DB4FF' },
         pick: () => this.setState({ sel: i }),
         style: { display: 'grid', gridTemplateColumns: '36px minmax(0, 1fr) 90px 150px', gap: '16px', alignItems: 'center', padding: '14px 18px', width: '100%', textAlign: 'left', color: '#F2F4F8', fontFamily: 'inherit', border: on ? '1px solid ' + accent : '1px solid #222734', background: on ? '#171B25' : '#13161E', animationDelay: (k * 50) + 'ms' },
-        numStyle: { color: on ? accent : '#5E677A', fontSize: '14px' },
+        numStyle: { color: on ? accent : '#7F889B', fontSize: '14px' },
         peakStyle: { width: '20%', height: Math.round(40 + t[1] / 120 * 60) + '%', background: on ? accent : '#6E9BFF', borderRadius: '2px', display: 'inline-block' }
       };
     });
-    const experts = names.map((l, i) => ({ label: l, pick: () => this.setState({ expert: i }), style: { minHeight: '28px', padding: '0 10px', borderRadius: '999px', border: '0', cursor: 'pointer', fontFamily: 'inherit', fontSize: '11px', fontWeight: '700', background: ex === i ? accent : 'transparent', color: ex === i ? '#0B0D12' : '#8B93A5' } }));
+    const experts = names.map((l, i) => ({ label: l, pick: () => this.setState({ expert: i }), style: { minHeight: '28px', padding: '0 10px', borderRadius: '999px', border: '0', cursor: 'pointer', fontFamily: 'inherit', fontSize: '11px', fontWeight: '700', background: ex === i ? accent : 'transparent', color: ex === i ? '#0B0D12' : '#98A0B1' } }));
     const num = (v) => { const x = parseFloat(String(v).replace(/[^0-9.]/g, '')); return isNaN(x) ? 0 : x; };
     const rows = [0, 1].map((e) => ({
-      name: names[e], nameStyle: { fontSize: '12px', fontWeight: '500', color: ex === e || ex === 2 ? '#F2F4F8' : '#5E677A' },
+      name: names[e], nameStyle: { fontSize: '12px', fontWeight: '500', color: ex === e || ex === 2 ? '#F2F4F8' : '#7F889B' },
       b: String(sel.tri[e][0]), l: String(sel.tri[e][1]), w: String(sel.tri[e][2]),
       setB: (ev) => this.upd((d) => { d.tri[e][0] = num(ev.target.value); return d; }),
       setL: (ev) => this.upd((d) => { d.tri[e][1] = num(ev.target.value); return d; }),
@@ -191,7 +196,7 @@ class Component extends DCLogic {
         hasRel: sel.relTo !== undefined || sel.relFrom !== undefined,
         relFrom: sel.relTo !== undefined ? data[sel.relTo].name + ' (間接)' : sel.name + ' (間接)',
         relTo: sel.relTo !== undefined ? sel.name : data[sel.relFrom === undefined ? 0 : sel.relFrom].name,
-        levels: sel.levels.map((t, i) => ({ id: 'L' + i, text: t, set: (ev) => this.upd((d) => { d.levels[i] = ev.target.value; return d; }), style: { width: '30px', height: '30px', borderRadius: '15px', background: i === 3 ? '#FF7A59' : '#1B2030', color: i === 3 ? '#0B0D12' : '#8B93A5', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', flexShrink: '0' } })),
+        levels: sel.levels.map((t, i) => ({ id: 'L' + i, text: t, set: (ev) => this.upd((d) => { d.levels[i] = ev.target.value; return d; }), style: { width: '30px', height: '30px', borderRadius: '15px', background: i === 3 ? '#FF7A59' : '#1B2030', color: i === 3 ? '#0B0D12' : '#98A0B1', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', flexShrink: '0' } })),
         rows
       },
       poly: poly(cur), ghost: poly(other), peakX: X(cur[1]), curName: names[ex], otherName: names[ex === 0 ? 1 : 0]

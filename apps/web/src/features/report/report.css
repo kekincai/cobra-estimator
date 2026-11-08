@@ -54,7 +54,7 @@
 .rp-kv > span:first-child { color: var(--color-ink-sub); white-space: nowrap; }
 .rp-kv > span:last-child { text-align: right; }
 .rp-bar { height: 8px; border-radius: 4px; background: var(--color-paper-track); position: relative; overflow: hidden; }
-.rp-bar > i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--color-lime); border-right: 2px solid var(--color-ink); }
+.rp-bar > i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--color-lime); border-right: 2px solid var(--color-ink); } /* impeccable-disable-line side-tab -- 横棒グラフの塗りの終端線で、カードの片側アクセントではない */
 .rp-toolbar {
   position: sticky;
   top: 0;
@@ -134,4 +134,8 @@
   .rp-basis { font-size: 9pt !important; }
   .rp-lever { padding: 6px 10px !important; }
   .rp-lever > span { font-size: 9pt !important; }
+  /* 前提メモの行数が増えても 2 ページに収まるよう、2 ページ目の余白を詰めて前提メモの枠を空ける（行数の上限は memoFit.ts） */
+  .rp-page { gap: 10px; }
+  .rp-results td { padding: 3px 6px; }
+  .rp-memo { font-size: 9pt !important; line-height: 1.45; gap: 1px !important; }
 }

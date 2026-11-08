@@ -35,7 +35,8 @@ export function EstimateTile({ links, gen, prev, prevP50, result, scale, budget,
   // 差は「表示している丸めた値」どうしで引く（43.9 − 33.5 → +10.4）
   const delta = prevP50 != null ? displayDelta(p50, prevP50) : null;
   const up = delta != null && delta > 0;
-  const overhead = p50 - result.nominal;
+  // 上乗せ = 表示値どうしの差（見積り画面の「名目 + 上乗せ = 推定」と同じ値にする）
+  const overhead = displayDelta(p50, result.nominal);
   const runsDone = Math.round(progress * gen.runs);
 
   return (

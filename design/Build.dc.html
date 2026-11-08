@@ -6,6 +6,11 @@
 <script src="./support.js"></script>
 </head>
 <body>
+<!--
+  実装メモ（PR #15 以降。設計稿に描いていない振る舞い。一覧と経緯は design/README.md）
+  - 版の切り替えは「見積りに使う」→ 確認ダイアログ（現在の版と新しい版の α・MMRE の比較、影響範囲）→ 成功後「v2 を見積りに使う版にしました（それまでは v3）」と「元に戻す (v3)」を 15 秒表示。実績の「採用 / 除外」と区別するため、版の側では「採用」を使わない。
+  - 構築前に「目安 約 2 秒」、完了後に「計算 0.18 s」。構築中は「キャンセル」を出し、右側は前の結果を淡く残す。
+-->
 <x-dc>
 <helmet>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Space+Grotesk:wght@500;700&display=swap">
@@ -16,7 +21,7 @@ a{color:#D4FF4F}a:hover{color:#E6FF8A}
 .tile{background:#13161E;border:1px solid #222734;border-radius:18px;box-sizing:border-box;animation:rise .7s cubic-bezier(.2,.7,.2,1) backwards;transition:border-color .25s}
 .tile:hover{border-color:#3A4257}
 @keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
-.nav{display:flex;align-items:center;gap:12px;min-height:44px;padding:0 14px;border-radius:12px;color:#8B93A5;text-decoration:none;font-size:13px;font-weight:500;transition:background .2s,color .2s}
+.nav{display:flex;align-items:center;gap:12px;min-height:44px;padding:0 14px;border-radius:12px;color:#98A0B1;text-decoration:none;font-size:13px;font-weight:500;transition:background .2s,color .2s}
 .nav:hover{background:#171B25;color:#F2F4F8}
 .nav.on{background:#1B2030;color:#F2F4F8}
 .dot{transition:top .7s cubic-bezier(.2,.7,.2,1),opacity .5s,background .3s}
@@ -41,12 +46,12 @@ a:focus-visible,button:focus-visible,select:focus-visible{outline:2px solid #D4F
       <span class="n" style="font-size: 18px">Estima</span>
     </a>
     <a href="Main.dc.html" class="nav"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8" rx="2"></rect><rect x="13" y="3" width="8" height="5" rx="2"></rect><rect x="13" y="11" width="8" height="10" rx="2"></rect><rect x="3" y="14" width="8" height="7" rx="2"></rect></svg>ダッシュボード</a>
-    <span style="font-size: 11px; color: #5E677A; padding: 16px 14px 6px; letter-spacing: 0.06em">MODEL</span>
+    <span style="font-size: 11px; color: #7F889B; padding: 16px 14px 6px; letter-spacing: 0.06em">MODEL</span>
     <a href="Factors.dc.html" class="nav"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h10M4 18h6"></path></svg>変動要因</a>
     <a href="ProjectData.dc.html" class="nav"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="8" ry="3"></ellipse><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"></path></svg>実績データ</a>
     <a href="Build.dc.html" aria-current="page" class="nav on"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"></path></svg>モデル構築</a>
     <a href="Transfer.dc.html" class="nav"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"></path></svg>取り込み / 書き出し</a>
-    <span style="font-size: 11px; color: #5E677A; padding: 16px 14px 6px; letter-spacing: 0.06em">ESTIMATE</span>
+    <span style="font-size: 11px; color: #7F889B; padding: 16px 14px 6px; letter-spacing: 0.06em">ESTIMATE</span>
     <a href="Estimate.dc.html" class="nav"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="3"></rect><path d="M8 7h8M8 12h3M13 12h3M8 17h3M13 17h3"></path></svg>工数見積り</a>
     <a href="Risk.dc.html" class="nav"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 17H3z"></path><path d="M12 10v4M12 17.5h.01"></path></svg>リスク</a>
     <a href="Report.dc.html" class="nav"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6M16 13H8M16 17H8"></path></svg>レポート</a>
@@ -57,13 +62,13 @@ a:focus-visible,button:focus-visible,select:focus-visible{outline:2px solid #D4F
   <main style="flex: 999 1 560px; min-width: 0; padding: 24px 32px 40px; box-sizing: border-box; display: flex; flex-direction: column; gap: 20px">
     <header style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px">
       <div style="display: flex; flex-direction: column; gap: 6px">
-        <span style="display: inline-flex; align-items: center; gap: 8px; font-size: 11px; color: #8B93A5"><span style="width: 6px; height: 6px; border-radius: 3px; background: #5EEAD4"></span>社内Web系開発 標準モデル ・ 採用中 v3</span>
+        <span style="display: inline-flex; align-items: center; gap: 8px; font-size: 11px; color: #98A0B1"><span style="width: 6px; height: 6px; border-radius: 3px; background: #5EEAD4"></span>社内Web系開発 標準モデル ・ 見積りに使用中 v3</span>
         <h1 class="n" style="margin: 0; font-size: 30px; line-height: 1.1">モデル構築</h1>
-        <span style="font-size: 12px; color: #8B93A5">実績データと三角分布から α (名目生産性) を推定し、1 件抜き交差検証で精度を確かめます。</span>
+        <span style="font-size: 12px; color: #98A0B1">実績データと三角分布から α (名目生産性) を推定し、1 件抜き交差検証で精度を確かめます。</span>
       </div>
       <div style="display: flex; gap: 6px">
-        <a href="Factors.dc.html" style="display: inline-flex; align-items: center; min-height: 30px; padding: 0 12px; border-radius: 999px; color: #8B93A5; font-size: 12px; font-weight: 500; text-decoration: none">要因</a>
-        <a href="ProjectData.dc.html" style="display: inline-flex; align-items: center; min-height: 30px; padding: 0 12px; border-radius: 999px; color: #8B93A5; font-size: 12px; font-weight: 500; text-decoration: none">実績</a>
+        <a href="Factors.dc.html" style="display: inline-flex; align-items: center; min-height: 30px; padding: 0 12px; border-radius: 999px; color: #98A0B1; font-size: 12px; font-weight: 500; text-decoration: none">要因</a>
+        <a href="ProjectData.dc.html" style="display: inline-flex; align-items: center; min-height: 30px; padding: 0 12px; border-radius: 999px; color: #98A0B1; font-size: 12px; font-weight: 500; text-decoration: none">実績</a>
         <span style="display: inline-flex; align-items: center; min-height: 30px; padding: 0 12px; border-radius: 999px; background: #1B2030; color: #F2F4F8; font-size: 12px; font-weight: 500">構築</span>
       </div>
     </header>
@@ -72,18 +77,18 @@ a:focus-visible,button:focus-visible,select:focus-visible{outline:2px solid #D4F
       <div style="grid-column: span 4; display: flex; flex-direction: column; gap: 16px; min-width: 0">
         <form class="tile" style="padding: 22px 24px; display: flex; flex-direction: column; gap: 14px; animation-delay: 0ms">
           <span style="font-size: 13px; font-weight: 500">構築条件</span>
-          <div style="display: flex; flex-direction: column; gap: 6px"><label for="b-group" style="font-size: 11px; color: #8B93A5">対象グループ</label><select id="b-group"><option>グループ A — 11 件採用 / 1 件除外</option><option>グループ B — 6 件</option><option>すべて — 17 件</option></select></div>
+          <div style="display: flex; flex-direction: column; gap: 6px"><label for="b-group" style="font-size: 11px; color: #98A0B1">対象グループ</label><select id="b-group"><option>グループ A — 11 件採用 / 1 件除外</option><option>グループ B — 6 件</option><option>すべて — 17 件</option></select></div>
           <div style="display: flex; flex-direction: column; gap: 6px">
-            <span style="font-size: 11px; color: #8B93A5">使用する三角分布</span>
+            <span style="font-size: 11px; color: #98A0B1">使用する三角分布</span>
             <div style="display: inline-flex; background: #0B0D12; border-radius: 999px; padding: 3px; gap: 2px; align-self: flex-start"><sc-for list="{{experts}}" as="x" hint-placeholder-count="3"><button type="button" onClick="{{x.pick}}" style="{{x.style}}">{{x.label}}</button></sc-for></div>
           </div>
           <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
-            <div style="display: flex; flex-direction: column; gap: 4px"><span style="font-size: 11px; color: #8B93A5">シミュレーション回数</span><span class="n" style="font-size: 18px; display: flex; align-items: baseline; gap: 8px">10,000 <a href="SimSettings.dc.html" style="font-size: 11px; font-weight: 500; letter-spacing: 0">設定</a></span></div>
-            <div style="display: flex; flex-direction: column; gap: 4px"><span style="font-size: 11px; color: #8B93A5">乱数</span><span style="font-size: 13px">固定 (再現可能)</span></div>
+            <div style="display: flex; flex-direction: column; gap: 4px"><span style="font-size: 11px; color: #98A0B1">シミュレーション回数</span><span class="n" style="font-size: 18px; display: flex; align-items: baseline; gap: 8px">10,000 <a href="SimSettings.dc.html" style="font-size: 11px; font-weight: 500; letter-spacing: 0">設定</a></span></div>
+            <div style="display: flex; flex-direction: column; gap: 4px"><span style="font-size: 11px; color: #98A0B1">乱数</span><span style="font-size: 13px">固定 (再現可能)</span></div>
           </div>
 
           <div style="display: flex; flex-direction: column; gap: 6px; padding-top: 10px; border-top: 1px solid #222734">
-            <span style="font-size: 11px; color: #8B93A5">構築前チェック</span>
+            <span style="font-size: 11px; color: #98A0B1">構築前チェック</span>
             <span style="display: flex; align-items: center; gap: 8px; font-size: 12px"><span style="width: 8px; height: 8px; border-radius: 4px; background: #7EE2B8"></span>要因 8 件すべてにレベル定義と三角分布がある</span>
             <span style="display: flex; align-items: center; gap: 8px; font-size: 12px"><span style="width: 8px; height: 8px; border-radius: 4px; background: #7EE2B8"></span>採用実績 11 件 (推奨 10 件以上)</span>
             <span style="display: flex; align-items: center; gap: 8px; font-size: 12px"><span style="width: 8px; height: 8px; border-radius: 4px; background: #FFB020"></span><span style="color: #FFD48A">PJ-007 が除外のまま — 不整合を確認してください</span></span>
@@ -91,7 +96,7 @@ a:focus-visible,button:focus-visible,select:focus-visible{outline:2px solid #D4F
 
           <div style="display: flex; flex-direction: column; gap: 8px; padding-top: 10px; border-top: 1px solid #222734">
             <sc-for list="{{stages}}" as="s" hint-placeholder-count="3">
-              <div style="display: flex; align-items: center; gap: 10px"><span class="stg" style="{{s.dot}}">{{s.mark}}</span><span style="{{s.text}}">{{s.label}}</span><span class="n" style="margin-left: auto; font-size: 11px; color: #5E677A">{{s.meta}}</span></div>
+              <div style="display: flex; align-items: center; gap: 10px"><span class="stg" style="{{s.dot}}">{{s.mark}}</span><span style="{{s.text}}">{{s.label}}</span><span class="n" style="margin-left: auto; font-size: 11px; color: #7F889B">{{s.meta}}</span></div>
             </sc-for>
             <div style="height: 6px; border-radius: 3px; background: #1B2030; overflow: hidden"><div class="fill" style="{{progressStyle}}"></div></div>
           </div>
@@ -100,18 +105,18 @@ a:focus-visible,button:focus-visible,select:focus-visible{outline:2px solid #D4F
             <sc-if value="{{idle}}" hint-placeholder-val="{{true}}"><span>モデルを構築する</span></sc-if>
             <sc-if value="{{running}}" hint-placeholder-val="{{false}}"><svg class="spin" aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0B0D12" stroke-width="3" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-6.2-8.6"></path></svg><span>構築中 {{progress}}%</span></sc-if>
           </button>
-          <div style="display: flex; justify-content: space-between; font-size: 11px; color: #8B93A5"><span>前回 {{lastRun}}</span><span>所要 <span class="n" style="color: #F2F4F8">{{elapsed}}</span></span></div>
+          <div style="display: flex; justify-content: space-between; font-size: 11px; color: #98A0B1"><span>前回 {{lastRun}}</span><span>計算 <span class="n" style="color: #F2F4F8">{{elapsed}}</span></span></div>
         </form>
 
         <div class="tile" style="padding: 20px 22px; display: flex; flex-direction: column; gap: 8px; animation-delay: 80ms">
-          <div style="display: flex; align-items: center; justify-content: space-between"><span style="font-size: 13px; font-weight: 500">モデルのバージョン</span><span style="font-size: 11px; color: #5E677A">構築するたびに追加</span></div>
+          <div style="display: flex; align-items: center; justify-content: space-between"><span style="font-size: 13px; font-weight: 500">モデルのバージョン</span><span style="font-size: 11px; color: #7F889B">構築するたびに追加</span></div>
           <sc-for list="{{versions}}" as="v" hint-placeholder-count="3">
             <div class="row" style="{{v.style}}">
               <span class="n" style="{{v.idStyle}}">{{v.id}}</span>
-              <span style="display: flex; flex-direction: column; gap: 2px; min-width: 0"><span style="font-size: 12px; font-weight: 500">{{v.title}}</span><span style="font-size: 11px; color: #8B93A5">{{v.meta}}</span></span>
-              <span style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px"><span class="n" style="font-size: 14px">{{v.alpha}}</span><span style="font-size: 10px; color: #8B93A5">MMRE {{v.mmre}}</span></span>
-              <sc-if value="{{v.active}}" hint-placeholder-val="{{true}}"><span style="padding: 3px 8px; border-radius: 999px; background: #15241C; color: #7EE2B8; font-size: 10px; font-weight: 700; white-space: nowrap">採用中</span></sc-if>
-              <sc-if value="{{v.inactive}}" hint-placeholder-val="{{false}}"><button type="button" class="btn" style="min-height: 26px; padding: 0 10px; border-radius: 999px; border: 1px solid #2A3040; background: transparent; color: #8B93A5; font-size: 10px; cursor: pointer; font-family: inherit; white-space: nowrap">採用する</button></sc-if>
+              <span style="display: flex; flex-direction: column; gap: 2px; min-width: 0"><span style="font-size: 12px; font-weight: 500">{{v.title}}</span><span style="font-size: 11px; color: #98A0B1">{{v.meta}}</span></span>
+              <span style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px"><span class="n" style="font-size: 14px">{{v.alpha}}</span><span style="font-size: 11px; color: #98A0B1">MMRE {{v.mmre}}</span></span>
+              <sc-if value="{{v.active}}" hint-placeholder-val="{{true}}"><span style="display: inline-flex; align-items: center; min-height: 32px; padding: 0 12px; border-radius: 999px; background: #15241C; color: #7EE2B8; font-size: 12px; font-weight: 700; white-space: nowrap">見積りに使用中</span></sc-if>
+              <sc-if value="{{v.inactive}}" hint-placeholder-val="{{false}}"><button type="button" class="btn" style="min-height: 32px; padding: 0 10px; border-radius: 999px; border: 1px solid #2A3040; background: transparent; color: #98A0B1; font-size: 12px; cursor: pointer; font-family: inherit; white-space: nowrap">見積りに使う</button></sc-if>
             </div>
           </sc-for>
         </div>
@@ -120,32 +125,32 @@ a:focus-visible,button:focus-visible,select:focus-visible{outline:2px solid #D4F
       <div style="grid-column: span 8; display: flex; flex-direction: column; gap: 16px; min-width: 0">
         <div class="tile" style="padding: 24px 28px; display: flex; flex-wrap: wrap; align-items: center; gap: 24px; animation-delay: 100ms">
           <div style="display: flex; flex-direction: column; gap: 6px; flex: 1 1 340px">
-            <span style="font-size: 12px; color: #8B93A5">工数算定式</span>
+            <span style="font-size: 12px; color: #98A0B1">工数算定式</span>
             <span class="n" style="font-size: 30px; line-height: 1.2">工数 = <span style="color: {{accent}}">{{alphaShown}}</span> × 規模 × (1 + ΣCO)</span>
-            <span class="rev" style="font-size: 12px; color: #8B93A5; {{revStyle}}">α = {{alpha}} 人月 / FP ・ 95% CI {{ciLo}} – {{ciHi}} ・ 前回 v2 比 <span style="{{dAlphaStyle}}">{{dAlpha}}</span></span>
+            <span class="rev" style="font-size: 12px; color: #98A0B1; {{revStyle}}">α = {{alpha}} 人月 / FP ・ 95% CI {{ciLo}} – {{ciHi}} ・ 前回 v2 比 <span style="{{dAlphaStyle}}">{{dAlpha}}</span></span>
           </div>
           <div style="display: flex; gap: 24px">
-            <div class="rev" style="display: flex; flex-direction: column; gap: 2px; {{revStyle}}"><span style="font-size: 12px; color: #8B93A5">MMRE</span><span class="n" style="font-size: 34px">{{mmre}}%</span><span style="font-size: 11px; {{dMmreStyle}}">{{dMmre}}</span></div>
-            <div class="rev" style="display: flex; flex-direction: column; gap: 2px; {{revStyle}}"><span style="font-size: 12px; color: #8B93A5">PRED(25)</span><span class="n" style="font-size: 34px">{{pred}}%</span><span style="font-size: 11px; color: #8B93A5">{{predN}} / 11 件</span></div>
-            <div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 12px; color: #8B93A5">採用件数</span><span class="n" style="font-size: 34px">11</span><span style="font-size: 11px; color: #8B93A5">除外 1</span></div>
+            <div class="rev" style="display: flex; flex-direction: column; gap: 2px; {{revStyle}}"><span style="font-size: 12px; color: #98A0B1">MMRE</span><span class="n" style="font-size: 34px">{{mmre}}%</span><span style="font-size: 11px; {{dMmreStyle}}">{{dMmre}}</span></div>
+            <div class="rev" style="display: flex; flex-direction: column; gap: 2px; {{revStyle}}"><span style="font-size: 12px; color: #98A0B1">PRED(25)</span><span class="n" style="font-size: 34px">{{pred}}%</span><span style="font-size: 11px; color: #98A0B1">{{predN}} / 11 件</span></div>
+            <div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 12px; color: #98A0B1">採用件数</span><span class="n" style="font-size: 34px">11</span><span style="font-size: 11px; color: #98A0B1">除外 1</span></div>
           </div>
         </div>
 
         <div class="tile" style="padding: 22px 26px; display: flex; flex-direction: column; gap: 12px; animation-delay: 200ms">
           <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px">
             <span style="font-size: 13px; font-weight: 500">交差検証 — 実績に対する推定の誤差 (1 件抜き)</span>
-            <span style="display: flex; gap: 14px; font-size: 11px; color: #8B93A5"><span><span style="display: inline-block; width: 10px; height: 10px; border-radius: 5px; background: {{accent}}; vertical-align: -1px; margin-right: 5px"></span>±25% 以内</span><span><span style="display: inline-block; width: 10px; height: 10px; border-radius: 5px; background: #FF7A59; vertical-align: -1px; margin-right: 5px"></span>帯の外</span></span>
+            <span style="display: flex; gap: 14px; font-size: 11px; color: #98A0B1"><span><span style="display: inline-block; width: 10px; height: 10px; border-radius: 5px; background: {{accent}}; vertical-align: -1px; margin-right: 5px"></span>±25% 以内</span><span><span style="display: inline-block; width: 10px; height: 10px; border-radius: 5px; background: #FF7A59; vertical-align: -1px; margin-right: 5px"></span>帯の外</span></span>
           </div>
           <div style="display: grid; grid-template-columns: repeat(11, minmax(0, 1fr)); gap: 10px; height: 176px; position: relative; padding-top: 8px">
             <div style="position: absolute; left: 0; right: 0; top: 44px; height: 64px; background: #171B25; border-radius: 6px"></div>
             <div style="position: absolute; left: 0; right: 0; top: 76px; height: 1px; background: #3A4257"></div>
-            <span style="position: absolute; right: 4px; top: 30px; font-size: 10px; color: #5E677A; font-family: 'Space Grotesk', sans-serif">+25%</span>
-            <span style="position: absolute; right: 4px; top: 110px; font-size: 10px; color: #5E677A; font-family: 'Space Grotesk', sans-serif">−25%</span>
+            <span style="position: absolute; right: 4px; top: 30px; font-size: 11px; color: #7F889B; font-family: 'Space Grotesk', sans-serif">+25%</span>
+            <span style="position: absolute; right: 4px; top: 110px; font-size: 11px; color: #7F889B; font-family: 'Space Grotesk', sans-serif">−25%</span>
             <sc-for list="{{dots}}" as="d" hint-placeholder-count="11">
-              <div style="position: relative; display: flex; flex-direction: column; align-items: center"><span class="lbl" style="{{d.lblStyle}}">{{d.err}}</span><span class="dot" style="{{d.style}}"></span><span style="margin-top: 140px; font-size: 10px; color: #5E677A; font-family: 'Space Grotesk', sans-serif">{{d.id}}</span></div>
+              <div style="position: relative; display: flex; flex-direction: column; align-items: center"><span class="lbl" style="{{d.lblStyle}}">{{d.err}}</span><span class="dot" style="{{d.style}}"></span><span style="margin-top: 140px; font-size: 11px; color: #7F889B; font-family: 'Space Grotesk', sans-serif">{{d.id}}</span></div>
             </sc-for>
           </div>
-          <div style="display: flex; justify-content: space-between; font-size: 11px; color: #5E677A"><span>上 = 過大見積り</span><span>PJ-005 と PJ-010 が帯の外。実績データのレベル値を確認する候補です。</span><span>下 = 過小見積り</span></div>
+          <div style="display: flex; justify-content: space-between; font-size: 11px; color: #7F889B"><span>上 = 過大見積り</span><span>PJ-005 と PJ-010 が帯の外。実績データのレベル値を確認する候補です。</span><span>下 = 過小見積り</span></div>
         </div>
 
         <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px">
@@ -159,7 +164,7 @@ a:focus-visible,button:focus-visible,select:focus-visible{outline:2px solid #D4F
             <span style="font-size: 13px; font-weight: 500">このモデルで</span>
             <a href="Estimate.dc.html" class="btn" style="display: flex; align-items: center; justify-content: space-between; min-height: 42px; padding: 0 14px; border-radius: 10px; background: {{accent}}; color: #0B0D12; text-decoration: none; font-size: 13px; font-weight: 700"><span>見積りをする</span><span aria-hidden="true">→</span></a>
             <a href="Main.dc.html" class="btn" style="display: flex; align-items: center; justify-content: space-between; min-height: 42px; padding: 0 14px; border-radius: 10px; background: #1B2030; color: #F2F4F8; text-decoration: none; font-size: 13px; font-weight: 500"><span>パラメータを書き出す (JSON)</span><span aria-hidden="true">→</span></a>
-            <span style="font-size: 11px; color: #5E677A">実績データを含めるかは書き出し時に選べます。</span>
+            <span style="font-size: 11px; color: #7F889B">実績データを含めるかは書き出し時に選べます。</span>
           </div>
         </div>
       </div>
@@ -211,7 +216,7 @@ class Component extends DCLogic {
       return {
         id: this.ids[i], err: (v > 0 ? '+' : '') + v + '%',
         style: { position: 'absolute', width: '14px', height: '14px', borderRadius: '7px', background: out ? '#FF7A59' : accent, top: (show ? 76 - v * 1.28 : -20) + 'px', opacity: show ? 1 : 0, transitionDelay: (i * 50) + 'ms' },
-        lblStyle: { position: 'absolute', top: (show ? 76 - v * 1.28 - 18 : -40) + 'px', fontSize: '10px', color: out ? '#FF9F84' : '#8B93A5', fontFamily: 'Space Grotesk, sans-serif', fontWeight: '700', opacity: show && (out || true) ? 1 : 0, transitionDelay: (i * 50 + 300) + 'ms' }
+        lblStyle: { position: 'absolute', top: (show ? 76 - v * 1.28 - 18 : -40) + 'px', fontSize: '11px', color: out ? '#FF9F84' : '#98A0B1', fontFamily: 'Space Grotesk, sans-serif', fontWeight: '700', opacity: show && (out || true) ? 1 : 0, transitionDelay: (i * 50 + 300) + 'ms' }
       };
     });
     const p = st.progress;
@@ -223,19 +228,19 @@ class Component extends DCLogic {
       const frac = act ? Math.min(1, (p - startP) / (endP - startP)) : doneS ? 1 : 0;
       return {
         label: d[0], mark: doneS ? '✓' : act ? '' : '', meta: act ? Math.round(frac * d[1]).toLocaleString('en-US') + ' / ' + d[1].toLocaleString('en-US') : doneS ? '完了' : '待機',
-        dot: { width: '18px', height: '18px', borderRadius: '9px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: '700', flexShrink: '0', background: doneS ? accent : act ? '#1B2030' : '#0B0D12', color: '#0B0D12', border: act ? '2px solid ' + accent : '1px solid #2A3040' },
-        text: { fontSize: '12px', color: doneS || act ? '#F2F4F8' : '#5E677A' }
+        dot: { width: '18px', height: '18px', borderRadius: '9px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: '700', flexShrink: '0', background: doneS ? accent : act ? '#1B2030' : '#0B0D12', color: '#0B0D12', border: act ? '2px solid ' + accent : '1px solid #2A3040' },
+        text: { fontSize: '12px', color: doneS || act ? '#F2F4F8' : '#7F889B' }
       };
     });
     const vers = [
       { id: 'v3', title: '平均の三角分布 ・ グループ A', meta: '11/5 ・ 11 件', alpha: '0.0210', mmre: '18.4%', active: true },
       { id: 'v2', title: 'Y.T. の三角分布 ・ グループ A', meta: '10/28 ・ 11 件', alpha: '0.0198', mmre: '19.8%' },
       { id: 'v1', title: 'S.T. の三角分布 ・ 初回', meta: '10/14 ・ 9 件', alpha: '0.0232', mmre: '24.1%' }
-    ].map((v) => ({ id: v.id, title: v.title, meta: v.meta, alpha: v.alpha, mmre: v.mmre, active: !!v.active, inactive: !v.active, style: { display: 'grid', gridTemplateColumns: '30px minmax(0, 1fr) auto auto', gap: '10px', alignItems: 'center', padding: '8px 10px', borderRadius: '10px', border: v.active ? '1px solid #2F3747' : '1px solid transparent', background: v.active ? '#1B2030' : 'transparent' }, idStyle: { fontSize: '12px', color: v.active ? accent : '#5E677A' } }));
+    ].map((v) => ({ id: v.id, title: v.title, meta: v.meta, alpha: v.alpha, mmre: v.mmre, active: !!v.active, inactive: !v.active, style: { display: 'grid', gridTemplateColumns: '30px minmax(0, 1fr) auto auto', gap: '10px', alignItems: 'center', padding: '8px 10px', borderRadius: '10px', border: v.active ? '1px solid #2F3747' : '1px solid transparent', background: v.active ? '#1B2030' : 'transparent' }, idStyle: { fontSize: '12px', color: v.active ? accent : '#7F889B' } }));
     const dA = this.alphas[e] - 0.0198, dM = this.mmres[e] - 19.8;
     return {
       accent,
-      experts: names.map((l, i) => ({ label: l, pick: () => { this.setState({ expert: i }); this.countTo(this.alphas[i]); }, style: { minHeight: '32px', padding: '0 12px', borderRadius: '999px', border: '0', cursor: 'pointer', fontFamily: 'inherit', fontSize: '12px', fontWeight: '700', background: e === i ? accent : 'transparent', color: e === i ? '#0B0D12' : '#8B93A5' } })),
+      experts: names.map((l, i) => ({ label: l, pick: () => { this.setState({ expert: i }); this.countTo(this.alphas[i]); }, style: { minHeight: '32px', padding: '0 12px', borderRadius: '999px', border: '0', cursor: 'pointer', fontFamily: 'inherit', fontSize: '12px', fontWeight: '700', background: e === i ? accent : 'transparent', color: e === i ? '#0B0D12' : '#98A0B1' } })),
       alphaShown: show ? st.shownAlpha.toFixed(4) : '—', alpha: this.alphas[e].toFixed(4), ciLo: (this.alphas[e] * 0.886).toFixed(4), ciHi: (this.alphas[e] * 1.128).toFixed(4),
       dAlpha: (dA >= 0 ? '+' : '') + dA.toFixed(4), dAlphaStyle: 'color: ' + (dA >= 0 ? '#FF9F84' : '#7EE2B8'),
       mmre: show ? this.mmres[e].toFixed(1) : '—', dMmre: (dM >= 0 ? '+' : '') + dM.toFixed(1) + ' pt vs v2', dMmreStyle: 'color: ' + (dM > 0 ? '#FF9F84' : '#7EE2B8'),

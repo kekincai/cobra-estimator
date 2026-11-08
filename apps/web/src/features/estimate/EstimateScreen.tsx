@@ -559,6 +559,7 @@ function EstimateEditor({
                 p80={p80}
                 p95={p95}
                 reference={prev && base ? { value: prev.p50, label: `保存済み ${base.label} ${fmt1(prev.p50)}` } : null}
+                basis={prev?.pct ? [prev.pct[20], prev.pct[95]] : undefined}
               />
             ) : (
               !previewFailed && <div className="h-[46px]" />

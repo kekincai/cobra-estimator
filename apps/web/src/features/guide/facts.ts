@@ -100,3 +100,42 @@ export function formulaStart(alpha: unknown, sizeFP: unknown, scoExpected: unkno
     sco: clamp(Math.round(scoExpected * 100), 0, 150),
   };
 }
+
+/** 業務フロー画面に出す「いまのモデル」の事実。読み込み中・失敗は null（画面は数値なしの文言にする） */
+export interface FlowFacts {
+  /** 三角分布を付けた専門家（初出順。例 ['S.T.', 'Y.T.']） */
+  experts: string[];
+  /** 実績のグループ ID（例 ['A', 'B']） */
+  groups: string[];
+  /** 見積りに使用中の版で採用した実績の件数（版がなければ null） */
+  adoptedN: number | null;
+  /** 残っている版の範囲（版がなければ null） */
+  versions: { first: number; last: number } | null;
+}
+
+interface FlowFactsSource {
+  factors?: readonly { triangles?: readonly { expert?: unknown }[] | null }[] | null;
+  groups?: readonly { id?: unknown }[] | null;
+  versions?: readonly { version?: unknown }[] | null;
+  activeVersion?: { n?: unknown } | null;
+}
+
+export function flowFacts(b: FlowFactsSource | null | undefined): FlowFacts | null {
+  if (!b || typeof b !== 'object') return null;
+  const experts: string[] = [];
+  for (const f of b.factors ?? []) {
+    for (const t of f?.triangles ?? []) {
+      const x = typeof t?.expert === 'string' ? t.expert.trim() : '';
+      if (x && !experts.includes(x)) experts.push(x);
+    }
+  }
+  const groups = (b.groups ?? []).map((g) => g?.id).filter((id): id is string => typeof id === 'string' && id !== '');
+  const vs = (b.versions ?? []).map((v) => v?.version).filter((v): v is number => finite(v) && Number.isInteger(v) && v > 0);
+  const n = b.activeVersion?.n;
+  return {
+    experts,
+    groups,
+    adoptedN: finite(n) && n >= 0 ? Math.round(n) : null,
+    versions: vs.length ? { first: Math.min(...vs), last: Math.max(...vs) } : null,
+  };
+}
