@@ -5,8 +5,8 @@
 // 0001_seed.sql は本番 D1 に適用済みなので作り直さない。seed.ts を変えたら --update の出力を
 // 新しいマイグレーション（例: migrations/0002_seed_calibration.sql）として追加する。
 // 新しい DB でも 0001 → 0002 … の順に当たるので、最終状態は現在の seed.ts の全件 INSERT と同じになる。
-import { DEFAULT_SEED, DEFAULT_UNITS, buildModel, type BuildResult } from 'cobra-core';
-import { SEED_FACTORS, SEED_G3, SEED_MODEL, SEED_PROJECTS, SEED_VERSIONS } from 'cobra-core/seed';
+import { DEFAULT_SEED, DEFAULT_UNITS, buildModel, simulate, type BuildResult } from 'cobra-core';
+import { SEED_FACTORS, SEED_G3, SEED_GENERATIONS, SEED_MODEL, SEED_PROJECTS, SEED_VERSIONS } from 'cobra-core/seed';
 
 const q = (v: unknown): string => {
   if (v === null || v === undefined) return 'NULL';
@@ -29,6 +29,17 @@ const v3: BuildResult = buildModel(SEED_MODEL, SEED_PROJECTS.filter((p) => p.ado
 });
 const v3Row = { alpha: v3.alpha, ci_lo: v3.ci95[0], ci_hi: v3.ci95[1], mmre: v3.mmre, pred25: v3.pred25, n: v3.n, loo: v3.loo, inconsistencies: v3.inconsistencies };
 
+// 示例見積りの保存済み世代。画面で実行したときと同じく v3 の α・σ で計算し、samples を除いて保存する
+const genRows = SEED_GENERATIONS.map((g) => {
+  const { samples, ...results } = simulate(SEED_MODEL, { alpha: v3.alpha, sizeFP: g.sizeFP, levels: g.levels, sigma: v3.sigma }, { runs: RUNS, seed: DEFAULT_SEED });
+  void samples;
+  return {
+    id: g.id, estimate_id: 'portal', label: g.label, name: g.name, size_fp: g.sizeFP, levels: g.levels, notes: g.notes,
+    runs: RUNS, seed: DEFAULT_SEED, model_version_id: 'v3', results, created_at: g.createdAt,
+  };
+});
+const reportGenerationId = SEED_GENERATIONS.at(-1)!.id;
+
 const upd = (table: string, set: Record<string, unknown>, where: Record<string, unknown>) =>
   `UPDATE ${table} SET ${Object.entries(set).map(([k, v]) => `${k} = ${q(v)}`).join(', ')} WHERE ${Object.entries(where).map(([k, v]) => `${k} = ${q(v)}`).join(' AND ')};`;
 
@@ -38,6 +49,9 @@ if (process.argv.includes('--update')) {
     out.push(upd('projects', { name: p.name, size_fp: p.sizeFP, effort_mm: p.effortMM, levels: p.levels, note: p.note, adopted: p.adopted, excluded_reason: p.excludedReason }, { id: p.id, model_id: M }));
   }
   out.push(upd('model_versions', v3Row, { id: 'v3', model_id: M }));
+  // 世代は seed の ID で入れ直す（結果は v3 に追随）。利用者が保存した世代には触れない
+  for (const g of genRows) out.push(ins('generations', g).replace('INSERT INTO', 'INSERT OR REPLACE INTO'));
+  out.push(upd('estimates', { report_generation_id: reportGenerationId }, { id: 'portal', model_id: M }));
   console.log(out.join('\n'));
   process.exit(0);
 }
@@ -67,6 +81,7 @@ for (const v of SEED_VERSIONS) {
     ...(v.version === 3 ? v3Row : {}),
   }));
 }
-out.push(ins('estimates', { id: 'portal', model_id: M, name: SEED_G3.name, budget: SEED_G3.budget, report_generation_id: null }));
+out.push(ins('estimates', { id: 'portal', model_id: M, name: SEED_G3.name, budget: SEED_G3.budget, report_generation_id: reportGenerationId }));
+for (const g of genRows) out.push(ins('generations', g));
 out.push(ins('users', { email: 'admin@example.com', name: 'K. Cai', role: 'admin' }));
 console.log(out.join('\n'));

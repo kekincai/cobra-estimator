@@ -77,6 +77,36 @@ export const SEED_G3 = {
   },
 } as const;
 
+/**
+ * 示例見積り（estimate 'portal'）の保存済み世代 G1〜G3（設計稿 Main / Estimate の世代ストリップ）。
+ * 設計稿の 6 列は寄与の大きい順（01, 06, 05, 04, 03, …）。残りの要因は G3 と同じ。
+ * results は seed-sql.ts が v3 の α・σ で計算して入れる。日時は JST の設計稿の時刻を UTC にしたもの。
+ */
+export const SEED_GENERATIONS = [
+  { id: 'portal-g1', label: 'G1', name: '初回', sizeFP: 1050, levels: lv([3, 2, 1, 2, 2, 2, 1, 1]), notes: {}, createdAt: '2026-11-05T02:10:00.000Z' },
+  { id: 'portal-g2', label: 'G2', name: '案A', sizeFP: 1050, levels: lv([2, 2, 1, 2, 2, 1, 1, 1]), notes: {}, createdAt: '2026-11-06T05:02:00.000Z' },
+  {
+    id: 'portal-g3',
+    label: 'G3',
+    name: '案B (外部連携あり)',
+    sizeFP: SEED_G3.sizeFP,
+    levels: SEED_G3.levels,
+    // 設計稿 Report の「判断の根拠」と「前提と注意事項」
+    notes: {
+      F01: '要件が未確定のまま開発着手の見込み',
+      F02: '確認に数週間を要する',
+      F03: '半数が同種システムの経験者',
+      F04: '3 社が関与',
+      F05: '認証基盤を新規採用',
+      F06: '6 システム、うち 2 つは仕様未確定',
+      F07: '概ね標準プロセスに沿う',
+      F08: '1 割程度の圧縮',
+      memo: '規模 1,200 FP は要件定義の中間成果物から概算したもの。要件確定後に再計測し、世代 G4 として再見積りする。\n外部連携 6 システムのうち 2 つは接続仕様が未確定。確定時点で要因 06 のレベルを見直す。',
+    } as Record<string, string>,
+    createdAt: '2026-11-06T06:20:00.000Z',
+  },
+];
+
 export const SEED_VERSIONS = [
   { version: 1, expert: 'S.T.', alpha: 0.0232, mmre: 0.241, builtAt: '2026-10-14', n: 9, active: false },
   { version: 2, expert: 'Y.T.', alpha: 0.0198, mmre: 0.198, builtAt: '2026-10-28', n: 11, active: false },
