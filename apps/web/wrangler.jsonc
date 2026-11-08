@@ -26,7 +26,7 @@
     "AUTH_MODE": "production",
     // GitHub OAuth App の Client ID（公開値）。Client Secret と SESSION_SECRET は `wrangler secret put` で設定する。
     // どれかが空のあいだはログインできない（本番は全ページ 401 / ログイン画面）。
-    "GITHUB_CLIENT_ID": ""
+    "GITHUB_CLIENT_ID": "Ov23liR6TxLhR6ky0rUw"
   },
   "observability": { "enabled": true }
 }
