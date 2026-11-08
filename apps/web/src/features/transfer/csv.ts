@@ -1,6 +1,8 @@
 // CSV 実績取り込み（IMPLEMENTATION_BRIEF.md §3.2）: 解析・見出しからの列推定・行の検証。
 import { DEFAULT_UNITS, toFP, toMM, type UnitFactors } from 'cobra-core';
 import { factorNo } from '../../ui/format';
+import { matchProject, type ExistingProject } from './projectMatch';
+import { PROJECT_NAME_MAX } from './schema';
 
 /** RFC 4180 風の CSV 解析（"…" 内のカンマ・改行・"" に対応）。区切りは , またはタブ（1 行目で判定）。空行は捨てる。 */
 export function parseCsv(text: string): string[][] {
@@ -113,15 +115,28 @@ export function checkMapping(map: TargetKey[]): MappingCheck {
   return { missing, duplicates, ok: missing.length === 0 && duplicates.length === 0 };
 }
 
-export type IssueCode = 'name-blank' | 'size-blank' | 'size-invalid' | 'effort-blank' | 'effort-invalid' | 'level-blank' | 'level-range' | 'dup-existing' | 'dup-file';
+export type IssueCode =
+  | 'name-blank'
+  | 'name-too-long'
+  | 'size-blank'
+  | 'size-invalid'
+  | 'effort-blank'
+  | 'effort-invalid'
+  | 'level-blank'
+  | 'level-range'
+  | 'dup-existing'
+  | 'dup-file'
+  | 'already-imported';
 
 export interface RowIssue {
   code: IssueCode;
   message: string;
   /** レベル値の不正値など */
   value?: string;
-  /** dup-existing のとき既存プロジェクトの ID */
+  /** dup-existing / already-imported のとき既存プロジェクトの ID */
   existingId?: string;
+  /** dup-existing のとき既存との差分 */
+  diffs?: string[];
 }
 
 export interface CsvRow {
@@ -146,7 +161,13 @@ export interface ValidateOptions {
   sizeUnit: SizeUnit;
   effortUnit: EffortUnit;
   units?: UnitFactors;
-  existing: { id: string; name: string }[];
+  /** 既存の実績（名前で突き合わせる。規模・工数などがあれば内容も比べる） */
+  existing: (ExistingProject & { name: string })[];
+}
+
+/** 登録するときの丸め（規模は小数 2 桁、工数は小数 3 桁）。重複判定もこの値で比べる。 */
+export function registerValues(sizeFP: number, effortMM: number): { sizeFP: number; effortMM: number } {
+  return { sizeFP: Math.round(sizeFP * 100) / 100, effortMM: Math.round(effortMM * 1000) / 1000 };
 }
 
 const parseNum = (s: string): number | null => {
@@ -164,7 +185,8 @@ export function validateRows(rows: string[][], map: TargetKey[], o: ValidateOpti
   const iEff = col('effort');
   const iNote = col('note');
   const units = o.units ?? DEFAULT_UNITS;
-  const existing = new Map(o.existing.map((p) => [p.name.trim(), p.id]));
+  const existing = new Map(o.existing.map((p) => [p.name.trim(), p]));
+  const factorName = new Map(o.factors.map((f) => [f.id, `要因 ${factorNo(f.no)} ${f.name}`]));
   const nameCount = new Map<string, number>();
   for (const r of rows) {
     const n = (r[iName] ?? '').trim();
@@ -176,6 +198,7 @@ export function validateRows(rows: string[][], map: TargetKey[], o: ValidateOpti
     const get = (i: number) => (i < 0 ? '' : (r[i] ?? '').trim());
     const name = get(iName);
     if (!name) issues.push({ code: 'name-blank', message: '名前が空' });
+    else if (name.length > PROJECT_NAME_MAX) issues.push({ code: 'name-too-long', message: `名前が ${PROJECT_NAME_MAX} 文字を超えています（${name.length} 文字）`, value: name });
 
     const sizeRaw = get(iSize);
     const sv = parseNum(sizeRaw);
@@ -208,8 +231,12 @@ export function validateRows(rows: string[][], map: TargetKey[], o: ValidateOpti
 
     if (name) {
       const ex = existing.get(name);
-      if (ex) issues.push({ code: 'dup-existing', message: '既存と同名', existingId: ex });
-      else if ((nameCount.get(name) ?? 0) > 1) issues.push({ code: 'dup-file', message: 'CSV 内で同名' });
+      if (ex) {
+        // 名前が同じ既存の実績: 内容まで同じなら「既に取り込み済み」（登録しない・問題ではない）
+        const m = issues.length === 0 && sizeFP != null && effortMM != null ? matchProject(existing, name, { name, ...registerValues(sizeFP, effortMM), levels, note: get(iNote) }, (id) => factorName.get(id) ?? id) : null;
+        if (m?.status === 'same') issues.push({ code: 'already-imported', message: '既に取り込み済み', existingId: ex.id });
+        else issues.push({ code: 'dup-existing', message: '既存と同名', existingId: ex.id, diffs: m?.diffs });
+      } else if ((nameCount.get(name) ?? 0) > 1) issues.push({ code: 'dup-file', message: 'CSV 内で同名' });
     }
 
     return { line: idx + 2, name, sizeRaw, effortRaw, sizeFP, effortMM, levels, levelsRaw, note: get(iNote), issues, ok: issues.length === 0 };
@@ -221,9 +248,11 @@ export function summarize(rows: CsvRow[]) {
   const by = (codes: IssueCode[]) => rows.filter((r) => r.issues.some((i) => codes.includes(i.code)));
   return {
     ok: rows.filter((r) => r.ok),
+    /** 既存と同じ名前・同じ内容（登録しない） */
+    already: by(['already-imported']),
     effortBlank: by(['effort-blank', 'effort-invalid']),
     levelRange: by(['level-range', 'level-blank']),
     duplicate: by(['dup-existing', 'dup-file']),
-    other: by(['name-blank', 'size-blank', 'size-invalid']),
+    other: by(['name-blank', 'name-too-long', 'size-blank', 'size-invalid']),
   };
 }

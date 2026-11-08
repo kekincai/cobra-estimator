@@ -1,6 +1,29 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { ProjectRow } from '../../../shared/types';
-import { apiSend, qk } from '../../data/api';
+import { ApiError, apiSend, qk } from '../../data/api';
+
+/** 400 の Zod 検証エラーで返る項目別の内容（worker/index.ts の onError） */
+export interface ServerIssue {
+  path: string;
+  message: string;
+}
+
+/** 保存の失敗。issues があれば項目ごとのエラー表示に使う */
+export class ProjectSaveError extends ApiError {
+  constructor(status: number, message: string, public issues: ServerIssue[] = []) {
+    super(status, message);
+  }
+}
+
+/** apiSend と同じだが、400 の issues を捨てずに ProjectSaveError に載せる */
+async function sendProject<T>(method: 'POST' | 'PUT', path: string, body: unknown): Promise<T> {
+  const res = await fetch(`/api${path}`, { method, headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+  if (!res.ok) {
+    const b = (await res.json().catch(() => ({}))) as { error?: string; issues?: ServerIssue[] };
+    throw new ProjectSaveError(res.status, b.error ?? res.statusText, Array.isArray(b.issues) ? b.issues : []);
+  }
+  return res.json() as Promise<T>;
+}
 
 export interface ProjectInput {
   groupId: string;
@@ -40,8 +63,8 @@ export function useSaveProject(id: string | undefined) {
   return useMutation({
     mutationFn: (body: ProjectInput) =>
       id
-        ? apiSend<{ ok: true }>('PUT', `/projects/${encodeURIComponent(id)}`, body).then(() => ({ id }))
-        : apiSend<{ id: string }>('POST', '/projects', body),
+        ? sendProject<{ ok: true }>('PUT', `/projects/${encodeURIComponent(id)}`, body).then(() => ({ id }))
+        : sendProject<{ id: string }>('POST', '/projects', body),
     onSuccess: async (res) => {
       await qc.invalidateQueries({ queryKey: qk.projects });
       await qc.invalidateQueries({ queryKey: qk.model });

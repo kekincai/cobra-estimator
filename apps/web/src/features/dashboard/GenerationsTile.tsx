@@ -7,7 +7,8 @@ import type { DashResult } from './results';
 import type { GenView } from './useDashboard';
 
 interface Props {
-  estimateId: string;
+  /** 「5世代まで比較」「工数見積りで実行する」のリンク先（?gen= 付き） */
+  estimateHref: string;
   gens: GenView[];
   selectedId: string;
   /** 選択中の世代は Worker の再計算結果、それ以外は保存値 */
@@ -19,14 +20,14 @@ interface Props {
 }
 
 /** 世代の一覧（新しい順）とモデルの確認事項 */
-export function GenerationsTile({ estimateId, gens, selectedId, resultOf, isSample, inconsistencies, mounted, onPick }: Props) {
+export function GenerationsTile({ estimateHref, gens, selectedId, resultOf, isSample, inconsistencies, mounted, onPick }: Props) {
   const rows = gens.map((g) => ({ g, r: resultOf(g) }));
   const maxMed = Math.max(1, ...rows.map((x) => x.r?.p50 ?? 0));
   return (
-    <div className="tile col-span-12 flex min-w-0 flex-col gap-2 px-6 py-[22px] xl:col-span-7" style={{ animationDelay: '480ms' }}>
-      <div className="flex items-center justify-between">
-        <span className="text-[13px] font-medium">見積りの世代 — クリックで切替</span>
-        <Link to={`/estimate/${estimateId}`} className="text-[12px] font-medium">
+    <div className="tile @container col-span-12 flex min-w-0 flex-col gap-2 px-5 py-[22px] sm:px-6 xl:col-span-7" style={{ animationDelay: '480ms' }}>
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+        <h2 className="m-0 text-[13px] font-medium">見積りの世代 — クリックで切替</h2>
+        <Link to={estimateHref} className="inline-flex min-h-6 items-center text-[12px] font-medium">
           5世代まで比較 →
         </Link>
       </div>
@@ -38,14 +39,14 @@ export function GenerationsTile({ estimateId, gens, selectedId, resultOf, isSamp
             type="button"
             aria-pressed={on}
             onClick={() => onPick(g.id)}
-            className={`dash-row grid min-h-11 w-full cursor-pointer grid-cols-[40px_minmax(0,1fr)_auto] items-center gap-3 rounded-xl px-3 py-2.5 text-left text-[13px] text-text sm:grid-cols-[40px_minmax(0,1fr)_120px_90px_60px] ${on ? 'border border-line-active bg-raised' : 'border border-transparent bg-transparent'}`}
+            className={`dash-row grid min-h-11 w-full cursor-pointer grid-cols-[40px_minmax(0,1fr)_auto] items-center gap-3 rounded-xl px-3 py-2.5 text-left text-[13px] text-text @min-[520px]:grid-cols-[40px_minmax(0,1fr)_120px_90px_60px] ${on ? 'border border-line-active bg-raised' : 'border border-transparent bg-transparent'}`}
           >
             <span className={`n ${on ? 'text-accent' : 'text-weak'}`}>{g.label.length > 3 ? '例' : g.label}</span>
             <span className="truncate font-medium">{g.name || '（名称なし）'}</span>
-            <span className="hidden text-[11px] text-sub sm:inline">
+            <span className="hidden text-[11px] text-sub @min-[520px]:inline">
               {fmtInt(g.sizeFP)} FP{r ? ` ・ ${fmtSco(r.sco)}` : ''}
             </span>
-            <span className="hidden items-center sm:flex">
+            <span aria-hidden="true" className="hidden items-center @min-[520px]:flex">
               <span className="h-1.5 w-[90px] rounded-[3px] bg-raised">
                 <span
                   className={`block h-full rounded-[3px] transition-[width] duration-800 ease-out-rise ${on ? 'bg-accent' : 'bg-line-strong'}`}
@@ -60,7 +61,7 @@ export function GenerationsTile({ estimateId, gens, selectedId, resultOf, isSamp
       {isSample && (
         <p className="m-0 rounded-xl border border-dashed border-line-strong px-3.5 py-3 text-[12px] leading-[1.6] text-sub">
           この見積りにはまだ世代がありません。表示中の値は既定の条件（規模 1,200 FP・要因レベル 3/2/1/2/2/3/1/1）を、この場で 10,000 回シミュレーションしたものです。
-          <Link to={`/estimate/${estimateId}`} className="ml-1 font-medium">
+          <Link to={estimateHref} className="ml-1 font-medium">
             工数見積りで実行する →
           </Link>
         </p>

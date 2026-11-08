@@ -10,7 +10,7 @@ import type { Context } from 'hono';
 const fields = {
   id: z.string().optional(),
   groupId: z.string().min(1).max(16),
-  name: z.string().trim().min(1),
+  name: z.string().trim().min(1).max(100),
   sizeFP: z.number().positive(),
   effortMM: z.number().positive(),
   levels: z.record(z.string(), z.number().int().min(0).max(3)),

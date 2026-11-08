@@ -4,6 +4,7 @@ import { SEED_G3 } from 'cobra-core/seed';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toModelSpec, type GenerationRow, type ModelBundle, type ModelVersionRow } from '../../../shared/types';
 import { useEstimate, useEstimates, useModel, useProjects } from '../../data/api';
+import { roundTo } from '../../ui/format';
 import { runSimulation } from '../../lib/cobra-client';
 import { fromSim, fromStored, type DashResult } from './results';
 
@@ -47,7 +48,10 @@ function sampleGen(active: ModelVersionRow | null): GenView {
   };
 }
 
-export function useDashboard() {
+/**
+ * @param genLabel URL の ?gen=（G1…G5）。該当が無ければ最新の世代
+ */
+export function useDashboard(genLabel?: string | null) {
   const model = useModel();
   const estimates = useEstimates();
   const latest = estimates.data?.[0];
@@ -65,17 +69,25 @@ export function useDashboard() {
   const isSample = !!estimate.data && gens.length === 0;
   const list = isSample ? [sampleGen(active)] : gens;
 
-  const [picked, setPicked] = useState<string | null>(null);
-  const gen = list.find((g) => g.id === picked) ?? list[list.length - 1] ?? null;
+  const gen = (genLabel ? list.find((g) => g.label === genLabel && g.id !== 'sample') : undefined) ?? list[list.length - 1] ?? null;
   const genIndex = gen ? list.indexOf(gen) : -1;
 
   const sim = useGenerationSim(bundle, gen);
 
+  const failed = [model, estimates, estimate, projects].filter((q) => q.isError);
+  const error = model.error ?? estimates.error ?? estimate.error ?? projects.error ?? null;
+
   return {
-    loading: model.isLoading || estimates.isLoading || (!!latest && estimate.isLoading),
-    error: model.error ?? estimates.error ?? estimate.error ?? null,
+    /** 見積り・モデルのどちらかがまだ届いていない（エラーのときは false） */
+    loading: !error && (model.isLoading || estimates.isLoading || (!!latest && estimate.isLoading)),
+    error,
+    /** モデル（α・MMRE・要確認）の状態。'ready' のときだけ「無い」と言い切れる */
+    modelStatus: model.isError ? ('error' as const) : model.isLoading ? ('loading' as const) : ('ready' as const),
+    projectsReady: projects.isSuccess,
+    /** 失敗したクエリだけ取り直す */
+    retry: () => Promise.all(failed.map((q) => q.refetch())),
     bundle, active, versions, estimate: estimate.data ?? null, projects: projects.data ?? [],
-    gens: list, gen, genIndex, isSample, pick: setPicked, ...sim,
+    gens: list, gen, genIndex, isSample, ...sim,
   };
 }
 
@@ -84,8 +96,11 @@ function useGenerationSim(bundle: ModelBundle | undefined, gen: GenView | null) 
   const [state, setState] = useState<{ key: string; result: DashResult } | null>(null);
   const [running, setRunning] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<unknown>(null);
+  /** 直前の再実行の結果（同じシードなら推定値は変わらない） */
+  const [rerunNote, setRerunNote] = useState<{ key: string; runs: number; same: boolean } | null>(null);
   const seq = useRef(0);
+  const shownRef = useRef<DashResult | null>(null);
 
   const factorsKey = bundle?.factors.map((f) => `${f.id}:${f.updatedAt}`).join('|') ?? '';
   const key = gen && bundle ? `${gen.id}|${gen.alpha}|${gen.sigma}|${gen.runs}|${gen.seed}|${JSON.stringify(gen.expertMode)}|${factorsKey}` : '';
@@ -98,6 +113,7 @@ function useGenerationSim(bundle: ModelBundle | undefined, gen: GenView | null) 
       if (withProgress) {
         setRunning(true);
         setProgress(0);
+        setRerunNote(null);
       }
       try {
         // 実行が一瞬で終わっても進捗が読めるよう、表示は最低 700ms
@@ -108,10 +124,15 @@ function useGenerationSim(bundle: ModelBundle | undefined, gen: GenView | null) 
           withProgress ? new Promise((res) => setTimeout(res, 700)) : null,
         ]);
         if (my !== seq.current) return;
-        setState({ key, result: fromSim(r) });
+        const next = fromSim(r);
+        if (withProgress) {
+          const before = shownRef.current;
+          setRerunNote({ key, runs: next.runs, same: !!before && roundTo(before.p50) === roundTo(next.p50) });
+        }
+        setState({ key, result: next });
         setError(null);
       } catch (e) {
-        if (my === seq.current) setError(e instanceof Error ? e.message : String(e));
+        if (my === seq.current) setError(e ?? new Error('simulation failed'));
       } finally {
         if (my === seq.current) setRunning(false);
       }
@@ -125,5 +146,10 @@ function useGenerationSim(bundle: ModelBundle | undefined, gen: GenView | null) 
   }, [key, run]);
 
   const result = state?.key === key ? state.result : (gen?.stored ?? null);
-  return { result, running, progress, simError: error, rerun: () => run(true) };
+  shownRef.current = result;
+  return {
+    result, running, progress, simError: error,
+    rerunNote: rerunNote?.key === key ? rerunNote : null,
+    rerun: () => run(true),
+  };
 }

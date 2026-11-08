@@ -1,24 +1,110 @@
 @import 'tailwindcss';
 
-/* デザイントークン（IMPLEMENTATION_BRIEF.md §4）。Tailwind では bg-bg / text-sub / border-line / text-accent などで使う */
-@theme {
+/*
+ * デザイントークン（IMPLEMENTATION_BRIEF.md §4）。Tailwind では bg-bg / text-sub / border-line / text-accent などで使う。
+ * - `static`: 工具クラスで参照されず var(--color-*) だけで使う変数（要因の系列色・紙色など）も
+ *   必ず :root に出力する（既定の @theme は未使用の変数を出力しないため、inline style の var() が空になる）。
+ * - 追加するときは 1 つのブロックにまとめ、同名がないか確認する（同名は後勝ちで上書きされる）。
+ *   確認: grep -oE -- '--color-[a-z0-9-]+:' src/index.css | sort | uniq -d  → 空であること
+ */
+@theme static {
+  /* 面 */
   --color-bg: #0b0d12;
+  --color-panel: #0f1218;
   --color-card: #13161e;
   --color-card-2: #171b25;
   --color-raised: #1b2030;
-  --color-line: #222734;
-  --color-line-strong: #3a4257;
-  --color-nav-line: #1e2330;
-  --color-text: #f2f4f8;
-  --color-sub: #8b93a5;
-  --color-weak: #5e677a;
   --color-muted: #2a3040;
+
+  /* 線 */
+  --color-line: #222734;
+  --color-nav-line: #1e2330;
+  --color-line-active: #2f3747;
+  --color-line-mid: #2f3747;
+  --color-line-dashed: #2f3747;
+  --color-line-strong: #3a4257;
+
+  /*
+   * 文字（暗色面での対比: bg / card / card-2 / raised）
+   *   text   #f2f4f8  17.65 / 16.42 / 15.63 / 14.72
+   *   body   #c7cdd9  12.18 / 11.34 / 10.79 / 10.16
+   *   sub    #98a0b1   7.40 /  6.89 /  6.56 /  6.17
+   *   weak   #7f889b   5.46 /  5.08 /  4.83 /  4.55   （WCAG AA 4.5:1 以上。設計稿 #5E677A は 2.85〜3.42 で不足）
+   * weak を AA に上げると sub との差が小さくなるため、sub も少し明るくして階層（明度差）を保つ。
+   * slate は非文字（線・目盛り）専用。line-strong も文字色には使わない。
+   */
+  --color-text: #f2f4f8;
+  --color-body: #c7cdd9;
+  --color-text-2: #c7cdd9;
+  --color-sub: #98a0b1;
+  --color-weak: #7f889b;
+  --color-slate: #4a5368;
+
+  /* 強調色・意味色 */
   --color-accent: var(--accent);
+  --color-accent-bg: #161c10;
+  --color-accent-line: #2f3a1e;
+  --color-accent-ink: #e6ff8a;
+  --color-lime: #d4ff4f;
+  --color-teal: #5eead4;
+  --color-ok: #7ee2b8;
+  --color-ok-bg: #15241c;
+  --color-ok-soft: #15241c;
+  --color-info: #6e9bff;
+  --color-info-soft: #1f2a4a;
+  --color-info-text: #9db4ff;
+  --color-lv1-bg: #1f2a4a;
+  --color-lv1: #9db4ff;
+  --color-lv2-bg: #2f4a9e;
+  --color-warn: #ffb020;
+  --color-warn-ink: #ffd48a;
+  --color-warn-bg: #2a1f14;
+  --color-warn-line: #4a3320;
+
+  /* 珊瑚（注意・L3） */
   --color-coral: #ff7a59;
   --color-coral-soft: #ff9f84;
-  --color-ok: #7ee2b8;
-  --color-info: #6e9bff;
-  --color-warn: #ffb020;
+  --color-coral-ink: #ffb4a0;
+  --color-coral-strong: #ffd1c4;
+  --color-coral-title: #ffd1c4;
+  --color-coral-bg: #2a1a16;
+  --color-coral-bg-2: #1a1210;
+  --color-coral-soft-bg: #2a1714;
+  --color-coral-row: #1e1512;
+  --color-coral-dim: #4a2a22;
+  /* 注意カードの枠（モデル構築「ΣCO と生産性の不整合」設計稿 Build.dc.html #4A2A22） */
+  --color-coral-line: #4a2a22;
+  /* 関係図の L3 ノード枠（設計稿 Relations.dc.html #5A3328）。カード枠より一段明るい */
+  --color-coral-line-strong: #5a3328;
+  /* 解説の注意カードの枠（設計稿 Guide.dc.html #4A2520） */
+  --color-coral-frame: #4a2520;
+  --color-coral-btn-line: #5a3a30;
+
+  /* 要因ごとの系列色（要因番号 1〜8 で循環）。inline style の var() からのみ参照 */
+  --color-factor-1: var(--accent);
+  --color-factor-2: #8fb0ff;
+  --color-factor-3: #5eead4;
+  --color-factor-4: #3fb8a0;
+  --color-factor-5: #ffb020;
+  --color-factor-6: #ff7a59;
+  --color-factor-7: #2a8c7a;
+  --color-factor-8: #c9a6ff;
+
+  /* レポート（白地・印刷）。強調は青柠を小面積だけ（lime を文字色にしない） */
+  --color-paper: #ffffff;
+  --color-paper-soft: #f7f8fa;
+  --color-paper-tint: #fafbe8;
+  --color-paper-track: #f0f2f4;
+  --color-paper-band: #d9dce1;
+  --color-paper-line: #e3e6ea;
+  --color-paper-pill: #c9cdd3;
+  --color-ink: #111418;
+  --color-ink-body: #3a414d;
+  --color-ink-sub: #5a6270;
+  /* 軸の端値など。白地 4.83 / paper-soft 4.55（設計稿 #9AA1AD は 2.60 で不足） */
+  --color-ink-faint: #6b7280;
+  --color-ink-invert-sub: #b9bfcb;
+
   --radius-tile: 18px;
   --font-sans: 'Noto Sans JP', system-ui, sans-serif;
   --font-num: 'Space Grotesk', 'Noto Sans JP', sans-serif;
@@ -26,18 +112,24 @@
 }
 
 :root {
-  /* 切替可能な強調色: #D4FF4F / #5EEAD4 / #6E9BFF / #FFB020 */
+  /* 切替可能な強調色: #D4FF4F / #5EEAD4 / #6E9BFF / #FFB020（切替 UI は未実装） */
   --accent: #d4ff4f;
   color-scheme: dark;
 }
 
+/* 根の文字サイズは相対値（既定 16px × 87.5% = 14px）。ブラウザの文字サイズ設定に追従する */
+html {
+  font-size: 87.5%;
+}
 html,
 body {
   margin: 0;
   background: var(--color-bg);
   color: var(--color-text);
   font-family: var(--font-sans);
-  font-size: 14px;
+}
+body {
+  font-size: 1rem;
 }
 
 /* base レイヤーに置く（unlayered だと Tailwind の text-* より強くなり、リンクの色指定が効かない） */
@@ -59,9 +151,15 @@ body {
   animation: rise 0.7s var(--ease-out-rise) backwards;
   transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
 }
+/* 既定のホバーは枠色だけ（設計稿 Build / Estimate / ProjectData / Risk）。押せない面に「押せそう」な動きを付けない */
 .tile:hover {
-  transform: translateY(-2px);
   border-color: var(--color-line-strong);
+}
+/* 持ち上がりは仪表板（設計稿 Main.dc.html）だけ。Layout が <main data-screen="dashboard"> を付ける。
+   他画面で押せるカードに付けたいときは .tile-lift を足す */
+main[data-screen='dashboard'] .tile:hover,
+.tile.tile-lift:hover {
+  transform: translateY(-2px);
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
 }
 @keyframes rise {
@@ -93,51 +191,45 @@ a:focus-visible,
 button:focus-visible,
 input:focus-visible,
 select:focus-visible,
-textarea:focus-visible {
+textarea:focus-visible,
+summary:focus-visible,
+[role='tab']:focus-visible,
+[role='radio']:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 
+/* 読み込み中の文言は少し遅れて出す（速い回線ではちらつかせない）。動かさず不透明度だけ */
+.fade-in-late { animation: fade-in 0.2s ease 0.4s backwards; }
+@keyframes fade-in { from { opacity: 0; } }
+
+/* 追加: 実行中スピナーの代わりに reduced-motion で使う、動かない明滅 */
+@keyframes soft-blink { 50% { opacity: 0.35; } }
+
+/*
+ * reduced-motion: 動き（移動・拡大・回転・順番に出る演出）は止めるが、状態の変化は残す。
+ * - アニメーション・遷移の時間と遅延を 0 にする（遅延が残ると、カードが 0〜650ms の間に 1 枚ずつ「パッ」と出る）。
+ * - 押せるもののホバー・選択の色の変化は、短いフェードで残す（移動は伴わない）。
+ * - 実行中スピナーは回転の代わりに明滅させ、処理中であることは伝わるようにする。
+ */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.001ms !important;
+    animation-delay: 0s !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
+    transition-delay: 0s !important;
+    scroll-behavior: auto !important;
   }
-}
-
-/* 追加トークン（ダッシュボード / 解説 / 業務フロー）。共通名の補助色は他ブロックで定義済み */
-@theme {
-  --color-slate: #4a5368;
-  --color-line-active: #2f3747;
-  --color-coral-bg-2: #1a1210;
-  --color-coral-dim: #4a2a22;
-  --color-coral-strong: #ffd1c4;
-  /* 解説の注意カードの枠（設計稿 #4A2520）。coral-line は他ブロックと共有のため別名 */
-  --color-coral-frame: #4a2520;
-  --color-accent-bg: #161c10;
-  --color-accent-line: #2f3a1e;
-  --color-accent-ink: #e6ff8a;
-}
-
-/* --- 実績データ / モデル構築 / シミュレーション設定 で追加（設計稿の補助色） --- */
-@theme {
-  --color-body: #c7cdd9;
-  --color-teal: #5eead4;
-  --color-line-mid: #2f3747;
-  --color-ok-bg: #15241c;
-  --color-warn-ink: #ffd48a;
-  --color-warn-bg: #2a1f14;
-  --color-warn-line: #4a3320;
-  --color-coral-ink: #ffb4a0;
-  --color-coral-title: #ffd1c4;
-  --color-coral-bg: #2a1a16;
-  --color-coral-line: #4a2a22;
-  --color-coral-btn-line: #5a3a30;
-  --color-coral-row: #1e1512;
-  --color-lv1-bg: #1f2a4a;
-  --color-lv1: #9db4ff;
-  --color-lv2-bg: #2f4a9e;
+  .nav, .tab-link, .row-hover, .seg, .btn {
+    transition-property: color, background-color, border-color, filter, opacity !important;
+    transition-duration: 0.15s !important;
+  }
+  .tile:hover, .btn:active, .seg:hover,
+  main[data-screen='dashboard'] .tile:hover, .tile.tile-lift:hover { transform: none !important; }
+  .spin {
+    animation: soft-blink 1.6s ease-in-out infinite !important;
+  }
 }
 
 /* SVG の点・線（cx/cy/r の遷移） */
@@ -155,45 +247,6 @@ textarea:focus-visible {
 .no-spin::-webkit-outer-spin-button,
 .no-spin::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 .no-spin { -moz-appearance: textfield; }
-/* 追加トークン（変動要因・関係図の設計稿で使う色） */
-@theme {
-  --color-panel: #0f1218;
-  --color-text-2: #c7cdd9;
-  --color-teal: #5eead4;
-  --color-info-soft: #1f2a4a;
-  --color-info-text: #9db4ff;
-  --color-ok-soft: #15241c;
-  --color-coral-soft-bg: #2a1714;
-  --color-coral-line: #5a3328;
-  --color-line-dashed: #2f3747;
-}
-
-/* ---- 見積り・リスク・レポート画面（追記）。teal / coral-bg / ok-bg / slate は上のブロックで定義済み ---- */
-@theme {
-  /* 要因ごとの系列色（要因番号 1〜8 で循環） */
-  --color-factor-1: var(--accent);
-  --color-factor-2: #8fb0ff;
-  --color-factor-3: #5eead4;
-  --color-factor-4: #3fb8a0;
-  --color-factor-5: #ffb020;
-  --color-factor-6: #ff7a59;
-  --color-factor-7: #2a8c7a;
-  --color-factor-8: #c9a6ff;
-  /* レポート（白地・印刷）。強調は青柠を小面積だけ */
-  --color-paper: #ffffff;
-  --color-paper-soft: #f7f8fa;
-  --color-paper-tint: #fafbe8;
-  --color-paper-track: #f0f2f4;
-  --color-paper-band: #d9dce1;
-  --color-paper-line: #e3e6ea;
-  --color-paper-pill: #c9cdd3;
-  --color-ink: #111418;
-  --color-ink-body: #3a414d;
-  --color-ink-sub: #5a6270;
-  --color-ink-faint: #9aa1ad;
-  --color-ink-invert-sub: #b9bfcb;
-  --color-lime: #d4ff4f;
-}
 
 /* 棒・帯・マーカーの CSS トランジション（reduced-motion は上の一括指定で無効） */
 .bar-v { transition: height 0.9s var(--ease-out-rise), background 0.4s; }

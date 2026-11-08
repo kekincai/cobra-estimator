@@ -1,9 +1,14 @@
-// 解説 8 節の本文（文言は design/Guide.dc.html から）
+// 解説 8 節の本文（文言は design/Guide.dc.html から）。
+// 見本の数値（精度・不整合・超過確率曲線・算定式の初期値）は実データから読む（useGuideFacts）。文中に数値を書き込まない。
 import type { ReactNode } from 'react';
 import { Link } from 'react-router';
 import { CURRENT_ESTIMATE_ID } from '../../ui/Layout';
+import { EXCEED_NOTE } from '../../ui/percentile';
+import { formulaStart } from './facts';
 import { FormulaPlayground, TrianglePlayground } from './Interactive';
+import { RiskExample } from './RiskExample';
 import type { GuideSectionId } from './sections';
+import { useGuideFacts } from './useGuideFacts';
 
 const card = 'flex flex-col rounded-[14px] border border-line bg-bg px-[18px] py-4';
 const smallCard = 'flex flex-col gap-1.5 rounded-xl border border-line bg-bg px-4 py-3.5';
@@ -12,7 +17,7 @@ const note = 'text-[12px] leading-[1.6] text-sub';
 function GoLink({ to, children, className }: { to: string; children: ReactNode; className?: string }) {
   return (
     <Link to={to} className={`guide-lk inline-flex min-h-10 items-center gap-2 rounded-[10px] border border-muted px-3.5 text-[13px] font-bold text-text no-underline ${className ?? ''}`}>
-      {children} <span className="text-accent">↗</span>
+      {children} <span aria-hidden="true" className="text-accent">→</span>
     </Link>
   );
 }
@@ -26,7 +31,7 @@ const About = () => (
       {[
         ['実績データ', '10 件程度でよい', '統計的な回帰には足りない件数でも、名目生産性 α を求めるには十分です。'],
         ['専門家の知見', '幅で答える', '「この要因が最悪なら工数は何 % 増えるか」を最良・最頻・最悪の 3 点で。'],
-        ['シミュレーション', '点ではなく分布', '10,000 回試行して「45 人月を超える確率は 34%」のように読めるようにします。'],
+        ['シミュレーション', '点ではなく分布', '10,000 回試行して「予算を超える確率は何 % か」を読めるようにします。'],
       ].map(([k, t, d]) => (
         <div key={k} className={`${card} gap-1.5`}>
           <span className="n text-[12px] text-accent">{k}</span>
@@ -41,14 +46,25 @@ const About = () => (
   </>
 );
 
-const Formula = () => (
-  <>
-    <FormulaPlayground />
-    <p>
-      CO (Cost Overhead) は「その要因が原因で、名目工数に対して何 % 余計にかかるか」です。要因は独立に足し合わせるのが CoBRA の約束で、掛け算にはしません。間接要因だけは例外で、自分の CO を持たず、対象の直接要因の CO を倍率で強めます。
-    </p>
-  </>
-);
+function Formula() {
+  const { alpha, sample, loading } = useGuideFacts();
+  const start = sample ? formulaStart(alpha, sample.sizeFP, sample.result.scoExpected) : null;
+  if (loading) return <p className="text-sub">読み込み中…</p>;
+  return (
+    <>
+      {/* 見本が読めたら初期値を合わせる（key で作り直す） */}
+      <FormulaPlayground key={start ? `${start.a}-${start.size}-${start.sco}` : 'default'} initial={start} />
+      {start && sample && (
+        <span className="text-[12px] leading-[1.6] text-sub">
+          初期値は現行モデルの α と、見本「{sample.name.split(' — ')[0]}」{sample.genLabel} の規模・ΣCO (期待値) です。
+        </span>
+      )}
+      <p>
+        CO (Cost Overhead) は「その要因が原因で、名目工数に対して何 % 余計にかかるか」です。要因は独立に足し合わせるのが CoBRA の約束で、掛け算にはしません。間接要因だけは例外で、自分の CO を持たず、対象の直接要因の CO を倍率で強めます。
+      </p>
+    </>
+  );
+}
 
 const Factors = () => (
   <>
@@ -78,51 +94,73 @@ const Factors = () => (
   </>
 );
 
-const Build = () => (
-  <>
-    <p>
-      構築とは、採用した実績データから α を決めることです。各実績について「工数 ÷ (規模 × (1 + ΣCO))」を計算すると、その案件での名目生産性が出ます。それらの平均が α です。実績の ΣCO は、その案件のレベル値から計算します。
-      このツールでは α を平均で求め、95% 信頼区間はブートストラップ (実績を重複ありで選び直して平均を取る操作を繰り返し、その 2.5% 点と 97.5% 点) で示します。
-    </p>
-    <div className="grid gap-3 md:grid-cols-2">
-      <div className={`${card} gap-2`}>
-        <h3>MMRE — 平均相対誤差</h3>
-        <span className="n text-[13px] text-body">MMRE = 平均 ( |実績 − 推定| / 実績 )</span>
-        <span className={note}>小さいほど良い。20% 以下なら実務で使える目安、18.4% (v3) は良好。</span>
+function Build() {
+  const { accuracy: acc, loading } = useGuideFacts();
+  const excluded = acc?.excludedInconsistent ?? [];
+  return (
+    <>
+      <p>
+        構築とは、採用した実績データから α を決めることです。各実績について「工数 ÷ (規模 × (1 + ΣCO))」を計算すると、その案件での名目生産性が出ます。それらの平均が α です。実績の ΣCO は、その案件のレベル値から計算します。
+        このツールでは α を平均で求め、95% 信頼区間はブートストラップ (実績を重複ありで選び直して平均を取る操作を繰り返し、その 2.5% 点と 97.5% 点) で示します。
+      </p>
+      <div className="grid gap-3 md:grid-cols-2">
+        <div className={`${card} gap-2`}>
+          <h3>MMRE — 平均相対誤差</h3>
+          <span className="n text-[13px] text-body">MMRE = 平均 ( |実績 − 推定| / 実績 )</span>
+          <span className={note}>
+            小さいほど良い。20% 以下なら実務で使える目安。
+            {acc?.mmrePct != null && <>現行の v{acc.version} は {acc.mmrePct}%。</>}
+            {loading && '（現行モデルの値を読み込み中）'}
+          </span>
+        </div>
+        <div className={`${card} gap-2`}>
+          <h3>PRED(25) — 25% 以内に入った割合</h3>
+          <span className="n text-[13px] text-body">PRED(25) = 誤差 25% 以内の件数 / 全件数</span>
+          <span className={note}>
+            大きいほど良い。
+            {acc?.predPct != null && acc.predHits != null ? (
+              <>
+                現行の v{acc.version} は {acc.predPct}% = {acc.n} 件中 {acc.predHits} 件が誤差 25% の内側。
+              </>
+            ) : (
+              '例: 12 件中 9 件が内側なら 75%。'
+            )}
+          </span>
+        </div>
+        <div className={`${card} gap-2`}>
+          <h3>1 件抜き交差検証</h3>
+          <span className={note}>
+            1 件を隠して残りで α を求め、隠した 1 件を見積もる。これを全件で繰り返した誤差が上の MMRE / PRED。手持ちのデータで「初めて見る案件」への当たり具合を測る方法です。
+          </span>
+        </div>
+        <div className={`${card} gap-2 border-coral-frame bg-coral-bg-2`}>
+          <h3 className="text-coral-soft">ΣCO と生産性の不整合</h3>
+          <span className="text-[12px] leading-[1.6] text-body">
+            レベル値が高い (ΣCO が大きい) のに生産性が良い、またはその逆の案件は、レベルの付け方か工数の集計に問題がある可能性があります。
+            {excluded.length > 0 && acc && <>現行の v{acc.version} では {excluded.join('・')} がその例で、除外して構築しています。</>}
+          </span>
+        </div>
       </div>
-      <div className={`${card} gap-2`}>
-        <h3>PRED(25) — 25% 以内に入った割合</h3>
-        <span className="n text-[13px] text-body">PRED(25) = 誤差 25% 以内の件数 / 全件数</span>
-        <span className={note}>大きいほど良い。75% なら 11 件中 8 件が帯の内側。</span>
-      </div>
-      <div className={`${card} gap-2`}>
-        <h3>1 件抜き交差検証</h3>
-        <span className={note}>
-          1 件を隠して残りで α を求め、隠した 1 件を見積もる。これを全件で繰り返した誤差が上の MMRE / PRED。手持ちのデータで「初めて見る案件」への当たり具合を測る方法です。
-        </span>
-      </div>
-      <div className={`${card} gap-2 border-coral-frame bg-coral-bg-2`}>
-        <h3 className="text-coral-soft">ΣCO と生産性の不整合</h3>
-        <span className="text-[12px] leading-[1.6] text-body">
-          レベル値が高い (ΣCO が大きい) のに生産性が良い、またはその逆の案件は、レベルの付け方か工数の集計に問題がある可能性があります。PJ-007 がその例で、除外して構築しています。
-        </span>
-      </div>
-    </div>
-    <p>
-      精度が足りないときは、要因の定義 (レベルの切り方) や実績データ (除外・グループ分け) に戻って作り直します。この往復が CoBRA のモデル作りの中心で、ツールはそのたびに版 (v1, v2, v3 …) を残します。
-    </p>
-  </>
-);
+      <p>
+        精度が足りないときは、要因の定義 (レベルの切り方) や実績データ (除外・グループ分け) に戻って作り直します。この往復が CoBRA のモデル作りの中心で、ツールはそのたびに版 (v1, v2, v3 …) を残します。
+      </p>
+      <GoLink to="/model/build" className="self-start">
+        モデル構築の画面へ
+      </GoLink>
+    </>
+  );
+}
 
 const Estimate = () => (
   <>
     <p>
       新しい案件の規模とレベル値を入れると、ツールは 10,000 回、各要因の三角分布から CO を引いて工数を計算します。その 10,000 個の工数を並べたものが「工数の分布」で、真ん中 (中央値) が推定値です。推定値は「50% の確率でこれを超える」工数であって、安全側の数字ではないことに注意してください。
     </p>
+    <p>{EXCEED_NOTE} 画面では超過確率を主に書き、P 値は「超過確率 20%・P80」のように添えます。</p>
     <ol className="m-0 grid list-none gap-2.5 p-0 sm:grid-cols-2 lg:grid-cols-4">
       {[
         ['条件を入れる', '規模、8 要因のレベル、前提メモ'],
-        ['実行する', '推定値・P20〜P95・要因ごとの上乗せ'],
+        ['実行する', '推定値 (中央値)・超過確率 80%〜5% の工数 (P20〜P95)・要因ごとの上乗せ'],
         ['世代として残す', '条件と結果の組を G1〜G5 まで横に並べる'],
         ['比べて選ぶ', '案 A / 案 B の差を要因ごとに説明できる'],
       ].map(([t, d], i) => (
@@ -142,48 +180,39 @@ const Estimate = () => (
   </>
 );
 
-const Risk = () => (
-  <>
-    <div className="grid items-center gap-5 lg:grid-cols-[minmax(0,1fr)_300px]">
-      <svg width="100%" height="200" viewBox="0 0 520 200" role="img" aria-label="工数超過確率の曲線。工数が増えるほど超える確率が下がる">
-        <line x1="40" y1="170" x2="500" y2="170" stroke="var(--color-line)" />
-        <line x1="40" y1="20" x2="40" y2="170" stroke="var(--color-line)" />
-        <g fontFamily="Space Grotesk" fontSize="10" fill="var(--color-weak)">
-          <text x="34" y="24" textAnchor="end">100%</text>
-          <text x="34" y="98" textAnchor="end">50%</text>
-          <text x="34" y="174" textAnchor="end">0%</text>
-          <text x="40" y="188">30</text>
-          <text x="270" y="188" textAnchor="middle">42.3</text>
-          <text x="500" y="188" textAnchor="end">60 人月</text>
-        </g>
-        <path d="M 40 22 C 150 24, 220 60, 270 95 S 400 160, 500 168" fill="none" stroke="var(--color-accent)" strokeWidth="2.5" />
-        <line x1="270" y1="95" x2="270" y2="170" stroke="var(--color-line-strong)" strokeDasharray="3 3" />
-        <circle cx="270" cy="95" r="5" fill="var(--color-accent)" stroke="var(--color-bg)" strokeWidth="2" />
-        <text x="278" y="90" fontFamily="Noto Sans JP" fontSize="10" fill="var(--color-text)">
-          推定値 = 超過 50%
-        </text>
-        <line x1="312" y1="118" x2="312" y2="170" stroke="var(--color-coral)" strokeDasharray="3 3" />
-        <circle cx="312" cy="118" r="5" fill="var(--color-coral)" stroke="var(--color-bg)" strokeWidth="2" />
-        <text x="320" y="122" fontFamily="Noto Sans JP" fontSize="10" fill="var(--color-coral-soft)">
-          予算 45 → 超過 34%
-        </text>
-      </svg>
-      <div className="flex flex-col gap-2.5">
-        {[
-          ['工数 → 確率', '「予算 45 人月で足りる確率は?」— 曲線を縦に読む。'],
-          ['確率 → 工数', '「80% の確度で収めるにはいくら?」— 曲線を横に読む。'],
-          ['寄与度', '上乗せのうち何割がどの要因か。レベルを 1 段下げたときの効き目もここから。'],
-        ].map(([t, d]) => (
-          <div key={t} className="flex flex-col gap-1 rounded-xl border border-line bg-bg px-3.5 py-3">
-            <h3>{t}</h3>
-            <span className={note}>{d}</span>
-          </div>
-        ))}
+const READINGS = [
+  ['工数 → 確率', '「予算 45 人月で足りる確率は?」— 曲線を縦に読む。'],
+  ['確率 → 工数', '「超過確率 20% (P80) に抑えるにはいくら?」— 曲線を横に読む。'],
+  ['寄与度', '上乗せのうち何割がどの要因か。レベルを 1 段下げたときの効き目もここから。'],
+] as const;
+
+function Risk() {
+  const { sample, loading } = useGuideFacts();
+  const readings = sample?.budget != null ? READINGS.map(([t, d]) => [t, d.replace('予算 45 人月', `予算 ${String(sample.budget)} 人月`)] as const) : READINGS;
+  return (
+    <>
+      <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_300px]">
+        {sample ? (
+          <RiskExample sample={sample} />
+        ) : (
+          <p className="text-sub">{loading ? '見本の見積りを読み込み中…' : '見本の見積りがまだ実行されていないため、曲線は工数見積りの画面で実行してから表示されます。'}</p>
+        )}
+        <div className="flex flex-col gap-2.5">
+          {readings.map(([t, d]) => (
+            <div key={t} className="flex flex-col gap-1 rounded-xl border border-line bg-bg px-3.5 py-3">
+              <h3>{t}</h3>
+              <span className={note}>{d}</span>
+            </div>
+          ))}
+        </div>
       </div>
-    </div>
-    <p>横軸は「工数」と「中央値を 100% とした比率」で切り替えられます。比率表示は、規模の違う案件どうしで幅の広さを比べるときに便利です。</p>
-  </>
-);
+      <p>横軸は「工数」と「中央値を 100% とした比率」で切り替えられます。比率表示は、規模の違う案件どうしで幅の広さを比べるときに便利です。</p>
+      <GoLink to={`/estimate/${CURRENT_ESTIMATE_ID}/risk`} className="self-start">
+        リスクの画面へ
+      </GoLink>
+    </>
+  );
+}
 
 const E = CURRENT_ESTIMATE_ID;
 const STEPS = [
@@ -192,7 +221,7 @@ const STEPS = [
   ['03', 'モデルを構築する', 'α を推定し、交差検証で MMRE / PRED を確認。不整合があれば 01・02 に戻る。', 'モデル管理者', '/model/build'],
   ['04', '工数を見積もる', '規模とレベル値を入れて実行。条件違いは世代として並べる。', '見積り担当', `/estimate/${E}`],
   ['05', 'リスクを見る', '予算に対する超過確率、要因の寄与度、効く打ち手。', '見積り担当 / PM', `/estimate/${E}/risk`],
-  ['06', '報告する', 'A4 レポート / PDF。モデル情報と前提を同梱。JSON の書き出しもここから。', 'PMO', `/estimate/${E}/report`],
+  ['06', '報告する', 'A4 レポート / PDF。モデル情報と前提を同梱。モデルの JSON 書き出しは「取り込み / 書き出し」から。', 'PMO', `/estimate/${E}/report`],
 ] as const;
 
 const Usage = () => (
@@ -200,20 +229,28 @@ const Usage = () => (
     <ol className="m-0 flex list-none flex-col gap-2 p-0">
       {STEPS.map(([no, t, d, who, href]) => (
         <li key={no}>
-          <Link to={href} className="guide-lk grid grid-cols-[36px_minmax(0,1fr)_auto] items-center gap-3.5 rounded-[14px] border border-line bg-bg px-4 py-3.5 text-text no-underline">
+          <Link to={href} className="guide-lk grid grid-cols-[28px_minmax(0,1fr)] items-center gap-x-3 gap-y-1 rounded-[14px] border border-line bg-bg px-4 py-3.5 text-text no-underline sm:grid-cols-[36px_minmax(0,1fr)_auto] sm:gap-x-3.5">
             <span className="n text-[14px] text-accent">{no}</span>
-            <span className="flex flex-col gap-0.5">
+            <span className="flex min-w-0 flex-col gap-0.5">
               <span className="text-[14px] font-bold">{t}</span>
               <span className="text-[12px] leading-[1.5] text-sub">{d}</span>
             </span>
-            <span className="text-[11px] whitespace-nowrap text-weak">
-              {who} <span className="text-accent">↗</span>
+            <span className="col-start-2 text-[11px] text-sub sm:col-start-auto sm:whitespace-nowrap">
+              {who} <span aria-hidden="true" className="text-accent">→</span>
             </span>
           </Link>
         </li>
       ))}
     </ol>
     <p>モデル管理者が 01〜03 を整え、見積り担当が 04〜06 を回す分担が基本です。精度が足りないときや要因が増えたときだけ 01〜03 に戻ります。</p>
+    <p>
+      実績の CSV 一括取り込み、モデルパラメータ (JSON) の取り込み・書き出しは「取り込み / 書き出し」の画面で行います。
+    </p>
+    <div className="flex flex-wrap gap-2">
+      <GoLink to="/transfer">JSON を取り込む</GoLink>
+      <GoLink to="/transfer?tab=export">JSON を書き出す</GoLink>
+      <GoLink to="/transfer?tab=csv">CSV で実績を取り込む</GoLink>
+    </div>
   </>
 );
 
@@ -225,8 +262,9 @@ const TERMS = [
   ['直接要因 / 間接要因', '直接は工数に上乗せ。間接は直接要因 1 つを強めるだけで自分の CO を持たない。'],
   ['三角分布', '最良・最頻・最悪の 3 点で決まる分布。専門家の「幅のある答え」を表す。'],
   ['モンテカルロ・シミュレーション', '分布から値を何度も引いて結果の分布を作る方法。既定 10,000 回。'],
-  ['推定値 (P50)', '分布の中央値。超過確率 50%。安全側の数字ではない。'],
-  ['超過確率', 'ある工数を実績が上回る確率。予算の妥当性を測る。'],
+  ['推定値 (中央値)', '分布の中央値。超過確率 50% (P50)。安全側の数字ではない。'],
+  ['超過確率', 'ある工数を実績が上回る確率。予算の妥当性を測る。画面の工数・予算はこの確率を主に表示する。'],
+  ['P 値 (P80 など)', '工数を小さい順に並べたときの位置。P80 = 超過確率 20%、P95 = 超過確率 5%。超過確率に添えて表示する。'],
   ['MMRE / PRED(25)', 'モデル精度。平均相対誤差と、誤差 25% 以内に入った割合。'],
   ['交差検証 (1 件抜き)', '1 件ずつ隠して見積もり、当たり具合を測る精度評価。'],
   ['世代', '同じ案件の見積り条件と結果の組。最大 5 つ並べて比較する。'],

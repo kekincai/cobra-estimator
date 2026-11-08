@@ -1,5 +1,6 @@
 import { drizzle } from 'drizzle-orm/d1';
 import { Hono } from 'hono';
+import { ZodError } from 'zod';
 import { parse } from 'hono/utils/cookie';
 import { authenticate, requireLogin } from './auth';
 import * as schema from './db/schema';
@@ -39,8 +40,14 @@ const routes = app
   .route('/users', usersRoute);
 
 app.onError((err, c) => {
+  // 入力検証エラーは 400 で日本語の要約を返す（生の Zod JSON を画面に出さない）
+  if (err instanceof ZodError) {
+    const issues = err.issues.map((i) => ({ path: i.path.join('.'), message: i.message }));
+    const fields = [...new Set(issues.map((i) => i.path).filter(Boolean))].slice(0, 3).join('、');
+    return c.json({ error: fields ? `入力内容に誤りがあります（${fields}）` : '入力内容に誤りがあります', issues }, 400);
+  }
   console.error(err);
-  return c.json({ error: err.message }, 500);
+  return c.json({ error: 'サーバーでエラーが発生しました' }, 500);
 });
 
 export type AppType = typeof routes;

@@ -1,7 +1,9 @@
 /* 解説ページの本文スタイル（design/Guide.dc.html） */
 .guide-body { display: flex; flex-direction: column; gap: 18px; animation: guide-rise 0.4s var(--ease-out-rise) backwards; }
 @keyframes guide-rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
-.guide-body p { margin: 0; font-size: 13.5px; line-height: 1.85; color: var(--color-body); }
+.guide-body p { margin: 0; max-width: 42em; font-size: 13.5px; line-height: 1.85; color: var(--color-body); }
+/* 節の本文（日本語）は 1 行 40 字前後に収める。カード・図は全幅のまま */
+.guide-body > p, .guide-body > span { max-width: 42em; }
 .guide-body h2 { margin: 0; font-size: 24px; outline: none; }
 .guide-body h3 { margin: 0; font-size: 15px; font-weight: 700; }
 .guide-body dt { font-size: 13px; font-weight: 700; }

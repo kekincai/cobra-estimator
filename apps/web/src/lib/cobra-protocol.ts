@@ -10,4 +10,6 @@ export type WorkerRequest =
 export type WorkerResponse =
   | { id: number; type: 'progress'; stage: BuildStage; done: number; total: number }
   | { id: number; type: 'result'; result: unknown }
-  | { id: number; type: 'error'; message: string };
+  | { id: number; type: 'error'; message: string }
+  /** どの依頼か特定できない失敗（依頼を受け取れなかった等）。待っている依頼をすべて失敗にする */
+  | { id: null; type: 'fatal'; message: string };

@@ -41,7 +41,7 @@ export function Histogram({ bins, markers = [], label, show = true, height = 150
             <div className="absolute inset-y-0 w-0.5 transition-[left,opacity] duration-350 ease-out-rise" style={{ left, background: m.color, opacity: show ? 0.9 : 0 }} />
             {m.label && (
               <span
-                className="n absolute -top-0.5 text-[10px] whitespace-nowrap transition-[left,opacity] duration-350 ease-out-rise"
+                className="n absolute -top-0.5 text-[11px] whitespace-nowrap transition-[left,opacity] duration-350 ease-out-rise"
                 style={{ left: `calc(${left} + 6px)`, color: m.color, opacity: show ? 1 : 0, letterSpacing: 0 }}
               >
                 {m.label}

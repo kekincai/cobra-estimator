@@ -5,8 +5,9 @@ import { SEED_G3 } from 'cobra-core/seed';
 import { useMemo } from 'react';
 import type { FactorRow } from '../../../shared/types';
 import { toModelSpec } from '../../../shared/types';
-import { apiSend, qk, useEstimate, useMe, useModel, useProjects } from '../../data/api';
+import { qk, useEstimate, useMe, useModel, useProjects } from '../../data/api';
 import { CURRENT_ESTIMATE_ID } from '../../ui/Layout';
+import { sendFactor } from './api';
 
 export type { FactorRow };
 
@@ -85,6 +86,7 @@ export function useFactorContext() {
   return {
     isLoading: model.isLoading,
     error: model.error,
+    refetch: () => model.refetch(),
     data: derived,
     projects: projects.data ?? [],
     canEdit: role === 'admin',
@@ -115,7 +117,7 @@ export function useCreateFactors() {
     // 1 件ずつ順に登録する（番号の採番とルール検査をサーバー側で行うため）
     mutationFn: async (inputs: FactorInput[]) => {
       const ids: string[] = [];
-      for (const input of inputs) ids.push((await apiSend<{ id: string }>('POST', '/factors', input)).id);
+      for (const input of inputs) ids.push((await sendFactor<{ id: string }>('POST', '/factors', input)).id);
       return ids;
     },
     onSettled: invalidate,
@@ -125,7 +127,7 @@ export function useCreateFactors() {
 export function useUpdateFactor() {
   const invalidate = useInvalidate();
   return useMutation({
-    mutationFn: ({ id, patch }: { id: string; patch: Partial<FactorInput> }) => apiSend('PUT', `/factors/${id}`, patch),
+    mutationFn: ({ id, patch }: { id: string; patch: Partial<FactorInput> }) => sendFactor('PUT', `/factors/${id}`, patch),
     onSettled: invalidate,
   });
 }
@@ -133,15 +135,11 @@ export function useUpdateFactor() {
 export function useDeleteFactor() {
   const invalidate = useInvalidate();
   return useMutation({
-    mutationFn: (id: string) => apiSend('DELETE', `/factors/${id}`),
+    mutationFn: (id: string) => sendFactor('DELETE', `/factors/${id}`),
     onSettled: invalidate,
   });
 }
 
-/** 割合 ↔ 表示用の % */
-export const toPct = (v: number) => Math.round(v * 1000) / 10;
-export const fromPct = (s: string) => {
-  const x = parseFloat(String(s).replace(/[^0-9.]/g, ''));
-  return Number.isFinite(x) ? x : 0;
-};
+/** 割合 ↔ 表示用の %（実装は triangle.ts。不正な入力は null） */
+export { fromPct, toPct } from './triangle';
 export const triText = (b: number, l: number, w: number) => `+${b} / +${l} / +${w}%`;
