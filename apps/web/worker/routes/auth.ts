@@ -2,7 +2,7 @@
 //   GET /api/auth/login?next=/path → GitHub の認可画面へ
 //   GET /api/auth/callback          → GitHub から戻る。検証してセッション クッキーを発行
 //   GET /api/auth/logout            → セッション クッキーを消す
-import { eq } from 'drizzle-orm';
+import { inArray } from 'drizzle-orm';
 import { Hono } from 'hono';
 import { deleteCookie, getCookie, setCookie } from 'hono/cookie';
 import { audit } from '../audit';
@@ -63,15 +63,30 @@ export const authRoute = new Hono<AppEnv>()
     const emailsRes = await fetch('https://api.github.com/user/emails', {
       headers: { authorization: `Bearer ${tok.access_token}`, accept: 'application/vnd.github+json', 'user-agent': UA },
     });
-    const emails = (await emailsRes.json().catch(() => [])) as { email: string; primary: boolean; verified: boolean }[];
-    const primary = Array.isArray(emails) ? emails.find((e) => e.primary && e.verified) : undefined;
-    if (!primary) return page('ログインできませんでした', 'GitHub アカウントに確認済みのメールアドレスがありません。', 403);
-    const email = primary.email.toLowerCase();
+    const emailsText = await emailsRes.text();
+    let emails: unknown = null;
+    try {
+      emails = JSON.parse(emailsText);
+    } catch {
+      /* 下でログに出す */
+    }
+    // 主メールが未確認のこともあるので、確認済みのアドレスすべてを候補にする（主メールを優先）
+    const verified = Array.isArray(emails)
+      ? (emails as { email: string; primary: boolean; verified: boolean }[])
+          .filter((e) => e.verified && typeof e.email === 'string')
+          .sort((a, b) => Number(b.primary) - Number(a.primary))
+          .map((e) => e.email.toLowerCase())
+      : [];
+    if (!verified.length) {
+      console.error('github /user/emails: no verified email', emailsRes.status, emailsRes.headers.get('x-oauth-scopes'));
+      return page('ログインできませんでした', 'GitHub アカウントに確認済みのメールアドレスがありません。', 403);
+    }
 
-    const row = await c.var.db.select().from(users).where(eq(users.email, email)).get();
+    const rows = await c.var.db.select().from(users).where(inArray(users.email, verified));
+    const row = verified.map((e) => rows.find((r) => r.email === e)).find(Boolean);
     if (!row) return page('利用権限がありません', 'この GitHub アカウントのメールアドレスは利用者として登録されていません。管理者に登録を依頼してください。', 403);
 
-    setCookie(c, SESSION_COOKIE, await signToken({ email }, 'session', c.env.SESSION_SECRET, SESSION_TTL_S), {
+    setCookie(c, SESSION_COOKIE, await signToken({ email: row.email }, 'session', c.env.SESSION_SECRET, SESSION_TTL_S), {
       path: '/', secure: true, httpOnly: true, sameSite: 'Lax', maxAge: SESSION_TTL_S,
     });
     c.set('user', row);
