@@ -1,2 +1,5 @@
 AUTH_MODE=dev
 DEV_USER_EMAIL=dev@example.com
+# 本番と同じ GitHub ログインを試すときだけ（AUTH_MODE=production にして）設定する
+GITHUB_CLIENT_SECRET=
+SESSION_SECRET=

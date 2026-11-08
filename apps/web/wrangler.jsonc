@@ -5,8 +5,10 @@
   "compatibility_date": "2026-11-01",
   "compatibility_flags": ["nodejs_compat"],
   "assets": {
+    "binding": "ASSETS",
     "not_found_handling": "single-page-application",
-    "run_worker_first": ["/api/*"]
+    // 本番は全ページにログインが要るので、静的ファイルもまず Worker を通す（worker/index.ts）
+    "run_worker_first": true
   },
   "routes": [{ "pattern": "cobra.kejincai.dev", "custom_domain": true }],
   "workers_dev": true,
@@ -19,9 +21,12 @@
     }
   ],
   "vars": {
-    // "production": 書き込み API は Cloudflare Access の JWT が必要（未設定なら読み取り専用）
+    // "production": GitHub でログインした users 表の利用者だけが使える
     // ローカルは .dev.vars で AUTH_MODE=dev
-    "AUTH_MODE": "production"
+    "AUTH_MODE": "production",
+    // GitHub OAuth App の Client ID（公開値）。Client Secret と SESSION_SECRET は `wrangler secret put` で設定する。
+    // どれかが空のあいだはログインできない（本番は全ページ 401 / ログイン画面）。
+    "GITHUB_CLIENT_ID": ""
   },
   "observability": { "enabled": true }
 }

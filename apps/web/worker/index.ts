@@ -1,9 +1,14 @@
 import { drizzle } from 'drizzle-orm/d1';
 import { Hono } from 'hono';
-import { authenticate } from './auth';
+import { parse } from 'hono/utils/cookie';
+import { authenticate, requireLogin } from './auth';
 import * as schema from './db/schema';
 import type { AppEnv } from './env';
+import { SESSION_COOKIE, sessionEmail } from './session';
+
+const getCookie = (header: string | null, name: string) => (header ? parse(header, name)[name] : undefined);
 import { auditRoute } from './routes/audit';
+import { authRoute } from './routes/auth';
 import { estimatesRoute } from './routes/estimates';
 import { factorsRoute } from './routes/factors';
 import { modelRoute } from './routes/model';
@@ -17,11 +22,13 @@ app.use('*', async (c, next) => {
   return next();
 });
 app.use('*', authenticate);
+app.use('*', requireLogin);
 
 app.get('/health', (c) => c.json({ ok: true }));
 app.get('/me', (c) => c.json({ user: c.var.user }));
 
 const routes = app
+  .route('/auth', authRoute)
   .route('/model', modelRoute)
   .route('/factors', factorsRoute)
   .route('/projects', projectsRoute)
@@ -36,4 +43,22 @@ app.onError((err, c) => {
 
 export type AppType = typeof routes;
 
-export default { fetch: app.fetch } satisfies ExportedHandler<Env>;
+/**
+ * 入口。assets.run_worker_first = true なので静的ファイルもここを通る。
+ * 本番はセッションが無ければ GitHub ログインへ回す（SPA・JS・CSS もログイン後だけ配る）。
+ */
+export default {
+  async fetch(req, env, ctx) {
+    const url = new URL(req.url);
+    if (url.pathname === '/api' || url.pathname.startsWith('/api/')) return app.fetch(req, env, ctx);
+    if (env.AUTH_MODE !== 'dev') {
+      const token = getCookie(req.headers.get('cookie'), SESSION_COOKIE);
+      if (!(await sessionEmail(token, env.SESSION_SECRET))) {
+        const login = new URL('/api/auth/login', url.origin);
+        login.searchParams.set('next', url.pathname + url.search);
+        return Response.redirect(login.toString(), 302);
+      }
+    }
+    return env.ASSETS.fetch(req);
+  },
+} satisfies ExportedHandler<Env>;
