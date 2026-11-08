@@ -1,4 +1,5 @@
 // 要因レベル L0〜L3 の小さなチップ列（実績一覧など）。L3 は珊瑚色。
+// L0 の text-weak は raised 上で 4.55:1（index.css の weak を AA 以上に調整済み）。
 const CLS = [
   'bg-raised text-weak',
   'bg-lv1-bg text-lv1',

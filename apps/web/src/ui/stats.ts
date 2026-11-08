@@ -4,13 +4,13 @@ import { quantile } from 'cobra-core';
 
 /** 昇順サンプルを [lo, hi) の n 区間に数える。範囲外は端の区間に含めない。 */
 export function binSamples(sorted: ArrayLike<number>, lo: number, hi: number, n: number): number[] {
-  const counts = new Array<number>(n).fill(0);
-  const w = (hi - lo) / n;
-  if (!(w > 0)) return counts;
+  const counts = new Array<number>(Math.max(0, Math.floor(n) || 0)).fill(0);
+  const w = (hi - lo) / counts.length;
+  if (!(w > 0) || !Number.isFinite(w)) return counts;
   for (let i = 0; i < sorted.length; i++) {
     const v = sorted[i]!;
-    if (v < lo || v >= hi) continue;
-    counts[Math.min(n - 1, Math.floor((v - lo) / w))]!++;
+    if (!(v >= lo && v < hi)) continue; // 範囲外・NaN は数えない
+    counts[Math.min(counts.length - 1, Math.floor((v - lo) / w))]!++;
   }
   return counts;
 }
@@ -26,14 +26,22 @@ export function niceStep(span: number, approxCount: number): number {
 
 /** [lo, hi] に収まるきりのよい目盛り */
 export function niceTicks(lo: number, hi: number, approxCount = 4): number[] {
-  const step = niceStep(hi - lo, approxCount);
   const out: number[] = [];
-  for (let v = Math.ceil(lo / step) * step; v <= hi + step * 1e-9; v += step) out.push(Math.round(v * 1e6) / 1e6);
+  if (!Number.isFinite(lo) || !Number.isFinite(hi)) return out;
+  const step = niceStep(hi - lo, approxCount);
+  const start = Math.ceil(lo / step) * step;
+  // 累積加算ではなく start + i × step（誤差をためない・桁落ちで止まらない）。目盛りは多くても 1,000 本
+  for (let i = 0; i < 1000; i++) {
+    const v = start + i * step;
+    if (v > hi + step * 1e-9) break;
+    out.push(Math.round(v * 1e6) / 1e6);
+  }
   return out;
 }
 
-/** 分布の表示範囲: 0.5〜99.5 パーセンタイルの両側に幅の 15% の余白 */
+/** 分布の表示範囲: 0.5〜99.5 パーセンタイルの両側に幅の 15% の余白。サンプルが無ければ 0〜1 */
 export function histRange(sorted: ArrayLike<number>): { lo: number; hi: number } {
+  if (sorted.length === 0) return { lo: 0, hi: 1 };
   const a = quantile(sorted, 0.005);
   const b = quantile(sorted, 0.995);
   const pad = Math.max((b - a) * 0.15, Math.abs(b) * 0.01, 1e-9);

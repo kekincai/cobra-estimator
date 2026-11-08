@@ -1,6 +1,7 @@
 // ダッシュボード（design/Main.dc.html）。アクティブなモデルと最新の見積りの概要。
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router';
+// 読み込み中・エラー・データなしを分けて表示する（読み込み中やエラーのときに「無い」とは言わない）。
+import { useMemo } from 'react';
+import { Link, useSearchParams } from 'react-router';
 import { ActivityTile } from '../features/dashboard/ActivityTile';
 import { describeFeed } from '../features/dashboard/activity';
 import { ContributionTile } from '../features/dashboard/ContributionTile';
@@ -8,201 +9,240 @@ import { BudgetTile, DistributionTile } from '../features/dashboard/Distribution
 import { EstimateTile } from '../features/dashboard/EstimateTile';
 import { estimateTitle, fmtMD } from '../features/dashboard/format';
 import { GenerationsTile } from '../features/dashboard/GenerationsTile';
+import { estimateLinks } from '../features/dashboard/links';
 import { AccuracyTile, AlphaTile } from '../features/dashboard/ModelTiles';
-import { bandScale, exceedAt } from '../features/dashboard/results';
+import { NewEstimateButton } from '../features/dashboard/NewEstimateButton';
+import { exceedAt, sharedBandScale } from '../features/dashboard/results';
+import { SearchBox } from '../features/dashboard/SearchBox';
+import { ErrorBanner, ReviewBadge } from '../features/dashboard/StateViews';
 import { useAudit } from '../features/dashboard/useAudit';
+import { useBudgetDraft } from '../features/dashboard/useBudgetDraft';
 import { useDashboard } from '../features/dashboard/useDashboard';
 import '../features/dashboard/dashboard.css';
+import { describeApiError } from '../ui/apiError';
 import { CURRENT_ESTIMATE_ID } from '../ui/Layout';
 import { useMounted } from '../ui/useMounted';
+import { useUnsavedChangesPrompt } from '../ui/useUnsavedChangesPrompt';
+
+/** 「最近の操作」に出す件数（ログインなどを除いたあと） */
+const FEED_ROWS = 6;
 
 export default function MainPage() {
-  const d = useDashboard();
-  const audit = useAudit(6);
+  const [params, setParams] = useSearchParams();
+  const d = useDashboard(params.get('gen'));
+  // ログインの記録を除いてから 6 件にするので、少し多めに取る
+  const audit = useAudit(20);
   const mounted = useMounted();
   const estimateId = d.estimate?.id ?? CURRENT_ESTIMATE_ID;
   const result = d.result;
-  // 予算: 見積りに保存された値 → なければ P80。スライダーで動かした値はこの画面だけのもの
-  const [budget, setBudget] = useState<number | null>(null);
+  const isRealGen = !!d.gen && !d.isSample;
+  const links = estimateLinks(estimateId, isRealGen ? d.gen!.label : null);
+
+  // 予算: 保存値 → なければ P80。スライダーで動かした値は「予算を保存」するまで試算
   const savedBudget = d.estimate?.budget ?? null;
-  const scale = useMemo(() => (result ? bandScale(result, savedBudget) : { lo: 0, hi: 1 }), [result, savedBudget]);
-  const budgetValue = budget ?? savedBudget ?? (result ? Math.round(result.pct[80] * 2) / 2 : 0);
+  const budget = useBudgetDraft(d.estimate?.id ?? null, savedBudget);
+  useUnsavedChangesPrompt(budget.dirty, { message: '予算の試算値を保存していません。保存せずに移動しますか？' });
+  const resultOf = (g: (typeof d.gens)[number]) => (g.id === d.gen?.id ? result : g.stored);
+  // 帯・ヒストグラム・スライダーは全世代で共通の目盛り（世代を切り替えても位置が動かない）
+  const scale = useMemo(
+    () => sharedBandScale(d.gens.map(resultOf), savedBudget) ?? { lo: 0, hi: 1 },
+    // resultOf は d.gen と result から決まる
+    [d.gens, d.gen, result, savedBudget],
+  );
+  const budgetValue = budget.draft ?? savedBudget ?? (result ? Math.round(result.pct[80] * 2) / 2 : 0);
   const pExceed = result ? exceedAt(result, budgetValue) : 0;
 
   const inconsistencies = d.active?.inconsistencies ?? [];
   const adopted = d.projects.filter((p) => p.adopted).length;
   const prev = d.genIndex > 0 ? d.gens[d.genIndex - 1]! : null;
-  const resultOf = (g: (typeof d.gens)[number]) => (g.id === d.gen?.id ? result : g.stored);
 
   const feed = useMemo(
     () =>
-      describeFeed(audit.data ?? [], {
-        gens: d.gens,
-        sco: (g) => resultOf(g)?.sco ?? null,
-        versions: d.versions,
-        factors: d.bundle?.factors ?? [],
-      }),
+      describeFeed(
+        audit.data ?? [],
+        { gens: d.gens, sco: (g) => resultOf(g)?.sco ?? null, versions: d.versions, factors: d.bundle?.factors ?? [] },
+        FEED_ROWS,
+      ),
     // resultOf は d.gen と result から決まる
     [audit.data, d.gens, d.versions, d.bundle, result],
   );
 
-  const search = useRef<HTMLInputElement>(null);
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
-        e.preventDefault();
-        search.current?.focus();
-      }
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, []);
+  const pick = (id: string) => {
+    const g = d.gens.find((x) => x.id === id);
+    if (!g || g.id === 'sample') return;
+    setParams(
+      (p) => {
+        const next = new URLSearchParams(p);
+        next.set('gen', g.label);
+        return next;
+      },
+      { replace: true, preventScrollReset: true },
+    );
+  };
 
   const tab = 'inline-flex min-h-[30px] items-center rounded-full px-3 text-[12px] font-medium no-underline';
+  const errorText = d.error ? `ダッシュボードのデータを読み込めませんでした。${describeApiError(d.error)}` : null;
 
   return (
-    <div className="flex min-w-0 flex-col gap-5 px-8 pt-6 pb-10">
+    <div className="flex min-w-0 flex-col gap-5 px-4 pt-6 pb-10 sm:px-8">
       <div className="flex flex-wrap items-center gap-2.5">
-        <div className="relative inline-flex items-center">
-          <svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--color-weak)" strokeWidth="2.2" strokeLinecap="round" className="absolute left-[13px]">
-            <circle cx="11" cy="11" r="7" />
-            <path d="M20 20l-3.5-3.5" />
-          </svg>
-          <input
-            ref={search}
-            type="search"
-            aria-label="見積り・モデルを検索"
-            placeholder="見積り、モデル、プロジェクトを検索"
-            className="dash-search box-border min-h-10 w-[260px] rounded-[10px] border border-line bg-card pr-3.5 pl-9 font-sans text-[13px] text-text"
-          />
-          <span className="n absolute right-2.5 rounded-[5px] border border-muted px-[5px] py-px text-[10px] font-medium tracking-normal text-weak">⌘K</span>
-        </div>
+        <SearchBox />
         <div className="grow" />
-        <span className="inline-flex min-h-9 items-center gap-2 rounded-[10px] border border-line bg-card px-3 text-[12px] text-sub">
-          <span className={`size-[7px] rounded-full ${inconsistencies.length ? 'bg-coral' : 'bg-ok'}`} />
-          要確認 {inconsistencies.length} 件
-        </span>
-        <Link to="/transfer" className="btn inline-flex min-h-9 items-center rounded-[10px] border border-line bg-card px-3 text-[12px] font-medium text-text no-underline">
-          インポート / エクスポート
+        <ReviewBadge status={d.modelStatus} count={inconsistencies.length} />
+        <Link to="/transfer" className="btn inline-flex min-h-10 items-center rounded-[10px] border border-line bg-card px-3 text-[12px] font-medium text-text no-underline">
+          取り込み / 書き出し
         </Link>
-        <Link to={`/estimate/${estimateId}`} className="btn inline-flex min-h-9 items-center gap-2 rounded-[10px] bg-accent px-3.5 text-[12px] font-bold text-bg no-underline">
-          + 新しい見積り
-        </Link>
+        <NewEstimateButton />
       </div>
 
       <header className="flex flex-wrap items-end justify-between gap-4">
-        <div className="flex flex-col gap-1.5">
+        <div className="flex min-w-0 flex-col gap-1.5">
           <Link
             to="/model/build"
-            className="btn inline-flex min-h-7 items-center gap-2 self-start rounded-lg border border-line bg-card pr-2.5 pl-2 text-[11px] text-sub no-underline"
+            className="btn inline-flex min-h-7 max-w-full items-center gap-2 self-start rounded-lg border border-line bg-card pr-2.5 pl-2 text-[11px] text-sub no-underline"
           >
-            <span className="size-1.5 rounded-full bg-teal" />
-            {d.bundle ? `${d.bundle.model.name}${d.active ? ` v${d.active.version}` : ''}` : 'モデルを読み込み中…'}
-            <svg aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-              <path d="M6 9l6 6 6-6" />
-            </svg>
+            <span aria-hidden="true" className={`size-1.5 shrink-0 rounded-full ${d.modelStatus === 'error' ? 'bg-coral' : d.modelStatus === 'loading' ? 'bg-muted' : 'bg-teal'}`} />
+            <span className="min-w-0 truncate">
+              {d.bundle
+                ? `${d.bundle.model.name}${d.active ? ` v${d.active.version}` : ''}`
+                : d.modelStatus === 'error'
+                  ? 'モデルを読み込めませんでした'
+                  : 'モデルを読み込み中…'}
+            </span>
+            <span aria-hidden="true">→</span>
           </Link>
-          <h1 className="n m-0 text-[30px] leading-[1.1]">{d.estimate ? estimateTitle(d.estimate.name) : 'ダッシュボード'}</h1>
+          <h1 className="n m-0 text-[30px] leading-[1.1] break-words">{d.estimate ? estimateTitle(d.estimate.name) : 'ダッシュボード'}</h1>
           <span className="text-[12px] text-sub">
             {[
               d.active && `${fmtMD(d.active.builtAt)} モデル構築`,
               d.active && `α ${d.active.alpha.toFixed(4)}`,
               d.bundle && `要因 ${d.bundle.factors.length}`,
-              d.projects.length > 0 && `実績 ${adopted}/${d.projects.length} 件`,
+              d.projectsReady && d.projects.length > 0 && `実績 ${adopted}/${d.projects.length} 件`,
               d.estimate && `見積り ${d.isSample ? 0 : d.gens.length} 世代`,
             ]
               .filter(Boolean)
               .join(' ・ ')}
           </span>
         </div>
-        <nav aria-label="見積りの表示" className="flex gap-1.5">
+        <nav aria-label="見積りの表示" className="flex flex-wrap gap-1.5">
           <span aria-current="page" className={`${tab} bg-raised text-text`}>
             概要
           </span>
-          <Link to={`/estimate/${estimateId}`} className={`${tab} text-sub hover:text-text`}>
+          <Link to={links.conditions} className={`${tab} text-sub hover:text-text`}>
             条件
           </Link>
-          <Link to={`/estimate/${estimateId}/risk`} className={`${tab} text-sub hover:text-text`}>
+          <Link to={links.risk} className={`${tab} text-sub hover:text-text`}>
             リスク
           </Link>
-          <Link to={`/estimate/${estimateId}/report`} className={`${tab} text-sub hover:text-text`}>
+          <Link to={links.report} className={`${tab} text-sub hover:text-text`}>
             レポート
           </Link>
         </nav>
       </header>
 
-      {d.error && (
-        <p role="alert" className="m-0 rounded-xl bg-coral-bg px-4 py-3 text-[13px] text-coral-ink">
-          データを読み込めませんでした: {d.error.message}
-        </p>
-      )}
-      {d.simError && (
-        <p role="alert" className="m-0 rounded-xl bg-coral-bg px-4 py-3 text-[13px] text-coral-ink">
-          シミュレーションに失敗しました: {d.simError}
-        </p>
+      {errorText && <ErrorBanner message={errorText} onRetry={d.retry} />}
+      {d.simError != null && !d.running && (
+        <ErrorBanner message={`シミュレーションに失敗しました。${describeApiError(d.simError, '再実行してください。')}`} onRetry={d.rerun} />
       )}
 
       <section aria-label="ダッシュボード" className="grid grid-cols-12 gap-4">
         {d.gen && result ? (
           <>
             <EstimateTile
-              estimateId={estimateId}
+              links={links}
               gen={d.gen}
               prev={prev}
-              prevP50={prev ? (prev.stored?.p50 ?? null) : null}
+              prevP50={prev ? (resultOf(prev)?.p50 ?? null) : null}
               result={result}
               scale={scale}
               budget={budgetValue}
               mounted={mounted}
               running={d.running}
               progress={d.progress}
+              rerunNote={d.rerunNote}
               onRun={() => void d.rerun()}
             />
-            <DistributionTile result={result} budget={budgetValue} pExceed={pExceed} mounted={mounted} />
-            <BudgetTile budget={budgetValue} scale={scale} pExceed={pExceed} p80={result.pct[80]} mounted={mounted} onBudget={setBudget} />
+            <DistributionTile result={result} scale={scale} budget={budgetValue} pExceed={pExceed} mounted={mounted} />
+            <BudgetTile
+              budget={budgetValue}
+              scale={scale}
+              pExceed={pExceed}
+              p80={result.pct[80]}
+              mounted={mounted}
+              onBudget={budget.setDraft}
+              dirty={budget.dirty}
+              savedBudget={savedBudget}
+              saving={budget.saving}
+              justSaved={budget.justSaved}
+              saveError={budget.error ? describeApiError(budget.error, '予算を保存できませんでした。時間をおいて再試行してください。') : null}
+              onSave={budget.save}
+              onRevert={budget.revert}
+            />
           </>
         ) : (
-          <EmptyEstimate loading={d.loading} hasEstimate={!!d.estimate} hasModel={!!d.active} estimateId={estimateId} />
+          <EstimatePlaceholder
+            state={d.error ? 'error' : d.loading ? 'loading' : !d.active ? 'no-model' : !d.estimate ? 'no-estimate' : 'simulating'}
+            conditionsHref={links.conditions}
+          />
         )}
 
-        <AlphaTile active={d.active} versions={d.versions} />
-        <AccuracyTile active={d.active} mounted={mounted} />
-        {d.gen && result && <ContributionTile gen={d.gen} result={result} factors={d.bundle?.factors ?? []} mounted={mounted} />}
+        <AlphaTile status={d.modelStatus} active={d.active} versions={d.versions} />
+        <AccuracyTile status={d.modelStatus} active={d.active} mounted={mounted} />
+        {d.gen && result && <ContributionTile gen={d.gen} result={result} bundle={d.bundle} mounted={mounted} />}
         {d.gen && (
           <GenerationsTile
-            estimateId={estimateId}
+            estimateHref={links.conditions}
             gens={d.gens}
             selectedId={d.gen.id}
             resultOf={resultOf}
             isSample={d.isSample}
             inconsistencies={inconsistencies}
             mounted={mounted}
-            onPick={d.pick}
+            onPick={pick}
           />
         )}
-        <ActivityTile items={feed} loading={audit.isLoading} />
+        <ActivityTile
+          items={feed}
+          status={audit.isError ? 'error' : audit.isLoading ? 'loading' : 'ready'}
+          error={audit.isError ? `操作の記録を読み込めませんでした。${describeApiError(audit.error)}` : null}
+          onRetry={() => void audit.refetch()}
+        />
       </section>
     </div>
   );
 }
 
-function EmptyEstimate({ loading, hasEstimate, hasModel, estimateId }: { loading: boolean; hasEstimate: boolean; hasModel: boolean; estimateId: string }) {
-  const msg = loading
-    ? '読み込み中…'
-    : !hasModel
-      ? '採用中のモデルがありません。モデルを構築すると、見積りを実行できます。'
-      : !hasEstimate
-        ? 'まだ見積りがありません。'
-        : 'シミュレーション中…';
+type PlaceholderState = 'loading' | 'error' | 'no-model' | 'no-estimate' | 'simulating';
+
+/** 推定値タイルの代わり。読み込み中は骨組み、エラーは「—」、データが無いときだけ次の一歩を示す */
+function EstimatePlaceholder({ state, conditionsHref }: { state: PlaceholderState; conditionsHref: string }) {
+  const msg: Record<PlaceholderState, string> = {
+    loading: '読み込み中…',
+    error: '—',
+    'no-model': '見積りに使うモデルがまだありません。モデルを構築すると、見積りを実行できます。',
+    'no-estimate': 'まだ見積りがありません。「+ 新しい見積り」から作成できます。',
+    simulating: 'シミュレーション中…',
+  };
   return (
-    <div className="tile col-span-12 flex min-h-[220px] flex-col items-start justify-center gap-3 px-[26px] py-6">
-      <span className="text-[12px] text-sub">推定工数 (超過確率 50%)</span>
-      <span className="text-[15px] font-medium" aria-live="polite">
-        {msg}
-      </span>
-      {!loading && (
-        <Link to={hasModel ? `/estimate/${estimateId}` : '/model/build'} className="btn inline-flex min-h-[38px] items-center rounded-[10px] bg-raised px-3.5 text-[12px] font-medium text-text no-underline">
-          {hasModel ? '工数見積りへ' : 'モデル構築へ'}
+    <div className="tile col-span-12 flex min-h-[220px] flex-col items-start justify-center gap-3 px-5 py-6 sm:px-[26px]" aria-busy={state === 'loading' || state === 'simulating'}>
+      <h2 className="m-0 text-[12px] font-normal text-sub">推定工数 (超過確率 50%)</h2>
+      {state === 'loading' ? (
+        <>
+          <span aria-hidden="true" className="dash-skel block h-[72px] w-[min(240px,70%)]" />
+          <span className="sr-only">読み込み中…</span>
+        </>
+      ) : (
+        <span className={state === 'error' ? 'n text-[40px] leading-none text-sub' : 'text-[15px] font-medium'}>{msg[state]}</span>
+      )}
+      {state === 'error' && <span className="text-[12px] text-sub">上のメッセージの「再試行」で読み込み直せます。</span>}
+      {state === 'no-model' && (
+        <Link to="/model/build" className="btn inline-flex min-h-10 items-center rounded-[10px] bg-raised px-3.5 text-[12px] font-medium text-text no-underline">
+          モデル構築へ
+        </Link>
+      )}
+      {state === 'simulating' && (
+        <Link to={conditionsHref} className="btn inline-flex min-h-10 items-center rounded-[10px] bg-raised px-3.5 text-[12px] font-medium text-text no-underline">
+          工数見積りへ
         </Link>
       )}
     </div>

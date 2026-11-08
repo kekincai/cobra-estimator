@@ -1,9 +1,10 @@
 import { fmt1 } from './format';
+import { exceedLabel, exceedWithP } from './percentile';
 import { clamp } from './stats';
 import { useMounted } from './useMounted';
 
 /**
- * P20〜P95 の見込み幅の帯。P20〜P80 を強調色、P80〜P95 を薄色、P50 に縦マーカー。
+ * P20〜P95 の見込み幅の帯（ラベルは超過確率が主、P 値は title / aria の補助）。P20〜P80 を強調色、P80〜P95 を薄色、P50 に縦マーカー。
  * reference があれば帯の下に ▲（例: 保存済みの世代）を置く。
  */
 export function PBand({
@@ -26,15 +27,17 @@ export function PBand({
   const pct = (x: number) => clamp(((x - lo) / (hi - lo)) * 100, 0, 100);
   return (
     <div className="flex flex-col gap-1.5">
-      <div className="flex justify-between text-[11px] text-weak">
-        <span>P20 {fmt1(p20)}</span>
-        <span>P50 {fmt1(p50)}</span>
-        <span>P80 {fmt1(p80)}</span>
-        <span>P95 {fmt1(p95)}</span>
+      <div className="flex justify-between gap-2 text-[11px] text-weak">
+        {([[20, p20], [50, p50], [80, p80], [95, p95]] as const).map(([p, v]) => (
+          <span key={p} className="flex flex-col items-start leading-tight last:items-end" title={exceedWithP(p)}>
+            <span>{exceedLabel(p)}</span>
+            <span className="font-num text-sub">{fmt1(v)}</span>
+          </span>
+        ))}
       </div>
       <div
         role="img"
-        aria-label={`見込み幅 P20 ${fmt1(p20)}、P50 ${fmt1(p50)}、P80 ${fmt1(p80)}、P95 ${fmt1(p95)} 人月`}
+        aria-label={`見込み幅 ${([[20, p20], [50, p50], [80, p80], [95, p95]] as const).map(([p, v]) => `${exceedWithP(p)} ${fmt1(v)}`).join('、')} 人月`}
         className="relative h-3 rounded-md bg-raised"
       >
         <div className="mk absolute inset-y-0 rounded-md bg-accent" style={{ left: `${pct(p20)}%`, width: `${pct(p80) - pct(p20)}%`, opacity: mounted ? 0.9 : 0 }} />

@@ -1,6 +1,20 @@
 // JSON / XML 取り込みの計画づくり: 内容グループ、同名要因の衝突、確定 API に送る差分。
-import type { FactorRow, TransferFactorInsert, TransferFactorUpdate, TransferImportRequest, TransferProjectInsert } from '../../../shared/types';
+import type { FactorRow, TransferFactorInsert, TransferFactorUpdate, TransferImportRequest, TransferImportResponse, TransferProjectInsert } from '../../../shared/types';
+import { DEFAULT_PROJECT_RESOLUTION, matchProject, type ExistingProject, type MatchStatus, type ProjectResolution } from './projectMatch';
 import { relationsOf, type FileFactor, type ModelFile } from './schema';
+
+/** 既存実績の上書き（同じ ID で内容が違い、「既存を更新」を選んだもの）。グループ・採用は変えない。 */
+export interface TransferProjectUpdate {
+  id: string;
+  name: string;
+  sizeFP: number;
+  effortMM: number;
+  levels: Record<string, number>;
+  note: string;
+}
+/** 確定 API に送る内容（shared の型に実績の更新を足したもの） */
+export type ImportRequest = TransferImportRequest & { projectsUpdate?: TransferProjectUpdate[] };
+export type ImportResponse = TransferImportResponse & { projectsUpdated?: number };
 
 export const IMPORT_GROUPS = ['stdFactors', 'stdTriangles', 'userFactors', 'userTriangles', 'relations', 'projects'] as const;
 export type ImportGroupKey = (typeof IMPORT_GROUPS)[number];
@@ -23,7 +37,10 @@ export interface Conflict {
   fileNo: number;
   name: string;
   existingId: string;
+  /** 1 行の要約（最初の差分 + 「ほか N 点」） */
   diff: string;
+  /** すべての差分（展開して見せる） */
+  diffs: string[];
 }
 
 function trianglesByNo(file: ModelFile) {
@@ -38,6 +55,13 @@ function trianglesByNo(file: ModelFile) {
 
 /** 既存要因と取り込み要因の差分を 1 行で説明する（設計稿の書き方に合わせる） */
 export function describeDiff(f: FileFactor, tris: TransferFactorInsert['triangles'], ex: ExistingFactor): string {
+  const diffs = factorDiffs(f, tris, ex);
+  if (!diffs.length) return '内容は同じ';
+  return diffs.length === 1 ? diffs[0]! : `${diffs[0]} ほか ${diffs.length - 1} 点`;
+}
+
+/** 既存要因と取り込み要因の差分（すべて）。同じなら空配列。 */
+export function factorDiffs(f: FileFactor, tris: TransferFactorInsert['triangles'], ex: ExistingFactor): string[] {
   const diffs: string[] = [];
   for (let i = 3; i >= 0; i--) {
     if ((f.levels[i] ?? '') !== (ex.levels[i] ?? '')) diffs.push(`L${i} の定義文が異なる — 既存「${ex.levels[i]}」 / 取り込み「${f.levels[i]}」`);
@@ -60,8 +84,7 @@ export function describeDiff(f: FileFactor, tris: TransferFactorInsert['triangle
       if (Math.abs(t[k] - e[k]) > 1e-9) diffs.push(`三角分布 ${label}が異なる — 既存 ${fmt2(e[k])} / 取り込み ${fmt2(t[k])} (${t.expert})`);
     }
   }
-  if (!diffs.length) return '内容は同じ';
-  return diffs.length === 1 ? diffs[0]! : `${diffs[0]} ほか ${diffs.length - 1} 点`;
+  return diffs;
 }
 
 /** 選んだ要因グループのうち、既存と同じ名前の要因 */
@@ -72,7 +95,9 @@ export function findConflicts(file: ModelFile, existing: ExistingFactor[], picke
     .filter((f) => (isStd(f) ? picked.stdFactors : picked.userFactors))
     .flatMap((f) => {
       const ex = byName.get(f.name.trim());
-      return ex ? [{ fileNo: f.no, name: f.name, existingId: ex.id, diff: describeDiff(f, tris.get(f.no) ?? [], ex) }] : [];
+      if (!ex) return [];
+      const t = tris.get(f.no) ?? [];
+      return [{ fileNo: f.no, name: f.name, existingId: ex.id, diff: describeDiff(f, t, ex), diffs: factorDiffs(f, t, ex) }];
     });
 }
 
@@ -98,13 +123,30 @@ export function importGroups(file: ModelFile, existing: ExistingFactor[], newGro
   const pj = file.projects ?? [];
   const author = file.exportedBy ? `${file.exportedBy} が定義。` : '';
   return [
-    { key: 'stdFactors', name: 'CoBRA 標準の変動要因', desc: `標準要因 ${std.length} 件と、そのレベル定義${stdSame ? `。うち ${stdSame} 件は既存と同名` : ''}`, count: std.length, tag: stdSame ? `同名 ${stdSame}` : '' },
-    { key: 'stdTriangles', name: '標準の三角分布', desc: `標準要因ごとの ${experts} 名分 (最良 / 最頻 / 最悪)`, count: triCount(std), tag: '' },
+    {
+      key: 'stdFactors', name: 'CoBRA 標準の変動要因',
+      desc: std.length ? `標準要因 ${std.length} 件と、そのレベル定義。選ぶと現在のモデルに要因として追加されます${stdSame ? `。うち ${stdSame} 件は既存と同名` : ''}` : 'ファイルに含まれていません',
+      count: std.length, tag: stdSame ? `同名 ${stdSame}` : std.length ? 'モデルに追加' : '',
+    },
+    { key: 'stdTriangles', name: '標準の三角分布', desc: std.length ? `標準要因ごとの ${experts} 名分 (最良 / 最頻 / 最悪)` : 'ファイルに含まれていません', count: triCount(std), tag: '' },
     { key: 'userFactors', name: 'ユーザ定義の変動要因', desc: `${author}${userSame ? `うち ${userSame} 件は既存と同名` : '一から定義された要因とレベル定義'}`, count: user.length, tag: userSame ? `同名 ${userSame}` : '' },
-    { key: 'userTriangles', name: 'ユーザ定義の三角分布', desc: `上の ${user.length} 要因 × ${experts} 名`, count: triCount(user), tag: '' },
+    { key: 'userTriangles', name: 'ユーザ定義の三角分布', desc: user.length ? `上の ${user.length} 要因 × ${experts} 名` : 'ファイルに含まれていません', count: triCount(user), tag: '' },
     { key: 'relations', name: '要因間の関係', desc: '間接 → 直接 の対応 (一段階)', count: rels.length, tag: '' },
-    { key: 'projects', name: 'プロジェクト実績データ', desc: `規模・工数・レベル値 ${pj.length} 件。グループ ${newGroupLabel} として追加`, count: pj.length, tag: '機密' },
+    { key: 'projects', name: 'プロジェクト実績データ', desc: pj.length ? `規模・工数・レベル値 ${pj.length} 件。新しい実績はグループ ${newGroupLabel} として追加` : 'ファイルに含まれていません', count: pj.length, tag: pj.length ? '機密' : '' },
   ];
+}
+
+/**
+ * 「内容」の既定の選択。
+ * - 実績（機密）は選ばない
+ * - CoBRA 標準の要因・三角分布も選ばない（選ぶと現在のモデルの要因表に入るため。「要因を追加」の標準リストは変わらない）
+ * - それ以外は中身があれば選ぶ
+ */
+export function defaultPicked(groups: Pick<ImportGroupInfo, 'key' | 'count'>[]): Picked {
+  const p = Object.fromEntries(IMPORT_GROUPS.map((k) => [k, false])) as Picked;
+  const off: ImportGroupKey[] = ['projects', 'stdFactors', 'stdTriangles'];
+  for (const g of groups) p[g.key] = g.count > 0 && !off.includes(g.key);
+  return p;
 }
 
 /** 既存と重ならないグループ ID（A, B, … Z, G27 …） */
@@ -128,15 +170,41 @@ export interface PlanInput {
   picked: Picked;
   resolutions: Record<number, Resolution>;
   existingFactors: ExistingFactor[];
-  existingProjects: { id: string }[];
+  existingProjects: ExistingProject[];
   existingGroups: { id: string; name: string }[];
+  /** 同じ ID で内容が違う実績の扱い（ファイルの ID → 扱い）。未指定は「別 ID で追加」 */
+  projectResolutions?: Record<string, ProjectResolution>;
   newId?: () => string;
 }
 
+/** 同じ ID の実績が既存にあったもの */
+export interface ProjectDup {
+  fileId: string;
+  name: string;
+  status: Exclude<MatchStatus, 'new'>;
+  diffs: string[];
+  /** changed のときの扱い（same は常に取り込まない） */
+  resolution: ProjectResolution | null;
+}
+
 export interface ImportPlan {
-  request: TransferImportRequest;
+  request: ImportRequest;
   after: { factors: number; triangles: number; projects: number; standard: number };
   warnings: string[];
+  /** 既存と同じ ID の実績 */
+  projectDups: ProjectDup[];
+  /** 確認ダイアログ・結果表示用の件数 */
+  summary: {
+    factorsAdd: number;
+    factorsUpdate: number;
+    factorsKeep: number;
+    projectsAdd: number;
+    projectsUpdate: number;
+    /** 既に取り込み済み（同じ ID・同じ内容）で取り込まない */
+    projectsSame: number;
+    /** 同じ ID・内容が違うが「取り込まない」を選んだ */
+    projectsSkip: number;
+  };
 }
 
 export function buildImportPlan(p: PlanInput): ImportPlan {
@@ -154,6 +222,7 @@ export function buildImportPlan(p: PlanInput): ImportPlan {
   const updates = new Map<string, TransferFactorUpdate>();
   /** 種類・関係を決める対象（追加・上書きしたもの）: ファイル番号 → 要因 ID */
   const touched: { f: FileFactor; id: string; isInsert: boolean }[] = [];
+  let factorsKeep = 0;
 
   for (const f of file.factors) {
     const selected = isStd(f) ? picked.stdFactors : picked.userFactors;
@@ -166,6 +235,7 @@ export function buildImportPlan(p: PlanInput): ImportPlan {
     const res: Resolution = ex ? (p.resolutions[f.no] ?? 'keep') : 'rename';
     if (ex && res === 'keep') {
       resultId.set(f.no, ex.id);
+      factorsKeep++;
       continue;
     }
     if (ex && res === 'overwrite') {
@@ -247,24 +317,21 @@ export function buildImportPlan(p: PlanInput): ImportPlan {
   }
 
   // --- 実績 ---
+  // 同じ ID の既存実績と突き合わせる: 同じ内容 → 取り込まない、違う内容 → 選んだ扱い
   const projects: TransferProjectInsert[] = [];
+  const projectsUpdate: TransferProjectUpdate[] = [];
+  const projectDups: ProjectDup[] = [];
   const groups: { id: string; name: string }[] = [];
   const fileProjects = picked.projects ? (file.projects ?? []) : [];
   if (fileProjects.length) {
-    const keys = [...new Set(fileProjects.map((x) => x.groupId ?? ''))];
-    const ids = nextGroupIds(p.existingGroups.map((g) => g.id), keys.length);
-    const groupOf = new Map(keys.map((k, i) => [k, ids[i]!]));
-    keys.forEach((k, i) => {
-      const fg = file.groups?.find((g) => g.id === k);
-      groups.push({ id: ids[i]!, name: fg?.name || (k ? `取り込み ${k}` : `取り込み ${p.fileName}`) });
-    });
+    const existingById = new Map(p.existingProjects.map((x) => [x.id.trim(), x]));
+    const labelOf = new Map<string, string>(p.existingFactors.map((e) => [e.id, e.name]));
+    for (const ins of inserts) labelOf.set(ins.id, ins.name);
     const usedIds = new Set(p.existingProjects.map((x) => x.id));
     const excluded = new Map((file.excluded ?? []).map((e) => [e.projectId, e.reason]));
     let dropped = 0;
+    const toInsert: { fp: (typeof fileProjects)[number]; id: string; levels: Record<string, number> }[] = [];
     for (const fp of fileProjects) {
-      let id = fp.id;
-      for (let i = 2; usedIds.has(id); i++) id = `${fp.id}-${i}`;
-      usedIds.add(id);
       const levels: Record<string, number> = {};
       fp.levels.forEach((v, i) => {
         const f = file.factors[i];
@@ -272,6 +339,36 @@ export function buildImportPlan(p: PlanInput): ImportPlan {
         if (fid) levels[fid] = v;
         else if (v > 0) dropped++;
       });
+      const content = { name: fp.name || fp.id, sizeFP: fp.sizeFP, effortMM: fp.effortMM, levels, note: fp.note };
+      const m = matchProject(existingById, fp.id, content, (id) => labelOf.get(id) ?? id);
+      if (m.status === 'same') {
+        projectDups.push({ fileId: fp.id, name: content.name, status: 'same', diffs: [], resolution: null });
+        continue;
+      }
+      if (m.status === 'changed') {
+        const res = p.projectResolutions?.[fp.id] ?? DEFAULT_PROJECT_RESOLUTION;
+        projectDups.push({ fileId: fp.id, name: content.name, status: 'changed', diffs: m.diffs, resolution: res });
+        if (res === 'skip') continue;
+        if (res === 'update') {
+          const ex = existingById.get(fp.id.trim())!;
+          projectsUpdate.push({ id: ex.id, ...content, levels: { ...(ex.levels ?? {}), ...levels } });
+          continue;
+        }
+      }
+      let id = fp.id;
+      for (let i = 2; usedIds.has(id); i++) id = `${fp.id}-${i}`;
+      usedIds.add(id);
+      toInsert.push({ fp, id, levels });
+    }
+    // グループは実際に追加する実績があるものだけ作る
+    const keys = [...new Set(toInsert.map((x) => x.fp.groupId ?? ''))];
+    const ids = nextGroupIds(p.existingGroups.map((g) => g.id), keys.length);
+    const groupOf = new Map(keys.map((k, i) => [k, ids[i]!]));
+    keys.forEach((k, i) => {
+      const fg = file.groups?.find((g) => g.id === k);
+      groups.push({ id: ids[i]!, name: fg?.name || (k ? `取り込み ${k}` : `取り込み ${p.fileName}`) });
+    });
+    for (const { fp, id, levels } of toInsert) {
       const reason = excluded.get(fp.id);
       projects.push({
         id, groupId: groupOf.get(fp.groupId ?? '')!, name: fp.name || fp.id, sizeFP: fp.sizeFP, effortMM: fp.effortMM, levels,
@@ -293,8 +390,19 @@ export function buildImportPlan(p: PlanInput): ImportPlan {
       factorsInsert: inserts,
       factorsUpdate: [...updates.values()],
       projects,
+      projectsUpdate,
     },
     after: { factors: p.existingFactors.length + inserts.length, triangles: finalTriangles, projects: p.existingProjects.length + projects.length, standard },
     warnings,
+    projectDups,
+    summary: {
+      factorsAdd: inserts.length,
+      factorsUpdate: [...updates.values()].filter((u) => touched.some((t) => !t.isInsert && t.id === u.id)).length,
+      factorsKeep,
+      projectsAdd: projects.length,
+      projectsUpdate: projectsUpdate.length,
+      projectsSame: projectDups.filter((d) => d.status === 'same').length,
+      projectsSkip: projectDups.filter((d) => d.status === 'changed' && d.resolution === 'skip').length,
+    },
   };
 }

@@ -24,7 +24,7 @@ export const sigmaFor = (version: ModelVersionRow | null | undefined): number =>
 export const genNo = (label: string) => Number(label.slice(1)) || 0;
 export const nextGenLabel = (gens: GenerationRow[]) => `G${gens.reduce((m, g) => Math.max(m, genNo(g.label)), 0) + 1}`;
 
-/** 世代の構築に使ったモデル版（無ければ採用中の版） */
+/** 世代の構築に使ったモデル版（無ければ見積りに使用中の版） */
 export function versionFor(bundle: ModelBundle, gen?: GenerationRow | null): ModelVersionRow | null {
   return (gen?.modelVersionId && bundle.versions.find((v) => v.id === gen.modelVersionId)) || bundle.activeVersion;
 }
@@ -70,7 +70,16 @@ export function useEstimateContext(id: string) {
     const reportGen = gens.find((g) => g.id === est.data.reportGenerationId) ?? latest;
     return { bundle: model.data, estimate: est.data, gens, latest, reportGen };
   }, [model.data, est.data]);
-  return { ctx, isLoading: model.isLoading || est.isLoading, error: model.error ?? est.error };
+  return {
+    ctx,
+    isLoading: model.isLoading || est.isLoading,
+    error: model.error ?? est.error,
+    /** 読み込み失敗時の「再試行」 */
+    refetch: () => {
+      if (model.error) void model.refetch();
+      if (est.error) void est.refetch();
+    },
+  };
 }
 
 /** レポート対象の世代を変更（PUT reportGenerationId、楽観的更新） */
@@ -96,6 +105,8 @@ export function useSetReportGeneration(id: string) {
  */
 export function useGenerationSimulation(bundle: ModelBundle | undefined, gen: GenerationRow | null | undefined) {
   const [state, setState] = useState<{ key: string; result: SimulationResult } | { key: string; error: string } | null>(null);
+  // 「再試行」で同じ入力をもう一度計算する（キーに含めない。結果は同じ入力なら同じ）
+  const [attempt, setAttempt] = useState(0);
   const version = bundle ? versionFor(bundle, gen) : null;
   const key = gen && version ? `${gen.id}:${version.id}:${gen.runs}:${gen.seed}` : '';
   useEffect(() => {
@@ -112,12 +123,17 @@ export function useGenerationSimulation(bundle: ModelBundle | undefined, gen: Ge
       alive = false;
     };
     // key が入力（世代・版・回数・シード）を表す
-  }, [key]);
+  }, [key, attempt]);
   const cur = state && state.key === key ? state : null;
   return {
     result: cur && 'result' in cur ? cur.result : null,
     error: cur && 'error' in cur ? cur.error : null,
     version,
+    /** 失敗したときにもう一度計算する */
+    retry: () => {
+      setState(null);
+      setAttempt((n) => n + 1);
+    },
   };
 }
 
@@ -128,7 +144,20 @@ export function useLevers(
   budget: number | null,
   debounceMs = 250,
 ): Lever[] | null {
-  const [state, setState] = useState<{ key: string; levers: Lever[] } | null>(null);
+  const s = useLeversState(bundle, gen, budget, debounceMs);
+  // 従来どおり、失敗時は空配列（レポート画面が使う）
+  return s.error ? [] : s.levers;
+}
+
+/** 効く打ち手 Top 3 + 失敗状態と再試行（リスク画面用） */
+export function useLeversState(
+  bundle: ModelBundle | undefined,
+  gen: GenerationRow | null | undefined,
+  budget: number | null,
+  debounceMs = 250,
+): { levers: Lever[] | null; error: string | null; retry: () => void } {
+  const [state, setState] = useState<{ key: string; levers: Lever[] } | { key: string; error: string } | null>(null);
+  const [attempt, setAttempt] = useState(0);
   const version = bundle ? versionFor(bundle, gen) : null;
   const key = gen && version ? `${gen.id}:${version.id}:${gen.runs}:${gen.seed}:${budget ?? ''}` : '';
   useEffect(() => {
@@ -141,13 +170,21 @@ export function useLevers(
         { runs: gen.runs, seed: gen.seed, budget: budget ?? undefined, top: 3 },
       )
         .then((levers) => alive && setState({ key, levers }))
-        .catch(() => alive && setState({ key, levers: [] }));
+        .catch((e: unknown) => alive && setState({ key, error: e instanceof Error ? e.message : String(e) }));
     }, debounceMs);
     return () => {
       alive = false;
       clearTimeout(t);
     };
-  }, [key]);
+  }, [key, attempt]);
+  const retry = () => {
+    setState(null);
+    setAttempt((n) => n + 1);
+  };
+  if (!key || !state) return { levers: null, error: null, retry };
   // 予算だけ変わったあいだは前の結果を出し続ける（ちらつき防止）
-  return key && state && (state.key === key || state.key.startsWith(key.slice(0, key.lastIndexOf(':') + 1))) ? state.levers : null;
+  const sameGen = state.key === key || state.key.startsWith(key.slice(0, key.lastIndexOf(':') + 1));
+  if (!sameGen) return { levers: null, error: null, retry };
+  if ('error' in state) return { levers: null, error: state.key === key ? state.error : null, retry };
+  return { levers: state.levers, error: null, retry };
 }

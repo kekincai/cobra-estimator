@@ -34,3 +34,13 @@ export { isInconsistent };
 export function levelArray(model: ModelSpec, levels: Record<string, number>): number[] {
   return [...model.factors].sort((a, b) => a.no - b.no).map((f) => levels[f.id] ?? 0);
 }
+
+/** 表示用: 要因の並び（no 順）に、番号・名前・レベル・定義文をそろえる（一覧のチップのツールチップ・読み上げ用） */
+export function factorLevels(model: ModelSpec, levels: Record<string, number>) {
+  return [...model.factors]
+    .sort((a, b) => a.no - b.no)
+    .map((f) => {
+      const level = levels[f.id] ?? 0;
+      return { no: f.no, name: f.name, level, def: f.levels[Math.max(0, Math.min(3, level))] };
+    });
+}

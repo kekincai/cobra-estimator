@@ -99,20 +99,20 @@ export function FlowDiagram({ active, onPick }: { active: number; onPick: (i: nu
                   background: act ? 'var(--color-card-2)' : 'var(--color-card)',
                   border: `1px solid ${act ? col : done ? 'var(--color-line-strong)' : 'var(--color-line)'}`,
                   boxShadow: act ? `0 0 0 4px color-mix(in srgb, ${col} 13%, transparent), 0 12px 32px rgba(0,0,0,.35)` : 'none',
-                  opacity: act || done ? 1 : 0.62,
+                  // 未到達の段も文字のコントラストを落とさない（透明度で薄めない）
                   transform: act ? 'translateY(-4px)' : 'none',
                 }}
               >
                 <span className="flex w-full items-center justify-between">
-                  <span className="n text-[12px]" style={{ color: act || done ? col : 'var(--color-weak)' }}>
+                  <span className="n text-[12px]" style={{ color: act || done ? col : 'var(--color-sub)' }}>
                     {s.no}
                   </span>
-                  <span
-                    className="rounded-full text-[10px] font-bold"
-                    style={{ color: done ? col : 'var(--color-bg)', background: act ? col : 'transparent', padding: act ? '1px 7px' : 0 }}
-                  >
-                    {done ? '✓' : act ? '現在' : ''}
-                  </span>
+                  {/* 「現在」「✓」だと利用者自身の進捗に見えるので、選んでいる段だけ「表示中」と出す */}
+                  {act && (
+                    <span className="rounded-full px-[7px] py-px text-[11px] font-bold" style={{ color: 'var(--color-bg)', background: col }}>
+                      表示中
+                    </span>
+                  )}
                 </span>
                 <span className="text-[14px] font-bold">{s.t}</span>
                 <span className="text-[11px] leading-[1.5] text-sub">{s.sub}</span>

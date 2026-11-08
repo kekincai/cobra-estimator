@@ -12,7 +12,7 @@
 @keyframes flow-spin { to { transform: rotate(360deg); } }
 .flow-btn { transition: transform 0.15s, background 0.2s, border-color 0.2s, color 0.2s; font-family: inherit; }
 .flow-btn:hover { transform: translateY(-1px); }
-.flow-chip { display: inline-flex; align-items: center; min-height: 24px; padding: 0 9px; border-radius: 999px; font-size: 11px; background: var(--color-raised); border: 1px solid var(--color-muted); color: var(--color-body); white-space: nowrap; }
+.flow-chip { display: inline-flex; align-items: center; min-height: 24px; max-width: 100%; padding: 2px 9px; border-radius: 999px; font-size: 11px; line-height: 1.4; background: var(--color-raised); border: 1px solid var(--color-muted); color: var(--color-body); overflow-wrap: anywhere; }
 .flow-chip.out { border-color: var(--color-accent-line); background: var(--color-accent-bg); color: var(--color-accent-ink); }
 @media (prefers-reduced-motion: reduce) {
   .flow-node, .flow-card, .flow-panel, .flow-dash, .flow-dash-slow, .flow-spin { animation: none; }

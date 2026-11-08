@@ -2,7 +2,9 @@
 // ネイティブ <dialog> の showModal() を使うので、フォーカス閉じ込め・Esc・背面の不活性化はブラウザ任せ。
 import { useEffect, useId, useRef, useState } from 'react';
 import { Segmented } from '../../ui/Segmented';
-import { MAX_SEED, RUN_CHOICES, randomSeed, readSim, writeSim, type SimTarget } from './store';
+import { HelpLink } from '../../ui/HelpLink';
+import { parseSeed } from './seed';
+import { RUN_CHOICES, randomSeed, readSim, writeSim, type SimTarget } from './store';
 
 type TargetChoice = SimTarget | 'both';
 
@@ -27,6 +29,7 @@ export interface SimSettingsDialogProps {
 export function SimSettingsDialog({ open, onClose, target }: SimSettingsDialogProps) {
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
+  const seedHelpId = useId();
   const [applyTo, setApplyTo] = useState<TargetChoice>(target);
   const [runs, setRuns] = useState(10_000);
   const [fixed, setFixed] = useState(true);
@@ -46,20 +49,20 @@ export function SimSettingsDialog({ open, onClose, target }: SimSettingsDialogPr
     } else if (d.open) d.close();
   }, [open, target]);
 
-  const seedNum = Number(seedText);
-  const seedOk = seedText !== '' && Number.isInteger(seedNum) && seedNum <= MAX_SEED;
+  const seed = parseSeed(seedText);
+  const seedOk = seed.ok;
   const canSave = !fixed || seedOk;
   const r = RUN_DEFS[runs] ?? RUN_DEFS[10_000]!;
 
   const save = () => {
     if (!canSave) return;
-    const patch = { runs, fixedSeed: fixed, ...(seedOk ? { seed: seedNum } : {}) };
+    const patch = { runs, fixedSeed: fixed, ...(seed.ok ? { seed: seed.value } : {}) };
     const targets: SimTarget[] = applyTo === 'both' ? ['build', 'estimate'] : [applyTo];
     targets.forEach((t) => writeSim(t, patch));
     onClose();
   };
 
-  const summary = `${runs.toLocaleString('en-US')} 回 ・ ${fixed ? `シード ${seedText || '—'}` : '乱数は毎回更新'} ・ ${
+  const summary = `${runs.toLocaleString('en-US')} 回 ・ ${fixed ? `シード ${seed.ok ? seed.value : '—'}` : '乱数は毎回更新'} ・ ${
     { build: '構築のみ', estimate: '見積りのみ', both: '構築と見積り' }[applyTo]
   }`;
 
@@ -75,18 +78,21 @@ export function SimSettingsDialog({ open, onClose, target }: SimSettingsDialogPr
         // 背景（dialog 自身）をクリックしたら閉じる
         if (e.target === e.currentTarget) onClose();
       }}
-      className="m-auto max-h-none max-w-[calc(100vw-32px)] overflow-visible border-0 bg-transparent p-0 text-text backdrop:bg-bg/75 backdrop:backdrop-blur-[2px]"
+      className="m-auto max-h-[calc(100dvh-32px)] max-w-[calc(100vw-32px)] overflow-hidden border-0 bg-transparent p-0 text-text backdrop:bg-bg/75 backdrop:backdrop-blur-[2px]"
     >
       {open && (
+        // 視口が低いとき（200% 拡大など）も見出しと「保存」が見えるよう、本体だけをスクロールさせる
         <div
-          className="flex w-[512px] max-w-full flex-col gap-[18px] rounded-[20px] border border-muted bg-card px-[26px] py-6 shadow-[0_30px_80px_rgba(0,0,0,.6)]"
+          className="flex max-h-[calc(100dvh-32px)] w-[512px] max-w-full flex-col rounded-[20px] border border-muted bg-card shadow-[0_30px_80px_rgba(0,0,0,.6)]"
           style={{ animation: 'pop .5s var(--ease-out-rise) backwards' }}
         >
-          <div className="flex items-start justify-between gap-4">
+          <div className="flex shrink-0 items-start justify-between gap-4 px-[26px] pt-6 pb-[18px]">
             <div className="flex flex-col gap-1">
-              <span className="text-[11px] tracking-[0.08em] text-weak">モンテカルロ・シミュレーション</span>
+              <span className="text-[11px] tracking-[0.08em] text-sub">モンテカルロ・シミュレーション</span>
               <h2 id={titleId} className="n m-0 text-[20px]">シミュレーション設定</h2>
             </div>
+            <span className="flex shrink-0 items-center gap-2">
+            <HelpLink section="estimate" />
             <button
               type="button"
               aria-label="閉じる"
@@ -95,8 +101,10 @@ export function SimSettingsDialog({ open, onClose, target }: SimSettingsDialogPr
             >
               ×
             </button>
+            </span>
           </div>
 
+          <div className="flex min-h-0 flex-1 flex-col gap-[18px] overflow-y-auto overscroll-contain px-[26px] pb-1">
           <div className="flex flex-col gap-2">
             <span className="text-[11px] text-sub">適用先</span>
             <Segmented<TargetChoice>
@@ -115,11 +123,11 @@ export function SimSettingsDialog({ open, onClose, target }: SimSettingsDialogPr
           </div>
 
           <div className="flex flex-col gap-2">
-            <div className="flex items-baseline justify-between">
+            <div className="flex flex-wrap items-baseline justify-between gap-x-3">
               <span className="text-[11px] text-sub">シミュレーション回数</span>
-              <span className="text-[11px] text-weak">多いほど結果が安定、時間は比例</span>
+              <span className="text-[11px] text-sub">多いほど結果が安定、時間は比例</span>
             </div>
-            <div role="group" aria-label="シミュレーション回数" className="grid grid-cols-3 gap-2">
+            <div role="group" aria-label="シミュレーション回数" className="grid grid-cols-[repeat(auto-fit,minmax(96px,1fr))] gap-2">
               {RUN_CHOICES.map((n) => {
                 const d = RUN_DEFS[n]!;
                 const on = runs === n;
@@ -135,7 +143,7 @@ export function SimSettingsDialog({ open, onClose, target }: SimSettingsDialogPr
                   >
                     <span className={`n text-[18px] ${on ? 'text-accent' : 'text-text'}`}>{n.toLocaleString('en-US')}</span>
                     <span className="text-[11px] text-sub">{d.tag}</span>
-                    <span className="flex w-full justify-between text-[10.5px] text-weak">
+                    <span className="flex w-full flex-wrap justify-between gap-x-2 text-[11px] text-sub">
                       <span>約 {d.time}</span>
                       <span>P50 ±{d.err}</span>
                     </span>
@@ -157,7 +165,7 @@ export function SimSettingsDialog({ open, onClose, target }: SimSettingsDialogPr
 
           <div className="flex flex-col gap-2">
             <span className="text-[11px] text-sub">乱数</span>
-            <div role="group" aria-label="乱数" className="grid grid-cols-2 gap-2">
+            <div role="group" aria-label="乱数" className="grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] gap-2">
               {SEED_MODES.map((m) => {
                 const on = fixed === m.fixed;
                 return (
@@ -184,8 +192,9 @@ export function SimSettingsDialog({ open, onClose, target }: SimSettingsDialogPr
                     inputMode="numeric"
                     aria-label="シード値"
                     aria-invalid={!seedOk}
+                    aria-describedby={seedHelpId}
                     value={seedText}
-                    onChange={(e) => setSeedText(e.target.value.replace(/[^0-9]/g, '').slice(0, 10))}
+                    onChange={(e) => setSeedText(e.target.value.slice(0, 20))}
                     className={`min-h-10 w-full rounded-[10px] border bg-bg px-3 font-num text-[15px] font-bold tracking-[0.04em] text-text transition-[border-color] focus:border-accent focus:outline-none ${
                       seedOk ? 'border-line' : 'border-coral'
                     }`}
@@ -198,10 +207,8 @@ export function SimSettingsDialog({ open, onClose, target }: SimSettingsDialogPr
                     新しいシード
                   </button>
                 </div>
-                <span className="text-[11px] leading-normal text-weak">
-                  {seedOk
-                    ? '同じシード・同じ条件なら同じ結果。レポートに載せる前は固定にしておくと、レビューで再現できます。'
-                    : `シードは 0〜${MAX_SEED.toLocaleString('en-US')} の整数で入力してください。`}
+                <span id={seedHelpId} role={seed.ok ? undefined : 'alert'} className={`text-[11px] leading-normal ${seed.ok ? 'text-sub' : 'text-coral-soft'}`}>
+                  {seed.ok ? '同じシード・同じ条件なら同じ結果。レポートに載せる前は固定にしておくと、レビューで再現できます。' : seed.error}
                 </span>
               </>
             ) : (
@@ -214,9 +221,11 @@ export function SimSettingsDialog({ open, onClose, target }: SimSettingsDialogPr
             )}
           </div>
 
-          <div className="flex items-center justify-between gap-2.5 pt-1.5">
-            <span className="text-[11px] text-weak">{summary}</span>
-            <div className="flex gap-2">
+          </div>
+
+          <div className="flex shrink-0 flex-wrap items-center justify-between gap-2.5 border-t border-line px-[26px] pt-3.5 pb-5">
+            <span className="min-w-0 text-[11px] text-sub">{summary}</span>
+            <div className="ml-auto flex gap-2">
               <button
                 type="button"
                 onClick={onClose}

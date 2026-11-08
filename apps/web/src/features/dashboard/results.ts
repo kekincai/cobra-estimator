@@ -91,3 +91,64 @@ export function viewBins(r: DashResult, n = 24): { bins: ViewBin[]; lo: number; 
   const { lo, width, counts } = r.histogram;
   return { lo, hi: lo + width * counts.length, bins: counts.map((count, i) => ({ x: lo + width * (i + 0.5), count })) };
 }
+
+/**
+ * 全世代で共通の目盛り（5 人月刻み）。世代を切り替えても帯・ヒストグラム・スライダーの位置が動かず、
+ * 世代どうしを見た目で比べられる。各結果の P5 の最小〜P95×1.1 の最大を覆い、anchor（保存済みの予算）も含める。
+ * 結果が 1 つもなければ null。
+ */
+export function sharedBandScale(results: ReadonlyArray<DashResult | null | undefined>, anchor?: number | null): { lo: number; hi: number } | null {
+  const rs = results.filter((r): r is DashResult => !!r && Number.isFinite(r.pct[5]) && Number.isFinite(r.pct[95]));
+  if (!rs.length) return null;
+  const a = anchor != null && Number.isFinite(anchor) && anchor > 0 ? anchor : null;
+  const lo = Math.floor(Math.min(...rs.map((r) => r.pct[5]), a ?? Infinity) / 5) * 5;
+  const hi = Math.ceil(Math.max(...rs.map((r) => r.pct[95] * 1.1), a != null ? a * 1.05 : 0) / 5) * 5;
+  return { lo, hi: hi > lo ? hi : lo + 5 };
+}
+
+/**
+ * [lo, hi] を n 等分したビンで数え直す（共通目盛りのヒストグラム用）。
+ * サンプルがあれば厳密に数え、なければ保存済みヒストグラムの各ビンを重なりの長さで按分する。
+ * 範囲外（裾）は数えない。
+ */
+export function binsInRange(r: DashResult, lo: number, hi: number, n = 24): ViewBin[] {
+  if (!(hi > lo) || n < 1) return [];
+  const w = (hi - lo) / n;
+  const counts = new Array<number>(n).fill(0);
+  const s = r.samples;
+  if (s && s.length) {
+    for (let i = 0; i < s.length; i++) {
+      const v = s[i]!;
+      if (v < lo || v > hi) continue;
+      counts[Math.min(n - 1, Math.floor((v - lo) / w))]!++;
+    }
+  } else {
+    const h = r.histogram;
+    for (let i = 0; i < h.counts.length; i++) {
+      const c = h.counts[i]!;
+      if (!c || !(h.width > 0)) continue;
+      const a = h.lo + i * h.width;
+      const b = a + h.width;
+      const from = Math.max(0, Math.floor((Math.max(a, lo) - lo) / w));
+      const to = Math.min(n - 1, Math.floor((Math.min(b, hi) - lo) / w));
+      for (let k = from; k <= to; k++) {
+        const overlap = Math.min(b, lo + (k + 1) * w) - Math.max(a, lo + k * w);
+        if (overlap > 0) counts[k]! += (c * overlap) / h.width;
+      }
+    }
+  }
+  return counts.map((count, i) => ({ x: lo + w * (i + 0.5), count }));
+}
+
+/** 軸の目盛り（両端を含む）。幅 20 以下は 5 刻み、それ以上は 10 刻み。at は 0〜1 の位置 */
+export function axisTicks(lo: number, hi: number): { value: number; at: number }[] {
+  if (!(hi > lo)) return [];
+  const step = hi - lo <= 20 ? 5 : 10;
+  const vals = new Set<number>([lo, hi]);
+  for (let v = Math.ceil(lo / step) * step; v < hi; v += step) vals.add(v);
+  return [...vals]
+    .sort((x, y) => x - y)
+    // 両端に近すぎる中間目盛りは文字が重なるので落とす
+    .filter((v) => v === lo || v === hi || (v - lo >= step * 0.75 && hi - v >= step * 0.75))
+    .map((value) => ({ value, at: (value - lo) / (hi - lo) }));
+}

@@ -18,9 +18,19 @@
 //     </Projects>
 //   </CoBRAModel>
 // 属性名の大文字小文字は区別しない。変換結果は schema.ts の検証を通してから使う。
+import { describeXmlSyntaxError, NOT_ESTIMA_HINT, SYNTAX_HINT } from './errors';
 import { FORMAT, validateModelFile, type ModelFileInput, type ParseResult } from './schema';
 
 const ROOT = 'CoBRAModel';
+
+/** 利用者に見せる日本語のエラー（hint は直し方） */
+class XmlFileError extends Error {
+  hint: string;
+  constructor(message: string, hint: string) {
+    super(message);
+    this.hint = hint;
+  }
+}
 
 function attr(el: Element, ...names: string[]): string | undefined {
   for (const n of names) {
@@ -60,9 +70,10 @@ export type XmlParser = { parseFromString(s: string, type: 'application/xml'): D
 export function legacyXmlToRaw(xml: string, parser: XmlParser = new DOMParser()): ModelFileInput {
   const doc = parser.parseFromString(xml, 'application/xml');
   const err = doc.getElementsByTagName('parsererror')[0];
-  if (err) throw new Error(`XML として読めません: ${text(err).split('\n')[0] ?? ''}`);
+  if (err) throw new XmlFileError(describeXmlSyntaxError(text(err)), SYNTAX_HINT);
   const root = doc.documentElement;
-  if (!root || root.localName !== ROOT) throw new Error(`ルート要素が <${ROOT}> ではありません (<${root?.localName ?? '?'}>)`);
+  if (!root || root.localName !== ROOT)
+    throw new XmlFileError(`旧 Excel 版のモデル XML ではありません（ルート要素が <${ROOT}> ではなく <${root?.localName ?? '?'}> です）。`, NOT_ESTIMA_HINT);
 
   const alphaEl = child(root, 'Alpha');
   const alpha = alphaEl ? num(attr(alphaEl, 'value') ?? text(alphaEl)) : undefined;
@@ -152,6 +163,7 @@ export function parseLegacyXml(xml: string, parser?: XmlParser): ParseResult {
   try {
     return validateModelFile(legacyXmlToRaw(xml, parser));
   } catch (e) {
-    return { ok: false, errors: [(e as Error).message] };
+    if (e instanceof XmlFileError) return { ok: false, errors: [e.message], hint: e.hint };
+    return { ok: false, errors: ['XML を読み込めませんでした。'], hint: NOT_ESTIMA_HINT };
   }
 }

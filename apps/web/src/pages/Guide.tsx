@@ -19,6 +19,17 @@ export default function GuidePage() {
   const panel = useRef<HTMLDivElement>(null);
   const userNav = useRef(false);
 
+  // 本文パネルの先頭へスクロール。登場アニメーション中（translateY）でもずれないよう transform を差し引き、
+  // scroll-margin-top（狭い画面の固定ヘッダーの分）をあける
+  const scrollToPanel = (smooth: boolean) => {
+    const el = panel.current;
+    if (!el) return;
+    const cs = getComputedStyle(el);
+    const shift = cs.transform && cs.transform !== 'none' ? new DOMMatrixReadOnly(cs.transform).m42 : 0;
+    const top = el.getBoundingClientRect().top - shift + window.scrollY - (parseFloat(cs.scrollMarginTop) || 0);
+    window.scrollTo({ top: Math.max(0, top), behavior: smooth && !matchMedia('(prefers-reduced-motion: reduce)').matches ? 'smooth' : 'auto' });
+  };
+
   const go = (id: GuideSectionId) => {
     userNav.current = true;
     navigate({ hash: id }, { replace: true });
@@ -30,27 +41,42 @@ export default function GuidePage() {
     userNav.current = false;
     heading.current?.focus({ preventScroll: true });
     const top = panel.current?.getBoundingClientRect().top ?? 0;
-    if (top < 0) panel.current?.scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    if (top < 0 || top > window.innerHeight * 0.6) scrollToPanel(true);
   }, [current]);
 
-  // 他画面の「?」から #id 付きで来たときはページ先頭へ
+  // 他画面の「?」から #id 付きで来たとき: 該当節の見出しへフォーカスし、本文が画面外（狭い画面で目次の下）なら
+  // 本文の先頭までスクロールする（scroll-margin-top で上部の固定ヘッダーの分をあける）。
+  // 画面遷移時の共通処理（RouteShell: 先頭へスクロール + h1 へフォーカス）の後に動かすため 2 フレーム待つ。
   useEffect(() => {
-    window.scrollTo({ top: 0 });
+    if (!isGuideSectionId(raw)) return;
+    let r2 = 0;
+    const r1 = requestAnimationFrame(() => {
+      r2 = requestAnimationFrame(() => {
+        heading.current?.focus({ preventScroll: true });
+        const top = panel.current?.getBoundingClientRect().top ?? 0;
+        if (top > window.innerHeight * 0.45) scrollToPanel(false);
+      });
+    });
+    return () => {
+      cancelAnimationFrame(r1);
+      cancelAnimationFrame(r2);
+    };
+    // 初回表示のときだけ（raw は初回の値を使う）
   }, []);
 
   const Body = SECTION_BODIES[current];
   const pager = 'btn min-h-9 cursor-pointer rounded-[10px] border border-muted bg-transparent px-3.5 font-sans text-[12px] font-bold text-text';
 
   return (
-    <div className="flex min-w-0 flex-col gap-5 px-8 pt-7 pb-9">
+    <div className="flex min-w-0 flex-col gap-5 px-4 pt-7 pb-9 sm:px-8">
       <div className="flex flex-wrap items-end justify-between gap-6">
-        <div className="flex flex-col gap-1.5">
+        <div className="flex min-w-0 flex-col gap-1.5">
           <span className="text-[12px] text-sub">解説 ・ 旧 Excel 版の「解説文の表示」(F-INF01) に相当</span>
-          <h1 className="n m-0 text-[28px]">CoBRA 法と、このツールの使い方</h1>
+          <h1 className="n m-0 text-[24px] leading-[1.25] sm:text-[28px]">CoBRA 法と、このツールの使い方</h1>
           <span className="text-[13px] text-sub">数式は動かして確かめられます。各画面の「?」からも該当する節が開きます。</span>
         </div>
         <Link to={GUIDE_FLOW_HREF} className="guide-lk inline-flex min-h-10 items-center gap-2 rounded-[10px] border border-muted bg-card px-3.5 text-[13px] font-bold text-text no-underline">
-          業務フロー図を見る <span className="text-accent">↗</span>
+          業務フロー図を見る <span aria-hidden="true" className="text-accent">→</span>
         </Link>
       </div>
 
@@ -79,7 +105,7 @@ export default function GuidePage() {
           </div>
         </nav>
 
-        <div ref={panel} className="tile flex min-h-[860px] scroll-mt-6 flex-col gap-[18px] px-8 py-7" style={{ animationDelay: '80ms' }}>
+        <div ref={panel} className="tile flex min-h-[calc(100dvh-6rem)] min-w-0 scroll-mt-20 flex-col gap-[18px] px-5 py-6 sm:px-8 sm:py-7 lg:min-h-[560px] lg:scroll-mt-6" style={{ animationDelay: '80ms' }}>
           <section key={current} id={current} aria-labelledby={`guide-h-${current}`} className="guide-body">
             <span className="text-[11px] tracking-[0.08em] text-weak">
               {sec.no} ・ {sec.kicker}
@@ -89,7 +115,7 @@ export default function GuidePage() {
             </h2>
             <Body />
           </section>
-          <div className="mt-auto flex items-center justify-between border-t border-nav-line pt-4">
+          <div className="mt-auto flex flex-wrap items-center justify-between gap-2 border-t border-nav-line pt-4">
             <button type="button" className={pager} style={{ visibility: prev ? 'visible' : 'hidden' }} onClick={() => prev && go(prev.id)} tabIndex={prev ? 0 : -1}>
               ← {prev?.title}
             </button>

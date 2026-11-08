@@ -22,15 +22,35 @@ const factorInput = z.object({
   triangles: z.array(triangle),
 });
 
-const bad = (msg: string) => ({ error: msg });
+interface Issue {
+  /** 入力のどの項目か（name、triangles.0.best など。画面はこれで欄を特定する） */
+  path: string;
+  message: string;
+}
+/** 400 の本文。issues があれば画面が該当の欄にエラーを出す */
+const bad = (msg: string, issues?: Issue[]) => (issues?.length ? { error: msg, issues } : { error: msg });
+const zodIssues = (e: z.ZodError): Issue[] => e.issues.map((i) => ({ path: i.path.join('.'), message: i.message }));
 
-function triangleError(ts: z.infer<typeof triangle>[]): string | null {
-  for (const t of ts) {
-    if (!(t.best <= t.likely && t.likely <= t.worst)) return `担当者「${t.expert}」の三角分布は 最良 ≤ 最頻 ≤ 最悪 の順にしてください。`;
-    if (t.best < 0) return `担当者「${t.expert}」の三角分布に負の値があります。`;
+/** 0 ≤ 最良 ≤ 最頻 ≤ 最悪（IMPLEMENTATION_BRIEF.md §2.2。画面側は features/factors/triangle.ts の checkTri） */
+function triangleError(ts: z.infer<typeof triangle>[]): { msg: string; issue: Issue } | null {
+  for (const [i, t] of ts.entries()) {
+    if (t.best < 0) {
+      const msg = `担当者「${t.expert}」の三角分布に負の値があります。`;
+      return { msg, issue: { path: `triangles.${i}.best`, message: msg } };
+    }
+    if (!(t.best <= t.likely && t.likely <= t.worst)) {
+      const msg = `担当者「${t.expert}」の三角分布は 最良 ≤ 最頻 ≤ 最悪 の順にしてください。`;
+      return { msg, issue: { path: `triangles.${i}.${t.best > t.likely ? 'likely' : 'worst'}`, message: msg } };
+    }
   }
   return null;
 }
+
+const dupName = (name: string) => {
+  const msg = `「${name}」は既にモデルにあります。`;
+  return bad(msg, [{ path: 'name', message: msg }]);
+};
+const ruleBad = (msg: string, kind: 'direct' | 'indirect') => bad(msg, kind === 'indirect' ? [{ path: 'targetFactorId', message: msg }] : undefined);
 
 const refOf = (f: { id: string; name: string; kind: 'direct' | 'indirect'; targetFactorId: string | null }): FactorRef => ({
   id: f.id, name: f.name, kind: f.kind, targetFactorId: f.kind === 'direct' ? null : f.targetFactorId,
@@ -40,17 +60,17 @@ export const factorsRoute = new Hono<AppEnv>()
   .get('/', async (c) => c.json(await c.var.db.select().from(factors).where(eq(factors.modelId, MODEL_ID)).orderBy(asc(factors.no))))
   .post('/', requireRole('admin'), async (c) => {
     const parsed = factorInput.safeParse(await c.req.json());
-    if (!parsed.success) return c.json(bad('入力が正しくありません。'), 400);
+    if (!parsed.success) return c.json(bad('入力内容に誤りがあります。', zodIssues(parsed.error)), 400);
     const body = parsed.data;
     const triErr = triangleError(body.triangles);
-    if (triErr) return c.json(bad(triErr), 400);
+    if (triErr) return c.json(bad(triErr.msg, [triErr.issue]), 400);
     const db = c.var.db;
     const existing = await db.select().from(factors).where(eq(factors.modelId, MODEL_ID));
-    if (existing.some((f) => f.name === body.name.trim())) return c.json(bad(`「${body.name}」は既にモデルにあります。`), 400);
+    if (existing.some((f) => f.name === body.name.trim())) return c.json(dupName(body.name), 400);
     const id = crypto.randomUUID();
     const targetFactorId = body.kind === 'indirect' ? (body.targetFactorId ?? null) : null;
     const ruleErr = checkFactorRules([...existing.map(refOf), { id, name: body.name, kind: body.kind, targetFactorId }]);
-    if (ruleErr) return c.json(bad(ruleErr), 400);
+    if (ruleErr) return c.json(ruleBad(ruleErr, body.kind), 400);
     const no = body.no ?? existing.reduce((m, f) => Math.max(m, f.no), 0) + 1;
     await db.insert(factors).values({ ...body, no, id, modelId: MODEL_ID, targetFactorId });
     await audit(c, 'factor.create', { id, name: body.name });
@@ -58,7 +78,7 @@ export const factorsRoute = new Hono<AppEnv>()
   })
   .put('/:id', requireRole('admin'), async (c) => {
     const parsed = factorInput.partial().safeParse(await c.req.json());
-    if (!parsed.success) return c.json(bad('入力が正しくありません。'), 400);
+    if (!parsed.success) return c.json(bad('入力内容に誤りがあります。', zodIssues(parsed.error)), 400);
     const body = parsed.data;
     const id = c.req.param('id');
     const db = c.var.db;
@@ -67,14 +87,14 @@ export const factorsRoute = new Hono<AppEnv>()
     if (!cur) return c.json(bad('要因が見つかりません。'), 404);
     if (body.triangles) {
       const triErr = triangleError(body.triangles);
-      if (triErr) return c.json(bad(triErr), 400);
+      if (triErr) return c.json(bad(triErr.msg, [triErr.issue]), 400);
     }
-    if (body.name !== undefined && existing.some((f) => f.id !== id && f.name === body.name)) return c.json(bad(`「${body.name}」は既にモデルにあります。`), 400);
+    if (body.name !== undefined && existing.some((f) => f.id !== id && f.name === body.name)) return c.json(dupName(body.name), 400);
     const kind = body.kind ?? cur.kind;
     const targetFactorId = kind === 'indirect' ? (body.targetFactorId !== undefined ? body.targetFactorId : cur.targetFactorId) : null;
     const next = existing.map((f) => (f.id === id ? { ...f, name: body.name ?? f.name, kind, targetFactorId } : f));
     const ruleErr = checkFactorRules(next.map(refOf));
-    if (ruleErr) return c.json(bad(ruleErr), 400);
+    if (ruleErr) return c.json(ruleBad(ruleErr, kind), 400);
     await db
       .update(factors)
       .set({ ...body, targetFactorId, updatedAt: new Date().toISOString() })

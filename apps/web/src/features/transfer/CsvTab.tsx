@@ -1,13 +1,18 @@
 // タブ 3: CSV で実績を取り込む（列の対応付け → 検証 → 問題のない行を登録）
 import { DEFAULT_UNITS } from 'cobra-core';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import type { ModelBundle, ProjectRow, Role, TransferProjectInsert } from '../../../shared/types';
+import { describeApiError } from '../../ui/apiError';
+import { ConfirmDialog } from '../../ui/ConfirmDialog';
 import { fmt1, fmtInt } from '../../ui/format';
 import { useImportCommit } from './api';
-import { checkMapping, guessMapping, parseCsv, summarize, targetOptions, validateRows, type CsvRow, type EffortUnit, type SizeUnit, type TargetKey } from './csv';
+import { downloadBackup } from './backup';
+import { checkMapping, guessMapping, parseCsv, registerValues, summarize, targetOptions, validateRows, type CsvRow, type EffortUnit, type SizeUnit, type TargetKey } from './csv';
 import { decodeAuto } from './decode';
-import { cx, DropZone, FileHead, ghostBtn, KV, primaryBtn, Seg, tdCls, thCls, Tile, TileHead } from './ui';
+import { wrongFileForCsv, type ImportFailure } from './errors';
+import type { Handoff, SwitchTab } from './tabs';
+import { cx, DiffList, DropZone, FileHead, ghostBtn, KV, primaryBtn, Seg, tdCls, thCls, Tile, TileHead, WrongFileCard } from './ui';
 
 const MAX_BYTES = 2 * 1024 * 1024;
 const SIZE_UNITS: { key: SizeUnit; label: string }[] = [
@@ -27,20 +32,38 @@ interface Loaded {
   rows: string[][];
 }
 
-export function CsvTab({ bundle, projects, role }: { bundle: ModelBundle; projects: ProjectRow[]; role: Role | null }) {
+interface Props {
+  bundle: ModelBundle;
+  projects: ProjectRow[];
+  role: Role | null;
+  userName: string;
+  handoff: Handoff | null;
+  onSwitchTab: SwitchTab;
+}
+
+export function CsvTab({ bundle, projects, role, userName, handoff, onSwitchTab }: Props) {
   const [loaded, setLoaded] = useState<Loaded | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<{ source: File; failure: ImportFailure } | null>(null);
   const factors = useMemo(() => [...bundle.factors].sort((a, b) => a.no - b.no).map((f) => ({ id: f.id, no: f.no, name: f.name })), [bundle.factors]);
   const [map, setMap] = useState<TargetKey[]>([]);
   const [sizeUnit, setSizeUnit] = useState<SizeUnit>('FP');
   const [effortUnit, setEffortUnit] = useState<EffortUnit>('MM');
 
+  const fail = (source: File, errors: string[], hint?: string, extra: Partial<ImportFailure> = {}) => setError({ source, failure: { ok: false, errors, hint, ...extra } });
   const onFile = async (f: File) => {
     setError(null);
-    if (f.size > MAX_BYTES) return setError('ファイルが大きすぎます (2 MB まで)');
-    const d = decodeAuto(await f.arrayBuffer());
+    if (f.size > MAX_BYTES) return fail(f, [`ファイルが大きすぎます（${(f.size / 1024 / 1024).toFixed(1)} MB）。2 MB までです。`], 'ファイルを分けて、何回かに分けて取り込んでください。');
+    let d: ReturnType<typeof decodeAuto>;
+    try {
+      d = decodeAuto(await f.arrayBuffer());
+    } catch {
+      return fail(f, ['ファイルを読み込めませんでした。'], 'ファイルが開けるか、別のアプリで使用中でないかを確かめてください。');
+    }
+    const wrong = wrongFileForCsv(f.name, d.text);
+    if (wrong) return setError({ source: f, failure: wrong });
     const all = parseCsv(d.text);
-    if (all.length < 2) return setError(`${f.name}: 見出し行とデータ行が必要です`);
+    if (all.length === 0) return fail(f, ['ファイルが空です。'], '1 行目に見出し（name,fp,mm など）、2 行目から実績を 1 行ずつ書いてください。');
+    if (all.length < 2) return fail(f, ['見出しの行しかありません（実績の行がありません）。'], '2 行目から実績を 1 行ずつ書いてください。右の「CSV の形」が例です。');
     const headers = all[0]!.map((h) => h.trim());
     const g = guessMapping(headers, factors);
     setMap(g.map);
@@ -48,12 +71,29 @@ export function CsvTab({ bundle, projects, role }: { bundle: ModelBundle; projec
     if (g.effortUnit) setEffortUnit(g.effortUnit);
     setLoaded({ fileName: f.name, encoding: d.encoding, headers, rows: all.slice(1) });
   };
+  // 別のタブから回ってきたファイル
+  const handled = useRef(0);
+  useEffect(() => {
+    if (handoff && handoff.seq !== handled.current) {
+      handled.current = handoff.seq;
+      setLoaded(null);
+      void onFile(handoff.file);
+    }
+  }, [handoff]);
 
   if (!loaded)
     return (
-      <div className="grid grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] gap-4">
-        <div className="flex flex-col gap-4">
-          {error && <div role="alert" className="tile border-coral/40 px-[22px] py-4 text-[12px] text-coral-soft">{error}</div>}
+      <div className="grid grid-cols-1 gap-4 @3xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+        <div className="flex min-w-0 flex-col gap-4">
+          {error && (
+            <WrongFileCard
+              fileName={error.source.name}
+              failure={error.failure}
+              fallbackHint="1 行目に見出し、2 行目から実績を書いた CSV（UTF-8 / Shift-JIS）を選んでください。"
+              switchLabel={error.failure.suggestTab === 'json' ? 'JSON を取り込む で開く' : undefined}
+              onSwitch={error.failure.suggestTab === 'json' ? () => onSwitchTab('json', error.source) : undefined}
+            />
+          )}
           <DropZone
             accept=".csv,.tsv,.txt,text/csv"
             onFile={onFile}
@@ -61,8 +101,13 @@ export function CsvTab({ bundle, projects, role }: { bundle: ModelBundle; projec
             sub={<>または <span className="text-accent underline">ファイルを選ぶ</span> ・ .csv (UTF-8 / Shift-JIS は自動判定)</>}
             note="1 行目は見出し。列の対応と内容を確認してから登録します。"
           />
+          {role !== 'admin' && role !== 'pmo' && (
+            <p className="m-0 text-[12px] leading-[1.6] text-sub">
+              {role ? 'あなたの権限（見積り担当）では登録できません。内容の確認はできます。登録は PMO またはモデル管理者が行います。' : '読み取り専用モードです（ログインが必要）。内容の確認はできます。'}
+            </p>
+          )}
         </div>
-        <Tile delay={80} className="flex flex-col gap-2.5 self-start">
+        <Tile delay={80} className="flex min-w-0 flex-col gap-2.5 self-start">
           <span className="text-[14px] font-bold">CSV の形</span>
           <span className="text-[12px] leading-[1.7] text-sub">
             必須はプロジェクト名・規模・工数の 3 列。要因ごとにレベル (0〜3) の列を置けます。列が無い要因は L0 になります。見出し名から列の対応を自動で推定します。
@@ -81,6 +126,7 @@ export function CsvTab({ bundle, projects, role }: { bundle: ModelBundle; projec
       bundle={bundle}
       projects={projects}
       role={role}
+      userName={userName}
       factors={factors}
       map={map}
       setMap={setMap}
@@ -98,6 +144,7 @@ function CsvMapped(p: {
   bundle: ModelBundle;
   projects: ProjectRow[];
   role: Role | null;
+  userName: string;
   factors: { id: string; no: number; name: string }[];
   map: TargetKey[];
   setMap: (m: TargetKey[]) => void;
@@ -126,7 +173,9 @@ function CsvMapped(p: {
   const groupId = group?.id ?? 'A';
   const allowed = p.role === 'admin' || p.role === 'pmo';
   const okCount = mapping.ok ? sum.ok.length : 0;
-  const problems = rows.filter((r) => !r.ok);
+  const problems = rows.filter((r) => !r.ok && !r.issues.some((i) => i.code === 'already-imported'));
+  const [confirming, setConfirming] = useState(false);
+  const [backup, setBackup] = useState<string | null>(null);
 
   const cycle = (i: number, back: boolean) => {
     if (frozen) return;
@@ -142,8 +191,7 @@ function CsvMapped(p: {
       id: `PJ-${stamp}-${String(i + 1).padStart(2, '0')}`,
       groupId,
       name: r.name,
-      sizeFP: Math.round(r.sizeFP! * 100) / 100,
-      effortMM: Math.round(r.effortMM! * 1000) / 1000,
+      ...registerValues(r.sizeFP!, r.effortMM!),
       levels: r.levels,
       note: r.note,
       adopted: true,
@@ -161,6 +209,7 @@ function CsvMapped(p: {
         onSuccess: () => {
           setFrozen(rows);
           setRegistered(list.map((x) => x.id));
+          setConfirming(false);
         },
       },
     );
@@ -189,7 +238,7 @@ function CsvMapped(p: {
     : !mapping.ok
       ? '必須の列を対応付けてください'
       : !allowed
-        ? '登録には PMO 権限が必要です'
+        ? '登録には PMO またはモデル管理者の権限が必要です'
         : commit.isPending
           ? '登録しています…'
           : okCount
@@ -197,10 +246,10 @@ function CsvMapped(p: {
             : '登録できる行がありません';
 
   return (
-    <div className="grid grid-cols-[minmax(0,1.5fr)_360px] items-start gap-4">
-      <div className="flex flex-col gap-4">
+    <div className="grid grid-cols-1 items-start gap-4 @4xl:grid-cols-[minmax(0,1.5fr)_360px]">
+      <div className="flex min-w-0 flex-col gap-4">
         <FileHead badge="CSV" badgeClass="text-info" name={loaded.fileName} meta={`${loaded.rows.length} 行 ・ ${loaded.headers.length} 列 ・ ${loaded.encoding} ・ 1 行目は見出し`}>
-          <div className="ml-auto flex items-center gap-3.5">
+          <div className="flex flex-wrap items-center gap-3.5 @2xl:ml-auto">
             <div className="flex flex-col gap-1">
               <span className="text-[11px] text-sub">規模の単位</span>
               <Seg label="規模の単位" options={SIZE_UNITS} value={p.sizeUnit} onChange={p.setSizeUnit} />
@@ -216,8 +265,9 @@ function CsvMapped(p: {
         </FileHead>
 
         <Tile delay={80} className="flex flex-col gap-3">
-          <TileHead title="列の対応付け" aside="右の項目をクリックすると切り替わります ・ 見出し名から自動で推定済み" />
-          <table className="w-full border-collapse">
+          <TileHead title="列の対応付け" aside="右の項目をクリックすると切り替わります（Shift+クリックで戻る） ・ 見出し名から自動で推定済み" />
+          <div className="-mx-1 overflow-x-auto px-1">
+          <table className="w-full min-w-[30rem] border-collapse">
             <thead>
               <tr>
                 <th className={cx(thCls, 'w-9')}>列</th>
@@ -255,11 +305,13 @@ function CsvMapped(p: {
               })}
             </tbody>
           </table>
+          </div>
         </Tile>
 
         <Tile delay={160} className="flex flex-col gap-3">
           <TileHead title={`登録前の確認 — 先頭 ${Math.min(5, rows.length)} 行`} aside={effNote} />
-          <table className="w-full border-collapse">
+          <div className="-mx-1 overflow-x-auto px-1">
+          <table className="w-full min-w-[34rem] border-collapse">
             <thead>
               <tr>
                 <th className={thCls}>プロジェクト名</th>
@@ -283,23 +335,33 @@ function CsvMapped(p: {
               ))}
             </tbody>
           </table>
+          </div>
         </Tile>
 
         {problems.length > 0 && mapping.ok && (
           <Tile delay={200} className="flex flex-col gap-3">
-            <TileHead title={`要修正の行 — ${problems.length} 行`} aside="登録されません。実績データの画面で直して登録してください" />
+            <TileHead title={`要修正の行 — ${problems.length} 行`} aside="この行は登録されません。「実績データ」の画面で個別に追加・修正してください（別タブで開きます）" />
             <div className="flex flex-col gap-1 text-[12px]">
               {problems.map((r) => {
                 const dup = r.issues.find((i) => i.code === 'dup-existing');
                 return (
-                  <div key={r.line} className="flex items-center gap-3 border-b border-line py-2">
-                    <span className="w-14 shrink-0 font-num text-weak tabular-nums">{r.line} 行目</span>
-                    <span className="min-w-0 flex-1 truncate font-medium">{r.name || '(名前なし)'}</span>
-                    <span className="shrink-0 text-coral-soft">{r.issues.map((i) => i.message).join(' ・ ')}</span>
+                  <div key={r.line} className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-line py-2">
+                    <span className="w-14 shrink-0 font-num text-sub tabular-nums">{r.line} 行目</span>
+                    <span className="min-w-0 flex-[1_1_8rem] truncate font-medium">{r.name || '(名前なし)'}</span>
+                    <span className="min-w-0 text-coral-soft">{r.issues.map((i) => i.message).join(' ・ ')}</span>
                     {dup?.existingId ? (
-                      <Link to={`/model/projects/${encodeURIComponent(dup.existingId)}`} className="shrink-0 text-[12px]">既存を開く</Link>
+                      <Link to={`/model/projects/${encodeURIComponent(dup.existingId)}`} target="_blank" rel="noopener" className="shrink-0 text-[12px]">
+                        既存を開く
+                      </Link>
                     ) : (
-                      <Link to="/model/projects/new" className="shrink-0 text-[12px]">新規で入力</Link>
+                      <Link to="/model/projects/new" target="_blank" rel="noopener" className="shrink-0 text-[12px]">
+                        新規で入力
+                      </Link>
+                    )}
+                    {dup?.diffs && dup.diffs.length > 0 && (
+                      <div className="basis-full pl-[68px] max-[30rem]:pl-0">
+                        <DiffList summary={dup.diffs.length > 1 ? `${dup.diffs[0]} ほか ${dup.diffs.length - 1} 点` : dup.diffs[0]!} diffs={dup.diffs} />
+                      </div>
                     )}
                   </div>
                 );
@@ -309,7 +371,7 @@ function CsvMapped(p: {
         )}
       </div>
 
-      <div className="sticky top-6 flex flex-col gap-4">
+      <div className="flex min-w-0 flex-col gap-4 @4xl:sticky @4xl:top-6">
         <Tile delay={120} className="flex flex-col gap-3.5">
           <span className="text-[14px] font-bold">登録できるもの</span>
           <div className="flex items-baseline gap-2">
@@ -325,26 +387,76 @@ function CsvMapped(p: {
             </KV>
             <KV k="工数が空">{sum.effortBlank.length} 行{firstNames(sum.effortBlank)}</KV>
             <KV k="レベル値が範囲外">{sum.levelRange.length} 行{badLevel ? ` (値 ${badLevel} → L0〜L3)` : ''}</KV>
-            <KV k="既存と同名">{sum.duplicate.length} 行{firstNames(sum.duplicate)}</KV>
+            <KV k="既存と同名（内容が違う）">{sum.duplicate.length} 行{firstNames(sum.duplicate)}</KV>
+            {sum.already.length > 0 && <KV k="既に取り込み済み（登録しない）">{sum.already.length} 行{firstNames(sum.already)}</KV>}
             {sum.other.length > 0 && <KV k="名前・規模の不備">{sum.other.length} 行{firstNames(sum.other)}</KV>}
           </div>
-          <span className="text-[11px] leading-[1.6] text-weak">
-            {problems.length ? `要修正の ${problems.length} 行は登録後に「実績データ」で直せます。` : ''}登録した件はすべて「採用」になります。グループは {groupId} に入ります。
+          <span className="text-[11px] leading-[1.6] text-sub">
+            {problems.length ? `要修正の ${problems.length} 行は登録されません。「実績データ」で個別に追加・修正してください。` : ''}
+            {sum.already.length ? `既に取り込み済みの ${sum.already.length} 行は登録しません。` : ''}登録した件はすべて「採用」になります。グループは {groupId} に入ります。
           </span>
-          {commit.isError && <span role="alert" className="text-[12px] text-coral-soft">{commit.error.message}</span>}
-          <button type="button" disabled={done || !mapping.ok || !allowed || !okCount || commit.isPending} onClick={register} className={cx(primaryBtn, done && 'disabled:bg-ok/15 disabled:text-ok')}>
+          {done && (
+            <span role="status" className="text-[12px] leading-[1.6] text-ok">
+              {registered.length} 件をグループ {groupId} に登録しました。
+              {problems.length + sum.already.length > 0 ? `要修正 ${problems.length} 行・取り込み済み ${sum.already.length} 行は登録していません。` : ''}
+            </span>
+          )}
+          <button type="button" disabled={done || !mapping.ok || !allowed || !okCount || commit.isPending} onClick={() => setConfirming(true)} className={cx(primaryBtn, done && 'disabled:bg-ok/15 disabled:text-ok')}>
             {ctaText}
           </button>
-          <Link to="/model/projects" className={ghostBtn}>実績データ一覧へ戻る</Link>
+          <Link to="/model/projects" className={ghostBtn}>
+            {done ? '登録した実績を確認' : '実績データ一覧へ戻る'}
+          </Link>
         </Tile>
       </div>
+
+      <ConfirmDialog
+        open={confirming}
+        title={`${okCount} 件の実績を登録しますか`}
+        confirmLabel="登録する"
+        busy={commit.isPending}
+        error={commit.isError ? describeApiError(commit.error) : null}
+        onConfirm={register}
+        onCancel={() => {
+          setConfirming(false);
+          commit.reset();
+        }}
+      >
+        <div className="flex flex-col gap-3">
+          <dl className="m-0 grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-1 text-[12px]">
+            <dt className="text-sub">登録する</dt>
+            <dd className="m-0 text-text">
+              {okCount} 件（グループ {groupId}・すべて「採用」）
+            </dd>
+            <dt className="text-sub">登録しない</dt>
+            <dd className="m-0 text-text">
+              要修正 {problems.length} 行 ・ 既に取り込み済み {sum.already.length} 行
+            </dd>
+          </dl>
+          <p className="m-0">
+            <strong className="text-text">登録は元に戻せません。</strong>
+            取り消すときは「実績データ」で 1 件ずつ削除することになります。必要なら先に現在のモデル（実績を含む）をバックアップしてください。
+          </p>
+          <div className="flex flex-wrap items-center gap-2.5">
+            <button type="button" onClick={() => setBackup(downloadBackup(p.bundle, p.projects, p.userName))} className={ghostBtn}>
+              現在のモデルを JSON でバックアップ
+            </button>
+            {backup && (
+              <span role="status" className="text-[12px] text-ok">
+                {backup} を保存しました
+              </span>
+            )}
+          </div>
+        </div>
+      </ConfirmDialog>
     </div>
   );
 }
 
 function StatusChip({ row }: { row: CsvRow }) {
+  const already = row.issues[0]?.code === 'already-imported';
   return (
-    <span className={cx('rounded-full px-2 py-[3px] text-[10px] whitespace-nowrap', row.ok ? 'bg-ok/10 text-ok' : 'bg-coral/10 text-coral-soft')}>
+    <span className={cx('rounded-full px-2 py-[3px] text-[11px] whitespace-nowrap', row.ok ? 'bg-ok/10 text-ok' : already ? 'bg-raised text-sub' : 'bg-coral/10 text-coral-soft')}>
       {row.ok ? '登録できます' : row.issues[0]!.message}
     </span>
   );

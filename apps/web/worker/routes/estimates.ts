@@ -19,6 +19,15 @@ const generationInput = z.object({
   results: z.unknown(),
 });
 
+/** 予算（人月）。0 以下・非有限は受け付けない。null で「未設定」 */
+const budget = z.number().finite().positive().nullable();
+
+/** POST /api/estimates の入力（新しい見積り。世代 0 で作られ、最初の実行で G1 ができる） */
+export const createEstimateInput = z.object({ name: z.string().trim().min(1), budget: budget.default(null) });
+
+/** PUT /api/estimates/:id の入力（部分更新） */
+export const updateEstimateInput = z.object({ name: z.string().trim().min(1), budget, reportGenerationId: z.string().nullable() }).partial();
+
 export const estimatesRoute = new Hono<AppEnv>()
   .get('/', async (c) => c.json(await c.var.db.select().from(estimates).where(eq(estimates.modelId, MODEL_ID)).orderBy(desc(estimates.updatedAt))))
   .get('/:id', async (c) => {
@@ -30,14 +39,14 @@ export const estimatesRoute = new Hono<AppEnv>()
     return c.json({ ...est, generations: gens });
   })
   .post('/', requireRole('estimator'), async (c) => {
-    const body = z.object({ name: z.string().min(1), budget: z.number().nullable().default(null) }).parse(await c.req.json());
+    const body = createEstimateInput.parse(await c.req.json());
     const id = crypto.randomUUID();
     await c.var.db.insert(estimates).values({ id, modelId: MODEL_ID, ...body });
     await audit(c, 'estimate.create', { id });
     return c.json({ id }, 201);
   })
   .put('/:id', requireRole('estimator'), async (c) => {
-    const body = z.object({ name: z.string().min(1), budget: z.number().nullable(), reportGenerationId: z.string().nullable() }).partial().parse(await c.req.json());
+    const body = updateEstimateInput.parse(await c.req.json());
     await c.var.db.update(estimates).set({ ...body, updatedAt: new Date().toISOString() }).where(and(eq(estimates.id, c.req.param('id')), eq(estimates.modelId, MODEL_ID)));
     return c.json({ ok: true });
   })

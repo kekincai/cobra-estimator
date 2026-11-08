@@ -86,27 +86,52 @@
 }
 .rp-print:focus-visible, .rp-toolbar a:focus-visible { outline: 2px solid var(--color-ink); outline-offset: 2px; }
 
+/* 狭い画面: 表は枠内で横スクロール、余白を詰め、多段の枠は縦に積む */
+.rp-scroll { overflow-x: auto; }
+@media (max-width: 720px) {
+  .rp-page { padding: 28px 16px 32px; font-size: 10pt; }
+  .rp-toolbar { flex-wrap: wrap; padding: 12px 16px; }
+  .rp-toolbar > span { order: 3; flex-basis: 100%; }
+  .rp-scroll > table { min-width: 600px; }
+  .rp-page header > div { flex-wrap: wrap; }
+  .rp-page header > div:last-child > div:last-child { align-items: flex-start; }
+  .rp-formula, .rp-results, .rp-levers, .rp-model, .rp-kvgrid, .rp-signs { grid-template-columns: minmax(0, 1fr) !important; }
+  .rp-formula > .rp-op { display: none; }
+  .rp-title { font-size: 20pt !important; }
+}
+
 @media print {
   @page {
     size: A4;
-    margin: 12mm 12mm 14mm;
+    margin: 10mm 12mm 12mm;
     @bottom-right {
       content: counter(page) ' / ' counter(pages);
       font-size: 8pt;
     }
   }
+  /* 全体の color-scheme: dark のままだと「背景のグラフィック」ON で余白（キャンバス）が黒くなる */
+  html:has(.rp-wrap) { color-scheme: light; }
   html, body { background: var(--color-paper) !important; }
   .rp-wrap { background: none; padding: 0; min-height: 0; }
   .rp-toolbar { display: none; }
+  .rp-scroll { overflow: visible; }
   /* 印刷では用紙幅に合わせて流す（固定幅を外す）。図は viewBox で縮む */
   /* 2 ページに収まるよう少し詰める */
   .rp-page { width: auto; max-width: none; margin: 0; padding: 0; box-shadow: none; gap: 14px; font-size: 10pt; line-height: 1.5; }
   .rp-page th { padding: 4px 6px; }
   .rp-page td { padding: 4px 6px; }
   .rp-results th { white-space: normal; }
-  .rp-title { font-size: 22pt !important; }
+  .rp-title { font-size: 20pt !important; }
   .rp-hero { font-size: 38pt !important; }
-  .rp-kv { font-size: 9.5pt; }
+  .rp-kv { font-size: 9pt; padding: 3px 0; }
   .rp-results { grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr) !important; gap: 20px !important; }
   .rp-model { grid-template-columns: minmax(0, 1fr) 196px !important; gap: 20px !important; }
+  /* 2 ページ目（03 以降）を詰め、フッターが 3 ページ目に送られないようにする */
+  .rp-sign { gap: 6px !important; padding: 6px 10px !important; }
+  .rp-foot { padding-top: 6px !important; font-size: 8pt !important; }
+  .rp-note { font-size: 8pt !important; }
+  .rp-page th.rp-co { width: 104px !important; }
+  .rp-basis { font-size: 9pt !important; }
+  .rp-lever { padding: 6px 10px !important; }
+  .rp-lever > span { font-size: 9pt !important; }
 }
