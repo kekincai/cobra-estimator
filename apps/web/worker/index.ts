@@ -54,6 +54,8 @@ export default {
     if (env.AUTH_MODE !== 'dev') {
       const token = getCookie(req.headers.get('cookie'), SESSION_COOKIE);
       if (!(await sessionEmail(token, env.SESSION_SECRET))) {
+        // ページ遷移だけログインへ回す。favicon などのサブリソースで OAuth の一時クッキーを上書きしない
+        if (req.headers.get('sec-fetch-mode') && req.headers.get('sec-fetch-mode') !== 'navigate') return new Response('Unauthorized', { status: 401 });
         const login = new URL('/api/auth/login', url.origin);
         login.searchParams.set('next', url.pathname + url.search);
         return Response.redirect(login.toString(), 302);
