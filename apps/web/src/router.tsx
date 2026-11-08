@@ -13,6 +13,7 @@ import Relations from './pages/Relations';
 import Report from './pages/Report';
 import Risk from './pages/Risk';
 import Transfer from './pages/Transfer';
+import Users from './pages/Users';
 import { Layout } from './ui/Layout';
 
 export const router = createBrowserRouter([
@@ -32,6 +33,7 @@ export const router = createBrowserRouter([
       { path: '/estimate/:id/risk', element: <Risk /> },
       { path: '/guide', element: <Guide /> },
       { path: '/guide/flow', element: <Flow /> },
+      { path: '/admin/users', element: <Users /> },
     ],
   },
   // レポートは白地 A4・ナビなし（印刷用）
