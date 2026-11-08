@@ -1,5 +1,5 @@
 // 確認ダイアログ（ネイティブ <dialog>。Esc で閉じ、閉じたら呼び出し元へフォーカスが戻る）。
-// 取り消しにくい操作（モデルの採用、ユーザー削除、権限変更、取り込み確定など）の前に使う。
+// 取り消しにくい操作（見積りに使うモデルの切替、ユーザー削除、権限変更、取り込み確定など）の前に使う。
 import { useEffect, useId, useRef, type ReactNode } from 'react';
 
 interface Props {

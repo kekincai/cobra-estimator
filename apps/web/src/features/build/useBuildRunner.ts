@@ -1,10 +1,11 @@
 // モデル構築の実行と 3 段の進捗。
 // 進捗は Web Worker（runBuild）の実際の報告を使う。ただし計算は 1 秒未満で終わるので、
 // 表示は実進捗を上限に一定速度で追いかける（各段が目で追えるように）。reduced-motion なら実進捗そのまま。
-// cancel(): cobra-client に中断の仕組みがないため、Worker の計算は最後まで走るが結果は捨てる（保存もしない）。
+// cancel(): AbortSignal で cobra-client に取りやめを伝え、Worker の計算を実際に止める（Worker は作り直される）。
+// 結果は表示も保存もしない。前の版の値はそのまま残る。次の run・アンマウントでも前の計算を止める。
 import type { BuildResult, BuildStage, ModelSpec, ProjectRecord } from 'cobra-core';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { runBuild } from '../../lib/cobra-client';
+import { isAbortError, runBuild } from '../../lib/cobra-client';
 import { STAGE_SPANS } from './progress';
 import { MIN_VISIBLE_MS } from './runEstimate';
 
@@ -30,6 +31,8 @@ export function useBuildRunner(onDone: (r: BuildResult, meta: { runs: number; se
   const alive = useRef(true);
   /** 実行ごとの番号。cancel や次の run で古い結果を捨てる */
   const token = useRef(0);
+  /** 実行中の計算を止めるためのもの（cancel・次の run・アンマウントで abort） */
+  const ctrl = useRef<AbortController | null>(null);
   const doneRef = useRef(onDone);
   doneRef.current = onDone;
 
@@ -38,6 +41,8 @@ export function useBuildRunner(onDone: (r: BuildResult, meta: { runs: number; se
     return () => {
       alive.current = false;
       token.current++;
+      ctrl.current?.abort();
+      ctrl.current = null;
       cancelAnimationFrame(raf.current);
     };
   }, []);
@@ -45,6 +50,9 @@ export function useBuildRunner(onDone: (r: BuildResult, meta: { runs: number; se
   /** excluded: 不採用の実績。α には使わず、不整合の判定だけ行う（cobra-core `BuildOptions.excluded`） */
   const run = useCallback((spec: ModelSpec, projects: ProjectRecord[], opts: { runs: number; seed: number }, excluded: ProjectRecord[] = []) => {
     cancelAnimationFrame(raf.current);
+    ctrl.current?.abort();
+    const ac = new AbortController();
+    ctrl.current = ac;
     const my = ++token.current;
     const current = () => alive.current && token.current === my;
     real.current = 0;
@@ -76,8 +84,9 @@ export function useBuildRunner(onDone: (r: BuildResult, meta: { runs: number; se
     };
     raf.current = requestAnimationFrame(tick);
 
-    runBuild(spec, projects, { ...opts, excluded }, onProgress).then(
+    runBuild(spec, projects, { ...opts, excluded }, onProgress, { signal: ac.signal }).then(
       (r) => {
+        if (ctrl.current === ac) ctrl.current = null;
         if (!current()) return;
         elapsedMs = performance.now() - t0;
         result = r;
@@ -89,7 +98,9 @@ export function useBuildRunner(onDone: (r: BuildResult, meta: { runs: number; se
         }
       },
       (e: unknown) => {
-        if (!current()) return;
+        if (ctrl.current === ac) ctrl.current = null;
+        // 取りやめは cancel() が状態を変えているので、エラーにしない
+        if (!current() || isAbortError(e)) return;
         cancelAnimationFrame(raf.current);
         setState({ phase: 'error', shown: 0, elapsedMs: null, error: e instanceof Error ? e.message : String(e) });
       },
@@ -99,6 +110,8 @@ export function useBuildRunner(onDone: (r: BuildResult, meta: { runs: number; se
   /** 実行中の構築を取りやめる。結果は表示も保存もしない */
   const cancel = useCallback(() => {
     token.current++;
+    ctrl.current?.abort();
+    ctrl.current = null;
     cancelAnimationFrame(raf.current);
     setState((s) => (s.phase === 'running' ? { phase: 'cancelled', shown: 0, elapsedMs: null, error: null } : s));
   }, []);

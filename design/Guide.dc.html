@@ -6,6 +6,10 @@
 <script src="./support.js"></script>
 </head>
 <body>
+<!--
+  実装メモ（PR #15 以降。設計稿に描いていない振る舞い。一覧と経緯は design/README.md）
+  - MMRE・PRED・不整合の例・リスク曲線・算定式の初期値は、画面では実データ（現行の版と見本の見積り）から読む。この稿の数字はその時点の見本。予算の超過確率は P 値表から言える幅（40〜50%）で示し、正確な値はリスク画面に任せる。
+-->
 <x-dc>
 <helmet>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Space+Grotesk:wght@500;700&display=swap">
@@ -17,7 +21,7 @@ a{color:#D4FF4F}a:hover{color:#E6FF8A}
 @keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
 @keyframes riseA{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 @keyframes riseB{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
-.nav{display:flex;align-items:center;gap:12px;min-height:44px;padding:0 14px;border-radius:12px;color:#8B93A5;text-decoration:none;font-size:13px;font-weight:500;transition:background .2s,color .2s}
+.nav{display:flex;align-items:center;gap:12px;min-height:44px;padding:0 14px;border-radius:12px;color:#98A0B1;text-decoration:none;font-size:13px;font-weight:500;transition:background .2s,color .2s}
 .nav:hover{background:#171B25;color:#F2F4F8}
 .nav.on{background:#1B2030;color:#F2F4F8}
 .btn{transition:transform .15s,filter .2s,background .2s,border-color .2s,color .2s}.btn:hover{filter:brightness(1.08)}.btn:active{transform:scale(.97)}
@@ -28,7 +32,7 @@ h2{margin:0;font-size:24px}
 h3{margin:0;font-size:15px;font-weight:700}
 .poly{transition:points .3s}
 input[type=range]{width:100%;accent-color:#D4FF4F;cursor:pointer;height:28px}
-dt{font-size:13px;font-weight:700}dd{margin:2px 0 0;font-size:12.5px;color:#8B93A5;line-height:1.6}
+dt{font-size:13px;font-weight:700}dd{margin:2px 0 0;font-size:12.5px;color:#98A0B1;line-height:1.6}
 a:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid #D4FF4F;outline-offset:2px}
 @media (prefers-reduced-motion: reduce){.tile{animation:none}}
 </style>
@@ -41,12 +45,12 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid #D4FF
       <span class="n" style="font-size: 18px">Estima</span>
     </a>
     <a href="Main.dc.html" class="nav"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8" rx="2"></rect><rect x="13" y="3" width="8" height="5" rx="2"></rect><rect x="13" y="11" width="8" height="10" rx="2"></rect><rect x="3" y="14" width="8" height="7" rx="2"></rect></svg>ダッシュボード</a>
-    <span style="font-size: 11px; color: #5E677A; padding: 16px 14px 6px; letter-spacing: 0.06em">MODEL</span>
+    <span style="font-size: 11px; color: #7F889B; padding: 16px 14px 6px; letter-spacing: 0.06em">MODEL</span>
     <a href="Factors.dc.html" class="nav"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h10M4 18h6"></path></svg>変動要因</a>
     <a href="ProjectData.dc.html" class="nav"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="8" ry="3"></ellipse><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"></path></svg>実績データ</a>
     <a href="Build.dc.html" class="nav"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"></path></svg>モデル構築</a>
     <a href="Transfer.dc.html" class="nav"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"></path></svg>取り込み / 書き出し</a>
-    <span style="font-size: 11px; color: #5E677A; padding: 16px 14px 6px; letter-spacing: 0.06em">ESTIMATE</span>
+    <span style="font-size: 11px; color: #7F889B; padding: 16px 14px 6px; letter-spacing: 0.06em">ESTIMATE</span>
     <a href="Estimate.dc.html" class="nav"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="3"></rect><path d="M8 7h8M8 12h3M13 12h3M8 17h3M13 17h3"></path></svg>工数見積り</a>
     <a href="Risk.dc.html" class="nav"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 17H3z"></path><path d="M12 10v4M12 17.5h.01"></path></svg>リスク</a>
     <a href="Report.dc.html" class="nav"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6M16 13H8M16 17H8"></path></svg>レポート</a>
@@ -54,152 +58,152 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid #D4FF
     <a href="Guide.dc.html" aria-current="page" class="nav on"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"></path></svg>CoBRA法の解説</a>
     <div style="display: flex; align-items: center; gap: 10px; padding: 12px 14px 4px">
       <span style="width: 30px; height: 30px; border-radius: 15px; background: #2A3040; color: #F2F4F8; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700">KC</span>
-      <span style="display: flex; flex-direction: column"><span style="font-size: 12px; font-weight: 500">K. Cai</span><span style="font-size: 11px; color: #5E677A">PMO</span></span>
+      <span style="display: flex; flex-direction: column"><span style="font-size: 12px; font-weight: 500">K. Cai</span><span style="font-size: 11px; color: #7F889B">PMO</span></span>
     </div>
   </nav>
 
   <main style="flex: 1 1 0; min-width: 0; padding: 28px 32px 36px; box-sizing: border-box; display: flex; flex-direction: column; gap: 20px">
     <div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 24px">
       <div style="display: flex; flex-direction: column; gap: 6px">
-        <span style="font-size: 12px; color: #8B93A5">解説 ・ 旧 Excel 版の「解説文の表示」(F-INF01) に相当</span>
+        <span style="font-size: 12px; color: #98A0B1">解説 ・ 旧 Excel 版の「解説文の表示」(F-INF01) に相当</span>
         <h1 class="n" style="margin: 0; font-size: 28px">CoBRA 法と、このツールの使い方</h1>
-        <span style="font-size: 13px; color: #8B93A5">数式は動かして確かめられます。各画面の「?」からも該当する節が開きます。</span>
+        <span style="font-size: 13px; color: #98A0B1">数式は動かして確かめられます。各画面の「?」からも該当する節が開きます。</span>
       </div>
-      <a href="Flow.dc.html" class="lk" style="display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 14px; border-radius: 10px; border: 1px solid #2A3040; background: #13161E; color: #F2F4F8; font-size: 13px; font-weight: 700; text-decoration: none">業務フロー図を見る <span style="color: {{accent}}">↗</span></a>
+      <a href="Flow.dc.html" class="lk" style="display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 14px; border-radius: 10px; border: 1px solid #2A3040; background: #13161E; color: #F2F4F8; font-size: 13px; font-weight: 700; text-decoration: none">業務フロー図を見る <span style="color: {{accent}}">→</span></a>
     </div>
 
     <div style="display: grid; grid-template-columns: 260px minmax(0, 1fr); gap: 16px; align-items: start">
       <div class="tile" style="padding: 12px; display: flex; flex-direction: column; gap: 2px; position: sticky; top: 24px">
         <sc-for list="{{toc}}" as="t" hint-placeholder-count="8"><button type="button" class="toc" onClick="{{t.pick}}" style="{{t.style}}"><span class="n" style="{{t.noStyle}}">{{t.no}}</span><span style="text-align: left">{{t.label}}</span></button></sc-for>
-        <div style="margin: 10px 4px 4px; padding: 12px 14px; border-radius: 12px; background: #0B0D12; border: 1px solid #222734; font-size: 11px; color: #8B93A5; line-height: 1.6">出典: IPA/SEC「CoBRA 法に基づく見積り支援ツール」要件定義書 v1.3 (2009) をもとに、Web 版の用語に合わせて再構成。</div>
+        <div style="margin: 10px 4px 4px; padding: 12px 14px; border-radius: 12px; background: #0B0D12; border: 1px solid #222734; font-size: 11px; color: #98A0B1; line-height: 1.6">出典: IPA/SEC「CoBRA 法に基づく見積り支援ツール」要件定義書 v1.3 (2009) をもとに、Web 版の用語に合わせて再構成。</div>
       </div>
 
       <div class="tile" style="padding: 28px 32px; min-height: 860px; display: flex; flex-direction: column; gap: 18px; animation-delay: 80ms">
         <div style="{{bodyStyle}}">
 
           <sc-if value="{{s0}}" hint-placeholder-val="{{true}}">
-            <span style="font-size: 11px; color: #5E677A; letter-spacing: 0.08em">01 ・ 概要</span>
+            <span style="font-size: 11px; color: #7F889B; letter-spacing: 0.08em">01 ・ 概要</span>
             <h2 class="n">CoBRA 法とは</h2>
             <p>CoBRA (Cost estimation, Benchmarking, and Risk Assessment) は、少ない実績データと専門家の知見を組み合わせて工数を見積もる手法です。過去の実績から「普通の生産性」を求め、そこにプロジェクトごとの事情 (変動要因) による上乗せを加えます。上乗せの大きさは専門家が幅をもって答え、シミュレーションで工数の分布にします。</p>
             <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 8px">
-              <div style="padding: 16px 18px; border-radius: 14px; background: #0B0D12; border: 1px solid #222734; display: flex; flex-direction: column; gap: 6px"><span class="n" style="font-size: 12px; color: {{accent}}">実績データ</span><span style="font-size: 14px; font-weight: 700">10 件程度でよい</span><span style="font-size: 12px; color: #8B93A5; line-height: 1.6">統計的な回帰には足りない件数でも、名目生産性 α を求めるには十分です。</span></div>
-              <div style="padding: 16px 18px; border-radius: 14px; background: #0B0D12; border: 1px solid #222734; display: flex; flex-direction: column; gap: 6px"><span class="n" style="font-size: 12px; color: {{accent}}">専門家の知見</span><span style="font-size: 14px; font-weight: 700">幅で答える</span><span style="font-size: 12px; color: #8B93A5; line-height: 1.6">「この要因が最悪なら工数は何 % 増えるか」を最良・最頻・最悪の 3 点で。</span></div>
-              <div style="padding: 16px 18px; border-radius: 14px; background: #0B0D12; border: 1px solid #222734; display: flex; flex-direction: column; gap: 6px"><span class="n" style="font-size: 12px; color: {{accent}}">シミュレーション</span><span style="font-size: 14px; font-weight: 700">点ではなく分布</span><span style="font-size: 12px; color: #8B93A5; line-height: 1.6">10,000 回試行して「45 人月を超える確率は 34%」のように読めるようにします。</span></div>
+              <div style="padding: 16px 18px; border-radius: 14px; background: #0B0D12; border: 1px solid #222734; display: flex; flex-direction: column; gap: 6px"><span class="n" style="font-size: 12px; color: {{accent}}">実績データ</span><span style="font-size: 14px; font-weight: 700">10 件程度でよい</span><span style="font-size: 12px; color: #98A0B1; line-height: 1.6">統計的な回帰には足りない件数でも、名目生産性 α を求めるには十分です。</span></div>
+              <div style="padding: 16px 18px; border-radius: 14px; background: #0B0D12; border: 1px solid #222734; display: flex; flex-direction: column; gap: 6px"><span class="n" style="font-size: 12px; color: {{accent}}">専門家の知見</span><span style="font-size: 14px; font-weight: 700">幅で答える</span><span style="font-size: 12px; color: #98A0B1; line-height: 1.6">「この要因が最悪なら工数は何 % 増えるか」を最良・最頻・最悪の 3 点で。</span></div>
+              <div style="padding: 16px 18px; border-radius: 14px; background: #0B0D12; border: 1px solid #222734; display: flex; flex-direction: column; gap: 6px"><span class="n" style="font-size: 12px; color: {{accent}}">シミュレーション</span><span style="font-size: 14px; font-weight: 700">点ではなく分布</span><span style="font-size: 12px; color: #98A0B1; line-height: 1.6">10,000 回試行して「予算を超える確率は何 % か」を読めるようにします。</span></div>
             </div>
             <p style="margin-top: 8px">結果として得られるのは一つの数字ではなく、「推定値 (超過確率 50%)」と「その周りの幅」です。予算に対する超過確率や、どの要因を下げれば効くかまで同じモデルから読み取れるのが、他の見積り手法との違いです。</p>
           </sc-if>
 
           <sc-if value="{{s1}}" hint-placeholder-val="{{false}}">
-            <span style="font-size: 11px; color: #5E677A; letter-spacing: 0.08em">02 ・ 数式</span>
+            <span style="font-size: 11px; color: #7F889B; letter-spacing: 0.08em">02 ・ 数式</span>
             <h2 class="n">工数算定式 — 動かして確かめる</h2>
             <div class="n" style="font-size: 22px; padding: 18px 22px; border-radius: 14px; background: #0B0D12; border: 1px solid #222734; display: flex; align-items: center; justify-content: center; gap: 14px; flex-wrap: wrap">
-              <span>工数</span><span style="color: #5E677A">=</span><span style="color: {{accent}}">α</span><span style="color: #5E677A">×</span><span>規模</span><span style="color: #5E677A">×</span><span>(1 + <span style="color: #FF7A59">ΣCO</span>)</span>
-              <span style="color: #5E677A">=</span><span>{{fAlpha}}</span><span style="color: #5E677A">×</span><span>{{fSize}}</span><span style="color: #5E677A">×</span><span>{{fMult}}</span><span style="color: #5E677A">=</span><span style="font-size: 28px; color: {{accent}}">{{fEffort}}</span><span style="font-size: 13px; color: #8B93A5; font-weight: 500">人月</span>
+              <span>工数</span><span style="color: #7F889B">=</span><span style="color: {{accent}}">α</span><span style="color: #7F889B">×</span><span>規模</span><span style="color: #7F889B">×</span><span>(1 + <span style="color: #FF7A59">ΣCO</span>)</span>
+              <span style="color: #7F889B">=</span><span>{{fAlpha}}</span><span style="color: #7F889B">×</span><span>{{fSize}}</span><span style="color: #7F889B">×</span><span>{{fMult}}</span><span style="color: #7F889B">=</span><span style="font-size: 28px; color: {{accent}}">{{fEffort}}</span><span style="font-size: 13px; color: #98A0B1; font-weight: 500">人月</span>
             </div>
             <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px">
-              <div style="display: flex; flex-direction: column; gap: 6px"><div style="display: flex; justify-content: space-between; font-size: 12px"><span style="color: #8B93A5">α 名目生産性 (人月 / FP)</span><span class="n">{{fAlpha}}</span></div><input type="range" min="150" max="300" value="{{aV}}" onInput="{{setA}}" aria-label="α"><span style="font-size: 11px; color: #5E677A; line-height: 1.5">実績データから求まる「要因が全部 L0 だったときの生産性」。</span></div>
-              <div style="display: flex; flex-direction: column; gap: 6px"><div style="display: flex; justify-content: space-between; font-size: 12px"><span style="color: #8B93A5">規模 (FP)</span><span class="n">{{fSize}}</span></div><input type="range" min="300" max="2400" step="50" value="{{sizeV}}" onInput="{{setS}}" aria-label="規模"><span style="font-size: 11px; color: #5E677A; line-height: 1.5">ファンクションポイント。KLOC や画面数からの換算でも可。</span></div>
-              <div style="display: flex; flex-direction: column; gap: 6px"><div style="display: flex; justify-content: space-between; font-size: 12px"><span style="color: #8B93A5">ΣCO 上乗せ率の合計</span><span class="n">{{fSco}}</span></div><input type="range" min="0" max="150" value="{{scoV}}" onInput="{{setC}}" aria-label="ΣCO"><span style="font-size: 11px; color: #5E677A; line-height: 1.5">各要因の CO (工数増加率) を足したもの。L0 なら 0。</span></div>
+              <div style="display: flex; flex-direction: column; gap: 6px"><div style="display: flex; justify-content: space-between; font-size: 12px"><span style="color: #98A0B1">α 名目生産性 (人月 / FP)</span><span class="n">{{fAlpha}}</span></div><input type="range" min="150" max="300" value="{{aV}}" onInput="{{setA}}" aria-label="α"><span style="font-size: 11px; color: #7F889B; line-height: 1.5">実績データから求まる「要因が全部 L0 だったときの生産性」。</span></div>
+              <div style="display: flex; flex-direction: column; gap: 6px"><div style="display: flex; justify-content: space-between; font-size: 12px"><span style="color: #98A0B1">規模 (FP)</span><span class="n">{{fSize}}</span></div><input type="range" min="300" max="2400" step="50" value="{{sizeV}}" onInput="{{setS}}" aria-label="規模"><span style="font-size: 11px; color: #7F889B; line-height: 1.5">ファンクションポイント。KLOC や画面数からの換算でも可。</span></div>
+              <div style="display: flex; flex-direction: column; gap: 6px"><div style="display: flex; justify-content: space-between; font-size: 12px"><span style="color: #98A0B1">ΣCO 上乗せ率の合計</span><span class="n">{{fSco}}</span></div><input type="range" min="0" max="150" value="{{scoV}}" onInput="{{setC}}" aria-label="ΣCO"><span style="font-size: 11px; color: #7F889B; line-height: 1.5">各要因の CO (工数増加率) を足したもの。L0 なら 0。</span></div>
             </div>
             <div style="display: grid; grid-template-columns: minmax(0, 1fr) 28px minmax(0, 1fr) 28px minmax(0, 1fr); align-items: stretch">
-              <div style="padding: 12px 14px; border-radius: 12px; border: 1px solid #222734; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 10px; color: #5E677A">名目工数 α × 規模</span><span class="n" style="font-size: 18px">{{fNominal}} <span style="font-size: 11px; font-weight: 500; color: #8B93A5">人月</span></span></div>
-              <div style="display: flex; align-items: center; justify-content: center; color: #5E677A">+</div>
-              <div style="padding: 12px 14px; border-radius: 12px; border: 1px solid #4A2520; background: #1A1210; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 10px; color: #5E677A">上乗せ 名目 × ΣCO</span><span class="n" style="font-size: 18px; color: #FF9F84">{{fOver}} <span style="font-size: 11px; font-weight: 500; color: #8B93A5">人月</span></span></div>
-              <div style="display: flex; align-items: center; justify-content: center; color: #5E677A">=</div>
-              <div style="padding: 12px 14px; border-radius: 12px; background: #0B0D12; border: 1px solid {{accent}}; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 10px; color: #5E677A">推定工数</span><span class="n" style="font-size: 18px; color: {{accent}}">{{fEffort}} <span style="font-size: 11px; font-weight: 500; color: #8B93A5">人月</span></span></div>
+              <div style="padding: 12px 14px; border-radius: 12px; border: 1px solid #222734; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 11px; color: #7F889B">名目工数 α × 規模</span><span class="n" style="font-size: 18px">{{fNominal}} <span style="font-size: 11px; font-weight: 500; color: #98A0B1">人月</span></span></div>
+              <div style="display: flex; align-items: center; justify-content: center; color: #7F889B">+</div>
+              <div style="padding: 12px 14px; border-radius: 12px; border: 1px solid #4A2520; background: #1A1210; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 11px; color: #7F889B">上乗せ 名目 × ΣCO</span><span class="n" style="font-size: 18px; color: #FF9F84">{{fOver}} <span style="font-size: 11px; font-weight: 500; color: #98A0B1">人月</span></span></div>
+              <div style="display: flex; align-items: center; justify-content: center; color: #7F889B">=</div>
+              <div style="padding: 12px 14px; border-radius: 12px; background: #0B0D12; border: 1px solid {{accent}}; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 11px; color: #7F889B">推定工数</span><span class="n" style="font-size: 18px; color: {{accent}}">{{fEffort}} <span style="font-size: 11px; font-weight: 500; color: #98A0B1">人月</span></span></div>
             </div>
             <p>CO (Cost Overhead) は「その要因が原因で、名目工数に対して何 % 余計にかかるか」です。要因は独立に足し合わせるのが CoBRA の約束で、掛け算にはしません。間接要因だけは例外で、自分の CO を持たず、対象の直接要因の CO を倍率で強めます。</p>
           </sc-if>
 
           <sc-if value="{{s2}}" hint-placeholder-val="{{false}}">
-            <span style="font-size: 11px; color: #5E677A; letter-spacing: 0.08em">03 ・ 要因</span>
+            <span style="font-size: 11px; color: #7F889B; letter-spacing: 0.08em">03 ・ 要因</span>
             <h2 class="n">変動要因と三角分布</h2>
             <p>変動要因は「このプロジェクトは普通より手がかかるか」を決める観点です。各要因は 4 段階のレベル (L0 = 影響なし 〜 L3 = 最も悪い) で評価し、L3 のときの CO を専門家が三角分布で答えます。L1、L2 の CO は L3 の 1/3、2/3 として内挿します。</p>
             <div style="display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 20px; align-items: start">
               <div style="display: flex; flex-direction: column; gap: 10px">
                 <svg width="100%" height="200" viewBox="0 0 520 200" role="img" aria-label="三角分布。最良、最頻、最悪の 3 点を結んだ三角形">
                   <line x1="30" y1="170" x2="500" y2="170" stroke="#222734"></line>
-                  <g font-family="Space Grotesk" font-size="10" fill="#5E677A"><text x="30" y="188">0%</text><text x="265" y="188" text-anchor="middle">50%</text><text x="500" y="188" text-anchor="end">100%</text></g>
+                  <g font-family="Space Grotesk" font-size="11" fill="#7F889B"><text x="30" y="188">0%</text><text x="265" y="188" text-anchor="middle">50%</text><text x="500" y="188" text-anchor="end">100%</text></g>
                   <polygon points="{{triPts}}" fill="{{accent}}" fill-opacity="0.18" stroke="{{accent}}" stroke-width="2" stroke-linejoin="round"></polygon>
                   <line x1="{{tMx}}" y1="40" x2="{{tMx}}" y2="170" stroke="{{accent}}" stroke-width="1" stroke-dasharray="3 3"></line>
-                  <text x="{{tBx}}" y="164" font-family="Space Grotesk" font-size="10" fill="#8B93A5" text-anchor="middle">最良 {{tB}}%</text>
+                  <text x="{{tBx}}" y="164" font-family="Space Grotesk" font-size="11" fill="#98A0B1" text-anchor="middle">最良 {{tB}}%</text>
                   <text x="{{tMx}}" y="32" font-family="Space Grotesk" font-size="11" font-weight="700" fill="#F2F4F8" text-anchor="middle">最頻 {{tM}}%</text>
-                  <text x="{{tWx}}" y="164" font-family="Space Grotesk" font-size="10" fill="#8B93A5" text-anchor="middle">最悪 {{tW}}%</text>
+                  <text x="{{tWx}}" y="164" font-family="Space Grotesk" font-size="11" fill="#98A0B1" text-anchor="middle">最悪 {{tW}}%</text>
                 </svg>
                 <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px">
-                  <div style="display: flex; flex-direction: column; gap: 4px"><span style="font-size: 11px; color: #8B93A5">最良 (これ以下はない)</span><input type="range" min="0" max="100" value="{{tB}}" onInput="{{setB}}" aria-label="最良"></div>
-                  <div style="display: flex; flex-direction: column; gap: 4px"><span style="font-size: 11px; color: #8B93A5">最頻 (いちばんありそう)</span><input type="range" min="0" max="100" value="{{tM}}" onInput="{{setM}}" aria-label="最頻"></div>
-                  <div style="display: flex; flex-direction: column; gap: 4px"><span style="font-size: 11px; color: #8B93A5">最悪 (これ以上はない)</span><input type="range" min="0" max="100" value="{{tW}}" onInput="{{setW}}" aria-label="最悪"></div>
+                  <div style="display: flex; flex-direction: column; gap: 4px"><span style="font-size: 11px; color: #98A0B1">最良 (これ以下はない)</span><input type="range" min="0" max="100" value="{{tB}}" onInput="{{setB}}" aria-label="最良"></div>
+                  <div style="display: flex; flex-direction: column; gap: 4px"><span style="font-size: 11px; color: #98A0B1">最頻 (いちばんありそう)</span><input type="range" min="0" max="100" value="{{tM}}" onInput="{{setM}}" aria-label="最頻"></div>
+                  <div style="display: flex; flex-direction: column; gap: 4px"><span style="font-size: 11px; color: #98A0B1">最悪 (これ以上はない)</span><input type="range" min="0" max="100" value="{{tW}}" onInput="{{setW}}" aria-label="最悪"></div>
                 </div>
-                <span style="font-size: 12px; color: #8B93A5">平均 (期待値) = (最良 + 最頻 + 最悪) / 3 = <span class="n" style="color: #F2F4F8">{{tMean}}%</span>。シミュレーションでは毎回この三角形から 1 つ値を引きます。</span>
+                <span style="font-size: 12px; color: #98A0B1">平均 (期待値) = (最良 + 最頻 + 最悪) / 3 = <span class="n" style="color: #F2F4F8">{{tMean}}%</span>。シミュレーションでは毎回この三角形から 1 つ値を引きます。</span>
               </div>
               <div style="display: flex; flex-direction: column; gap: 10px">
-                <div style="padding: 14px 16px; border-radius: 12px; background: #0B0D12; border: 1px solid #222734; display: flex; flex-direction: column; gap: 6px"><h3>直接要因</h3><span style="font-size: 12px; color: #8B93A5; line-height: 1.6">自分の CO を持ち、工数に直接上乗せする。例: 要件の安定性、外部連携数。</span></div>
-                <div style="padding: 14px 16px; border-radius: 12px; background: #0B0D12; border: 1px dashed #3A4257; display: flex; flex-direction: column; gap: 6px"><h3>間接要因</h3><span style="font-size: 12px; color: #8B93A5; line-height: 1.6">直接要因 1 つを「強める」。一段階まで、直接要因 1 つにつき 1 つまで。例: 顧客の関与度 → 要件の安定性。</span></div>
-                <div style="padding: 14px 16px; border-radius: 12px; background: #0B0D12; border: 1px solid #222734; display: flex; flex-direction: column; gap: 6px"><h3>複数の専門家</h3><span style="font-size: 12px; color: #8B93A5; line-height: 1.6">三角分布は担当者ごとに持てます (S.T. / Y.T.)。モデル構築ではどれを使うか、平均を使うかを選びます。</span></div>
-                <a href="Factors.dc.html" class="lk" style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 40px; border-radius: 10px; border: 1px solid #2A3040; color: #F2F4F8; font-size: 13px; font-weight: 700; text-decoration: none">変動要因の画面へ <span style="color: {{accent}}">↗</span></a>
+                <div style="padding: 14px 16px; border-radius: 12px; background: #0B0D12; border: 1px solid #222734; display: flex; flex-direction: column; gap: 6px"><h3>直接要因</h3><span style="font-size: 12px; color: #98A0B1; line-height: 1.6">自分の CO を持ち、工数に直接上乗せする。例: 要件の安定性、外部連携数。</span></div>
+                <div style="padding: 14px 16px; border-radius: 12px; background: #0B0D12; border: 1px dashed #3A4257; display: flex; flex-direction: column; gap: 6px"><h3>間接要因</h3><span style="font-size: 12px; color: #98A0B1; line-height: 1.6">直接要因 1 つを「強める」。一段階まで、直接要因 1 つにつき 1 つまで。例: 顧客の関与度 → 要件の安定性。</span></div>
+                <div style="padding: 14px 16px; border-radius: 12px; background: #0B0D12; border: 1px solid #222734; display: flex; flex-direction: column; gap: 6px"><h3>複数の専門家</h3><span style="font-size: 12px; color: #98A0B1; line-height: 1.6">三角分布は担当者ごとに持てます (S.T. / Y.T.)。モデル構築ではどれを使うか、平均を使うかを選びます。</span></div>
+                <a href="Factors.dc.html" class="lk" style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 40px; border-radius: 10px; border: 1px solid #2A3040; color: #F2F4F8; font-size: 13px; font-weight: 700; text-decoration: none">変動要因の画面へ <span style="color: {{accent}}">→</span></a>
               </div>
             </div>
           </sc-if>
 
           <sc-if value="{{s3}}" hint-placeholder-val="{{false}}">
-            <span style="font-size: 11px; color: #5E677A; letter-spacing: 0.08em">04 ・ 構築</span>
+            <span style="font-size: 11px; color: #7F889B; letter-spacing: 0.08em">04 ・ 構築</span>
             <h2 class="n">モデル構築と精度の読み方</h2>
             <p>構築とは、採用した実績データから α を決めることです。各実績について「工数 ÷ (規模 × (1 + ΣCO))」を計算すると、その案件での名目生産性が出ます。それらの平均 (またはシミュレーションでの最尤値) が α です。実績の ΣCO は、その案件のレベル値から計算します。</p>
             <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
-              <div style="padding: 16px 18px; border-radius: 14px; background: #0B0D12; border: 1px solid #222734; display: flex; flex-direction: column; gap: 8px"><h3>MMRE — 平均相対誤差</h3><span class="n" style="font-size: 13px; color: #C7CDD9">MMRE = 平均 ( |実績 − 推定| / 実績 )</span><span style="font-size: 12px; color: #8B93A5; line-height: 1.6">小さいほど良い。20% 以下なら実務で使える目安、18.4% (v3) は良好。</span></div>
-              <div style="padding: 16px 18px; border-radius: 14px; background: #0B0D12; border: 1px solid #222734; display: flex; flex-direction: column; gap: 8px"><h3>PRED(25) — 25% 以内に入った割合</h3><span class="n" style="font-size: 13px; color: #C7CDD9">PRED(25) = 誤差 25% 以内の件数 / 全件数</span><span style="font-size: 12px; color: #8B93A5; line-height: 1.6">大きいほど良い。75% なら 11 件中 8 件が帯の内側。</span></div>
-              <div style="padding: 16px 18px; border-radius: 14px; background: #0B0D12; border: 1px solid #222734; display: flex; flex-direction: column; gap: 8px"><h3>1 件抜き交差検証</h3><span style="font-size: 12px; color: #8B93A5; line-height: 1.6">1 件を隠して残りで α を求め、隠した 1 件を見積もる。これを全件で繰り返した誤差が上の MMRE / PRED。手持ちのデータで「初めて見る案件」への当たり具合を測る方法です。</span></div>
-              <div style="padding: 16px 18px; border-radius: 14px; background: #1A1210; border: 1px solid #4A2520; display: flex; flex-direction: column; gap: 8px"><h3 style="color: #FF9F84">ΣCO と生産性の不整合</h3><span style="font-size: 12px; color: #C7CDD9; line-height: 1.6">レベル値が高い (ΣCO が大きい) のに生産性が良い、またはその逆の案件は、レベルの付け方か工数の集計に問題がある可能性があります。PJ-007 がその例で、除外して構築しています。</span></div>
+              <div style="padding: 16px 18px; border-radius: 14px; background: #0B0D12; border: 1px solid #222734; display: flex; flex-direction: column; gap: 8px"><h3>MMRE — 平均相対誤差</h3><span class="n" style="font-size: 13px; color: #C7CDD9">MMRE = 平均 ( |実績 − 推定| / 実績 )</span><span style="font-size: 12px; color: #98A0B1; line-height: 1.6">小さいほど良い。20% 以下なら実務で使える目安。現行の v3 は 12.8%。</span></div>
+              <div style="padding: 16px 18px; border-radius: 14px; background: #0B0D12; border: 1px solid #222734; display: flex; flex-direction: column; gap: 8px"><h3>PRED(25) — 25% 以内に入った割合</h3><span class="n" style="font-size: 13px; color: #C7CDD9">PRED(25) = 誤差 25% 以内の件数 / 全件数</span><span style="font-size: 12px; color: #98A0B1; line-height: 1.6">大きいほど良い。現行の v3 は 82% = 11 件中 9 件が誤差 25% の内側。</span></div>
+              <div style="padding: 16px 18px; border-radius: 14px; background: #0B0D12; border: 1px solid #222734; display: flex; flex-direction: column; gap: 8px"><h3>1 件抜き交差検証</h3><span style="font-size: 12px; color: #98A0B1; line-height: 1.6">1 件を隠して残りで α を求め、隠した 1 件を見積もる。これを全件で繰り返した誤差が上の MMRE / PRED。手持ちのデータで「初めて見る案件」への当たり具合を測る方法です。</span></div>
+              <div style="padding: 16px 18px; border-radius: 14px; background: #1A1210; border: 1px solid #4A2520; display: flex; flex-direction: column; gap: 8px"><h3 style="color: #FF9F84">ΣCO と生産性の不整合</h3><span style="font-size: 12px; color: #C7CDD9; line-height: 1.6">レベル値が高い (ΣCO が大きい) のに生産性が良い、またはその逆の案件は、レベルの付け方か工数の集計に問題がある可能性があります。現行の v3 では PJ-007 がその例で、除外して構築しています。</span></div>
             </div>
             <p>精度が足りないときは、要因の定義 (レベルの切り方) や実績データ (除外・グループ分け) に戻って作り直します。この往復が CoBRA のモデル作りの中心で、ツールはそのたびに版 (v1, v2, v3 …) を残します。</p>
           </sc-if>
 
           <sc-if value="{{s4}}" hint-placeholder-val="{{false}}">
-            <span style="font-size: 11px; color: #5E677A; letter-spacing: 0.08em">05 ・ 見積り</span>
+            <span style="font-size: 11px; color: #7F889B; letter-spacing: 0.08em">05 ・ 見積り</span>
             <h2 class="n">見積りの実行と世代</h2>
             <p>新しい案件の規模とレベル値を入れると、ツールは 10,000 回、各要因の三角分布から CO を引いて工数を計算します。その 10,000 個の工数を並べたものが「工数の分布」で、真ん中 (中央値) が推定値です。推定値は「50% の確率でこれを超える」工数であって、安全側の数字ではないことに注意してください。</p>
             <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px">
-              <div style="padding: 14px 16px; border-radius: 12px; background: #0B0D12; border: 1px solid #222734; display: flex; flex-direction: column; gap: 4px"><span class="n" style="font-size: 12px; color: {{accent}}">1</span><span style="font-size: 13px; font-weight: 700">条件を入れる</span><span style="font-size: 11.5px; color: #8B93A5; line-height: 1.5">規模、8 要因のレベル、前提メモ</span></div>
-              <div style="padding: 14px 16px; border-radius: 12px; background: #0B0D12; border: 1px solid #222734; display: flex; flex-direction: column; gap: 4px"><span class="n" style="font-size: 12px; color: {{accent}}">2</span><span style="font-size: 13px; font-weight: 700">実行する</span><span style="font-size: 11.5px; color: #8B93A5; line-height: 1.5">推定値・P20〜P95・要因ごとの上乗せ</span></div>
-              <div style="padding: 14px 16px; border-radius: 12px; background: #0B0D12; border: 1px solid #222734; display: flex; flex-direction: column; gap: 4px"><span class="n" style="font-size: 12px; color: {{accent}}">3</span><span style="font-size: 13px; font-weight: 700">世代として残す</span><span style="font-size: 11.5px; color: #8B93A5; line-height: 1.5">条件と結果の組を G1〜G5 まで横に並べる</span></div>
-              <div style="padding: 14px 16px; border-radius: 12px; background: #0B0D12; border: 1px solid #222734; display: flex; flex-direction: column; gap: 4px"><span class="n" style="font-size: 12px; color: {{accent}}">4</span><span style="font-size: 13px; font-weight: 700">比べて選ぶ</span><span style="font-size: 11.5px; color: #8B93A5; line-height: 1.5">案 A / 案 B の差を要因ごとに説明できる</span></div>
+              <div style="padding: 14px 16px; border-radius: 12px; background: #0B0D12; border: 1px solid #222734; display: flex; flex-direction: column; gap: 4px"><span class="n" style="font-size: 12px; color: {{accent}}">1</span><span style="font-size: 13px; font-weight: 700">条件を入れる</span><span style="font-size: 11.5px; color: #98A0B1; line-height: 1.5">規模、8 要因のレベル、前提メモ</span></div>
+              <div style="padding: 14px 16px; border-radius: 12px; background: #0B0D12; border: 1px solid #222734; display: flex; flex-direction: column; gap: 4px"><span class="n" style="font-size: 12px; color: {{accent}}">2</span><span style="font-size: 13px; font-weight: 700">実行する</span><span style="font-size: 11.5px; color: #98A0B1; line-height: 1.5">推定値 (中央値)・超過確率 80%〜5% の工数 (P20〜P95)・要因ごとの上乗せ</span></div>
+              <div style="padding: 14px 16px; border-radius: 12px; background: #0B0D12; border: 1px solid #222734; display: flex; flex-direction: column; gap: 4px"><span class="n" style="font-size: 12px; color: {{accent}}">3</span><span style="font-size: 13px; font-weight: 700">世代として残す</span><span style="font-size: 11.5px; color: #98A0B1; line-height: 1.5">条件と結果の組を G1〜G5 まで横に並べる</span></div>
+              <div style="padding: 14px 16px; border-radius: 12px; background: #0B0D12; border: 1px solid #222734; display: flex; flex-direction: column; gap: 4px"><span class="n" style="font-size: 12px; color: {{accent}}">4</span><span style="font-size: 13px; font-weight: 700">比べて選ぶ</span><span style="font-size: 11.5px; color: #98A0B1; line-height: 1.5">案 A / 案 B の差を要因ごとに説明できる</span></div>
             </div>
             <p>世代は「同じ案件の条件違い」を並べるためのものです。要件が固まったら新しい世代を作り直し、レポートにはどの世代を載せるかを選びます。乱数のシードを固定しておくと、同じ条件なら同じ結果になり、レビューで再現できます。</p>
-            <a href="Estimate.dc.html" class="lk" style="align-self: flex-start; display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 14px; border-radius: 10px; border: 1px solid #2A3040; color: #F2F4F8; font-size: 13px; font-weight: 700; text-decoration: none">工数見積りの画面へ <span style="color: {{accent}}">↗</span></a>
+            <a href="Estimate.dc.html" class="lk" style="align-self: flex-start; display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 14px; border-radius: 10px; border: 1px solid #2A3040; color: #F2F4F8; font-size: 13px; font-weight: 700; text-decoration: none">工数見積りの画面へ <span style="color: {{accent}}">→</span></a>
           </sc-if>
 
           <sc-if value="{{s5}}" hint-placeholder-val="{{false}}">
-            <span style="font-size: 11px; color: #5E677A; letter-spacing: 0.08em">06 ・ リスク</span>
+            <span style="font-size: 11px; color: #7F889B; letter-spacing: 0.08em">06 ・ リスク</span>
             <h2 class="n">リスクアセスメント — 超過確率の読み方</h2>
             <div style="display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 20px; align-items: center">
-              <svg width="100%" height="200" viewBox="0 0 520 200" role="img" aria-label="工数超過確率の曲線。工数が増えるほど超える確率が下がる">
+              <svg width="100%" height="200" viewBox="0 0 520 200" role="img" aria-label="見本の見積りの工数超過確率の曲線。工数が増えるほど超える確率が下がる">
                 <line x1="40" y1="170" x2="500" y2="170" stroke="#222734"></line><line x1="40" y1="20" x2="40" y2="170" stroke="#222734"></line>
-                <g font-family="Space Grotesk" font-size="10" fill="#5E677A"><text x="34" y="24" text-anchor="end">100%</text><text x="34" y="98" text-anchor="end">50%</text><text x="34" y="174" text-anchor="end">0%</text><text x="40" y="188">30</text><text x="270" y="188" text-anchor="middle">42.3</text><text x="500" y="188" text-anchor="end">60 人月</text></g>
+                <g font-family="Space Grotesk" font-size="11" fill="#7F889B"><text x="34" y="24" text-anchor="end">100%</text><text x="34" y="98" text-anchor="end">50%</text><text x="34" y="174" text-anchor="end">0%</text><text x="40" y="188">30</text><text x="270" y="188" text-anchor="middle">42.3</text><text x="500" y="188" text-anchor="end">60 人月</text></g>
                 <path d="M 40 22 C 150 24, 220 60, 270 95 S 400 160, 500 168" fill="none" stroke="{{accent}}" stroke-width="2.5"></path>
                 <line x1="270" y1="95" x2="270" y2="170" stroke="#3A4257" stroke-dasharray="3 3"></line><circle cx="270" cy="95" r="5" fill="{{accent}}" stroke="#0B0D12" stroke-width="2"></circle>
-                <text x="278" y="90" font-family="Noto Sans JP" font-size="10" fill="#F2F4F8">推定値 = 超過 50%</text>
+                <text x="278" y="90" font-family="Noto Sans JP" font-size="11" fill="#F2F4F8">推定値 = 中央値 (超過確率 50%)</text>
                 <line x1="312" y1="118" x2="312" y2="170" stroke="#FF7A59" stroke-dasharray="3 3"></line><circle cx="312" cy="118" r="5" fill="#FF7A59" stroke="#0B0D12" stroke-width="2"></circle>
-                <text x="320" y="122" font-family="Noto Sans JP" font-size="10" fill="#FF9F84">予算 45 → 超過 34%</text>
+                <text x="320" y="122" font-family="Noto Sans JP" font-size="11" fill="#FF9F84">予算 45 → 超過確率 40〜50%</text>
               </svg>
               <div style="display: flex; flex-direction: column; gap: 10px">
-                <div style="padding: 12px 14px; border-radius: 12px; background: #0B0D12; border: 1px solid #222734; display: flex; flex-direction: column; gap: 4px"><h3>工数 → 確率</h3><span style="font-size: 12px; color: #8B93A5; line-height: 1.6">「予算 45 人月で足りる確率は?」— 曲線を縦に読む。</span></div>
-                <div style="padding: 12px 14px; border-radius: 12px; background: #0B0D12; border: 1px solid #222734; display: flex; flex-direction: column; gap: 4px"><h3>確率 → 工数</h3><span style="font-size: 12px; color: #8B93A5; line-height: 1.6">「80% の確度で収めるにはいくら?」— 曲線を横に読む。</span></div>
-                <div style="padding: 12px 14px; border-radius: 12px; background: #0B0D12; border: 1px solid #222734; display: flex; flex-direction: column; gap: 4px"><h3>寄与度</h3><span style="font-size: 12px; color: #8B93A5; line-height: 1.6">上乗せのうち何割がどの要因か。レベルを 1 段下げたときの効き目もここから。</span></div>
+                <div style="padding: 12px 14px; border-radius: 12px; background: #0B0D12; border: 1px solid #222734; display: flex; flex-direction: column; gap: 4px"><h3>工数 → 確率</h3><span style="font-size: 12px; color: #98A0B1; line-height: 1.6">「予算 45 人月で足りる確率は?」— 曲線を縦に読む。</span></div>
+                <div style="padding: 12px 14px; border-radius: 12px; background: #0B0D12; border: 1px solid #222734; display: flex; flex-direction: column; gap: 4px"><h3>確率 → 工数</h3><span style="font-size: 12px; color: #98A0B1; line-height: 1.6">「超過確率 20% (P80) に抑えるにはいくら?」— 曲線を横に読む。</span></div>
+                <div style="padding: 12px 14px; border-radius: 12px; background: #0B0D12; border: 1px solid #222734; display: flex; flex-direction: column; gap: 4px"><h3>寄与度</h3><span style="font-size: 12px; color: #98A0B1; line-height: 1.6">上乗せのうち何割がどの要因か。レベルを 1 段下げたときの効き目もここから。</span></div>
               </div>
             </div>
             <p>横軸は「工数」と「中央値を 100% とした比率」で切り替えられます。比率表示は、規模の違う案件どうしで幅の広さを比べるときに便利です。</p>
           </sc-if>
 
           <sc-if value="{{s6}}" hint-placeholder-val="{{false}}">
-            <span style="font-size: 11px; color: #5E677A; letter-spacing: 0.08em">07 ・ 使い方</span>
+            <span style="font-size: 11px; color: #7F889B; letter-spacing: 0.08em">07 ・ 使い方</span>
             <h2 class="n">このツールの使い方 — 6 つの画面</h2>
             <div style="display: flex; flex-direction: column; gap: 8px">
               <sc-for list="{{steps}}" as="s" hint-placeholder-count="6">
                 <a class="lk" href="{{s.href}}" style="display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 14px 16px; border-radius: 14px; background: #0B0D12; border: 1px solid #222734; color: #F2F4F8; text-decoration: none">
                   <span class="n" style="font-size: 14px; color: {{accent}}">{{s.no}}</span>
-                  <span style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 14px; font-weight: 700">{{s.t}}</span><span style="font-size: 12px; color: #8B93A5; line-height: 1.5">{{s.d}}</span></span>
-                  <span style="font-size: 11px; color: #5E677A; white-space: nowrap">{{s.who}} <span style="color: {{accent}}">↗</span></span>
+                  <span style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 14px; font-weight: 700">{{s.t}}</span><span style="font-size: 12px; color: #98A0B1; line-height: 1.5">{{s.d}}</span></span>
+                  <span style="font-size: 11px; color: #7F889B; white-space: nowrap">{{s.who}} <span style="color: {{accent}}">→</span></span>
                 </a>
               </sc-for>
             </div>
@@ -207,7 +211,7 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid #D4FF
           </sc-if>
 
           <sc-if value="{{s7}}" hint-placeholder-val="{{false}}">
-            <span style="font-size: 11px; color: #5E677A; letter-spacing: 0.08em">08 ・ 用語</span>
+            <span style="font-size: 11px; color: #7F889B; letter-spacing: 0.08em">08 ・ 用語</span>
             <h2 class="n">用語集</h2>
             <dl style="margin: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 32px">
               <div><dt>α (名目生産性)</dt><dd>変動要因の影響がないときの、規模 1 単位あたりの工数。人月 / FP。</dd></div>
@@ -217,8 +221,9 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid #D4FF
               <div><dt>直接要因 / 間接要因</dt><dd>直接は工数に上乗せ。間接は直接要因 1 つを強めるだけで自分の CO を持たない。</dd></div>
               <div><dt>三角分布</dt><dd>最良・最頻・最悪の 3 点で決まる分布。専門家の「幅のある答え」を表す。</dd></div>
               <div><dt>モンテカルロ・シミュレーション</dt><dd>分布から値を何度も引いて結果の分布を作る方法。既定 10,000 回。</dd></div>
-              <div><dt>推定値 (P50)</dt><dd>分布の中央値。超過確率 50%。安全側の数字ではない。</dd></div>
-              <div><dt>超過確率</dt><dd>ある工数を実績が上回る確率。予算の妥当性を測る。</dd></div>
+              <div><dt>推定値 (中央値)</dt><dd>分布の中央値。超過確率 50% (P50)。安全側の数字ではない。</dd></div>
+              <div><dt>超過確率</dt><dd>ある工数を実績が上回る確率。予算の妥当性を測る。画面の工数・予算はこの確率を主に表示する。</dd></div>
+              <div><dt>P 値 (P80 など)</dt><dd>工数を小さい順に並べたときの位置。P80 = 超過確率 20%、P95 = 超過確率 5%。超過確率に添えて表示する。</dd></div>
               <div><dt>MMRE / PRED(25)</dt><dd>モデル精度。平均相対誤差と、誤差 25% 以内に入った割合。</dd></div>
               <div><dt>交差検証 (1 件抜き)</dt><dd>1 件ずつ隠して見積もり、当たり具合を測る精度評価。</dd></div>
               <div><dt>世代</dt><dd>同じ案件の見積り条件と結果の組。最大 5 つ並べて比較する。</dd></div>
@@ -230,7 +235,7 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid #D4FF
         </div>
         <div style="margin-top: auto; display: flex; justify-content: space-between; align-items: center; padding-top: 16px; border-top: 1px solid #1E2330">
           <button type="button" class="btn" onClick="{{prev}}" style="{{prevStyle}}">← {{prevLabel}}</button>
-          <span class="n" style="font-size: 12px; color: #5E677A">{{pageText}}</span>
+          <span class="n" style="font-size: 12px; color: #7F889B">{{pageText}}</span>
           <button type="button" class="btn" onClick="{{next}}" style="{{nextStyle}}">{{nextLabel}} →</button>
         </div>
       </div>
@@ -250,7 +255,7 @@ class Component extends DCLogic {
       ['03', 'モデルを構築する', 'α を推定し、交差検証で MMRE / PRED を確認。不整合があれば 01・02 に戻る。', 'モデル管理者', 'Build.dc.html'],
       ['04', '工数を見積もる', '規模とレベル値を入れて実行。条件違いは世代として並べる。', '見積り担当', 'Estimate.dc.html'],
       ['05', 'リスクを見る', '予算に対する超過確率、要因の寄与度、効く打ち手。', '見積り担当 / PM', 'Risk.dc.html'],
-      ['06', '報告する', 'A4 レポート / PDF。モデル情報と前提を同梱。JSON の書き出しもここから。', 'PMO', 'Report.dc.html']
+      ['06', '報告する', 'A4 レポート / PDF。モデル情報と前提を同梱。モデルの JSON 書き出しは「取り込み / 書き出し」から。', 'PMO', 'Report.dc.html']
     ];
     this.setA = (e) => this.setState({ aV: Number(e.target.value) });
     this.setS = (e) => this.setState({ sizeV: Number(e.target.value) });
@@ -266,7 +271,7 @@ class Component extends DCLogic {
     const alpha = st.aV / 10000, nominal = alpha * st.sizeV, over = nominal * st.scoV / 100;
     const X = (p) => 30 + p / 100 * 470;
     const triPts = X(st.tB) + ',170 ' + X(st.tM) + ',44 ' + X(st.tW) + ',170';
-    const toc = this.titles.map((t, i) => ({ no: String(i + 1).padStart(2, '0'), label: t, pick: () => this.go(i), style: { display: 'flex', alignItems: 'center', gap: '12px', minHeight: '42px', padding: '0 12px', borderRadius: '10px', border: '0', background: s === i ? '#1B2030' : 'transparent', color: s === i ? '#F2F4F8' : '#8B93A5', fontSize: '13px', fontWeight: s === i ? '700' : '500', cursor: 'pointer', fontFamily: 'inherit', width: '100%', textAlign: 'left' }, noStyle: { fontSize: '11px', color: s === i ? accent : '#5E677A', width: '20px' } }));
+    const toc = this.titles.map((t, i) => ({ no: String(i + 1).padStart(2, '0'), label: t, pick: () => this.go(i), style: { display: 'flex', alignItems: 'center', gap: '12px', minHeight: '42px', padding: '0 12px', borderRadius: '10px', border: '0', background: s === i ? '#1B2030' : 'transparent', color: s === i ? '#F2F4F8' : '#98A0B1', fontSize: '13px', fontWeight: s === i ? '700' : '500', cursor: 'pointer', fontFamily: 'inherit', width: '100%', textAlign: 'left' }, noStyle: { fontSize: '11px', color: s === i ? accent : '#7F889B', width: '20px' } }));
     const navBtn = (on) => ({ minHeight: '36px', padding: '0 14px', borderRadius: '10px', border: '1px solid #2A3040', background: 'transparent', color: on ? '#F2F4F8' : '#3A4257', fontSize: '12px', fontWeight: '700', cursor: on ? 'pointer' : 'default', fontFamily: 'inherit', visibility: on ? 'visible' : 'hidden' });
     const flags = {}; for (let i = 0; i < 8; i++) flags['s' + i] = s === i;
     return Object.assign({

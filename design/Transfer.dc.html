@@ -6,6 +6,12 @@
 <script src="./support.js"></script>
 </head>
 <body>
+<!--
+  実装メモ（PR #15 以降。設計稿に描いていない振る舞い。一覧と経緯は design/README.md）
+  - 管理者だけに 4 つ目のタブ「申請の確認」（レビュー待ちの件数バッジ付き）。左に申請一覧（レビュー待ち / 対応済み / すべて）、右に申請の詳細・申請者へのコメント・「承認する」「却下する」（どちらも確認ダイアログ）。
+  - 書き出しタブの申請一覧は「あなたの申請」だけ。状態は「管理者がレビュー中 / 承認済み / 却下」。
+  - JSON 取り込み・CSV 登録の確定前に確認ダイアログ（件数の要約、「元に戻せません」、現在のモデルを JSON でバックアップするボタン）。同じ ID の実績は差分を出し「取り込まない / 既存を更新 / 別 ID で追加」を選ぶ。内容が同じものは「既に取り込み済み」として登録しない。
+-->
 <x-dc>
 <helmet>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Space+Grotesk:wght@500;700&display=swap">
@@ -18,14 +24,14 @@ a{color:#D4FF4F}a:hover{color:#E6FF8A}
 @keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
 @keyframes riseA{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 @keyframes riseB{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
-.nav{display:flex;align-items:center;gap:12px;min-height:44px;padding:0 14px;border-radius:12px;color:#8B93A5;text-decoration:none;font-size:13px;font-weight:500;transition:background .2s,color .2s}
+.nav{display:flex;align-items:center;gap:12px;min-height:44px;padding:0 14px;border-radius:12px;color:#98A0B1;text-decoration:none;font-size:13px;font-weight:500;transition:background .2s,color .2s}
 .nav:hover{background:#171B25;color:#F2F4F8}
 .nav.on{background:#1B2030;color:#F2F4F8}
 .btn{transition:transform .15s,filter .2s,background .2s,border-color .2s,color .2s}.btn:hover{filter:brightness(1.08)}.btn:active{transform:scale(.97)}
 .row{transition:background .2s,border-color .2s}.row:hover{background:#171B25}
 .drop{transition:border-color .25s,background .25s}.drop:hover{border-color:#D4FF4F;background:#141A12}
 .fill{transition:width .6s cubic-bezier(.2,.7,.2,1)}
-th{font-size:11px;color:#8B93A5;font-weight:500;text-align:left;padding:8px 10px;border-bottom:1px solid #222734;white-space:nowrap}
+th{font-size:11px;color:#98A0B1;font-weight:500;text-align:left;padding:8px 10px;border-bottom:1px solid #222734;white-space:nowrap}
 td{font-size:12px;padding:8px 10px;border-bottom:1px solid #1A1F2B;vertical-align:middle}
 textarea{font-family:inherit;font-size:12px;color:#F2F4F8;background:#0B0D12;border:1px solid #222734;border-radius:10px;padding:10px 12px;resize:none;width:100%;box-sizing:border-box;line-height:1.6}
 textarea:focus{outline:none;border-color:#D4FF4F}
@@ -41,12 +47,12 @@ a:focus-visible,button:focus-visible,textarea:focus-visible{outline:2px solid #D
       <span class="n" style="font-size: 18px">Estima</span>
     </a>
     <a href="Main.dc.html" class="nav"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8" rx="2"></rect><rect x="13" y="3" width="8" height="5" rx="2"></rect><rect x="13" y="11" width="8" height="10" rx="2"></rect><rect x="3" y="14" width="8" height="7" rx="2"></rect></svg>ダッシュボード</a>
-    <span style="font-size: 11px; color: #5E677A; padding: 16px 14px 6px; letter-spacing: 0.06em">MODEL</span>
+    <span style="font-size: 11px; color: #7F889B; padding: 16px 14px 6px; letter-spacing: 0.06em">MODEL</span>
     <a href="Factors.dc.html" class="nav"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h10M4 18h6"></path></svg>変動要因</a>
     <a href="ProjectData.dc.html" class="nav"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="8" ry="3"></ellipse><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"></path></svg>実績データ</a>
     <a href="Build.dc.html" class="nav"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"></path></svg>モデル構築</a>
     <a href="Transfer.dc.html" aria-current="page" class="nav on"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"></path></svg>取り込み / 書き出し</a>
-    <span style="font-size: 11px; color: #5E677A; padding: 16px 14px 6px; letter-spacing: 0.06em">ESTIMATE</span>
+    <span style="font-size: 11px; color: #7F889B; padding: 16px 14px 6px; letter-spacing: 0.06em">ESTIMATE</span>
     <a href="Estimate.dc.html" class="nav"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="3"></rect><path d="M8 7h8M8 12h3M13 12h3M8 17h3M13 17h3"></path></svg>工数見積り</a>
     <a href="Risk.dc.html" class="nav"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 17H3z"></path><path d="M12 10v4M12 17.5h.01"></path></svg>リスク</a>
     <a href="Report.dc.html" class="nav"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6M16 13H8M16 17H8"></path></svg>レポート</a>
@@ -54,16 +60,16 @@ a:focus-visible,button:focus-visible,textarea:focus-visible{outline:2px solid #D
     <a href="Guide.dc.html" class="nav"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"></path></svg>CoBRA法の解説</a>
     <div style="display: flex; align-items: center; gap: 10px; padding: 12px 14px 4px">
       <span style="width: 30px; height: 30px; border-radius: 15px; background: #2A3040; color: #F2F4F8; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700">KC</span>
-      <span style="display: flex; flex-direction: column"><span style="font-size: 12px; font-weight: 500">K. Cai</span><span style="font-size: 11px; color: #5E677A">PMO</span></span>
+      <span style="display: flex; flex-direction: column"><span style="font-size: 12px; font-weight: 500">K. Cai</span><span style="font-size: 11px; color: #7F889B">PMO</span></span>
     </div>
   </nav>
 
   <main style="flex: 1 1 0; min-width: 0; padding: 28px 32px 36px; box-sizing: border-box; display: flex; flex-direction: column; gap: 20px">
     <div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 24px">
       <div style="display: flex; flex-direction: column; gap: 6px">
-        <span style="font-size: 12px; color: #8B93A5">社内Web系開発 標準モデル v3 ・ 要因 8 ・ 実績 12 件</span>
+        <span style="font-size: 12px; color: #98A0B1">社内Web系開発 標準モデル v3 ・ 要因 8 ・ 実績 12 件</span>
         <h1 class="n" style="margin: 0; font-size: 28px">取り込み / 書き出し</h1>
-        <span style="font-size: 13px; color: #8B93A5">旧 Excel 版の XML (Shift-JIS) は JSON に置き換え。簡易見積りモデルツールとのやり取りも、実績データの一括登録もここで行います。</span>
+        <span style="font-size: 13px; color: #98A0B1">旧 Excel 版の XML (Shift-JIS) は JSON に置き換え。簡易見積りモデルツールとのやり取りも、実績データの一括登録もここで行います。</span>
       </div>
       <div style="display: inline-flex; background: #13161E; border: 1px solid #222734; border-radius: 12px; padding: 4px; gap: 2px">
         <sc-for list="{{tabs}}" as="t" hint-placeholder-count="3"><button type="button" class="btn" onClick="{{t.pick}}" style="{{t.style}}">{{t.label}}</button></sc-for>
@@ -76,22 +82,22 @@ a:focus-visible,button:focus-visible,textarea:focus-visible{outline:2px solid #D
           <button type="button" class="tile drop" onClick="{{chooseFile}}" style="min-height: 420px; border: 1px dashed #3A4257; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; cursor: pointer; color: #F2F4F8; font-family: inherit; background: #0F1218">
             <span style="width: 64px; height: 64px; border-radius: 20px; background: #13161E; border: 1px solid #222734; display: inline-flex; align-items: center; justify-content: center"><svg aria-hidden="true" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="{{accent}}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"></path></svg></span>
             <span style="font-size: 16px; font-weight: 700">モデルパラメータ JSON をここにドロップ</span>
-            <span style="font-size: 12px; color: #8B93A5">または <span style="color: {{accent}}; text-decoration: underline">ファイルを選ぶ</span> ・ .json / 旧 .xml (Shift-JIS は自動変換)</span>
-            <span style="font-size: 11px; color: #5E677A; margin-top: 10px">取り込む前に内容を確認できます。確認なしで反映されることはありません。</span>
+            <span style="font-size: 12px; color: #98A0B1">または <span style="color: {{accent}}; text-decoration: underline">ファイルを選ぶ</span> ・ .json / 旧 .xml (Shift-JIS は自動変換)</span>
+            <span style="font-size: 11px; color: #7F889B; margin-top: 10px">取り込む前に内容を確認できます。確認なしで反映されることはありません。</span>
           </button>
           <div style="display: flex; flex-direction: column; gap: 16px">
             <div class="tile" style="padding: 20px 22px; display: flex; flex-direction: column; gap: 10px; animation-delay: 80ms">
               <span style="font-size: 14px; font-weight: 700">取り込めるもの</span>
               <div style="display: flex; flex-direction: column; gap: 8px">
-                <div style="padding: 12px 14px; border-radius: 12px; background: #0B0D12; border: 1px solid #222734; display: flex; flex-direction: column; gap: 3px"><span style="font-size: 12px; font-weight: 700">CoBRA 標準データ</span><span style="font-size: 11px; color: #8B93A5; line-height: 1.5">デフォルトの変動要因と三角分布。「要因を追加」の標準リストに入ります</span></div>
-                <div style="padding: 12px 14px; border-radius: 12px; background: #0B0D12; border: 1px solid #222734; display: flex; flex-direction: column; gap: 3px"><span style="font-size: 12px; font-weight: 700">ユーザデータ</span><span style="font-size: 11px; color: #8B93A5; line-height: 1.5">簡易見積りモデルツールで構築したモデル — 使った要因、三角分布、要因間の関係、入力した実績データ</span></div>
+                <div style="padding: 12px 14px; border-radius: 12px; background: #0B0D12; border: 1px solid #222734; display: flex; flex-direction: column; gap: 3px"><span style="font-size: 12px; font-weight: 700">CoBRA 標準データ</span><span style="font-size: 11px; color: #98A0B1; line-height: 1.5">デフォルトの変動要因と三角分布。既定では取り込みません。選ぶと現在のモデルに要因として追加されます（「要因を追加」の標準リストは変わりません）</span></div>
+                <div style="padding: 12px 14px; border-radius: 12px; background: #0B0D12; border: 1px solid #222734; display: flex; flex-direction: column; gap: 3px"><span style="font-size: 12px; font-weight: 700">ユーザデータ</span><span style="font-size: 11px; color: #98A0B1; line-height: 1.5">簡易見積りモデルツールで構築したモデル — 使った要因、三角分布、要因間の関係、入力した実績データ</span></div>
               </div>
             </div>
             <div class="tile" style="padding: 20px 22px; display: flex; flex-direction: column; gap: 10px; animation-delay: 160ms">
               <span style="font-size: 14px; font-weight: 700">最近の取り込み</span>
               <div style="display: flex; flex-direction: column; gap: 6px; font-size: 12px">
-                <div style="display: flex; justify-content: space-between; gap: 10px; padding: 8px 0; border-bottom: 1px solid #1A1F2B"><span>cobra-standard-v2.1.json</span><span style="color: #5E677A">10/14 ・ 要因 14</span></div>
-                <div style="display: flex; justify-content: space-between; gap: 10px; padding: 8px 0; border-bottom: 1px solid #1A1F2B"><span>kanni-tool-export.xml</span><span style="color: #5E677A">10/02 ・ XML を変換</span></div>
+                <div style="display: flex; justify-content: space-between; gap: 10px; padding: 8px 0; border-bottom: 1px solid #1A1F2B"><span>cobra-standard-v2.1.json</span><span style="color: #7F889B">10/14 ・ 要因 14</span></div>
+                <div style="display: flex; justify-content: space-between; gap: 10px; padding: 8px 0; border-bottom: 1px solid #1A1F2B"><span>kanni-tool-export.xml</span><span style="color: #7F889B">10/02 ・ XML を変換</span></div>
               </div>
             </div>
           </div>
@@ -101,17 +107,17 @@ a:focus-visible,button:focus-visible,textarea:focus-visible{outline:2px solid #D
         <div style="display: grid; grid-template-columns: minmax(0, 1.5fr) 360px; gap: 16px; align-items: start">
           <div style="display: flex; flex-direction: column; gap: 16px">
             <div class="tile" style="padding: 16px 20px; display: flex; align-items: center; gap: 14px">
-              <span style="width: 40px; height: 40px; border-radius: 12px; background: #0B0D12; border: 1px solid #222734; display: inline-flex; align-items: center; justify-content: center"><span class="n" style="font-size: 10px; color: {{accent}}">JSON</span></span>
-              <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0"><span style="font-size: 14px; font-weight: 700">kanni-model-tanaka.json</span><span style="font-size: 11px; color: #8B93A5">48 KB ・ 形式 v2 ・ 簡易見積りモデルツール 2026/10/30 に書き出し ・ 作成者 S. Tanaka</span></div>
-              <button type="button" class="btn" onClick="{{resetImport}}" style="margin-left: auto; min-height: 32px; padding: 0 12px; border-radius: 10px; border: 1px solid #2A3040; background: transparent; color: #8B93A5; font-size: 12px; cursor: pointer; font-family: inherit">別のファイル</button>
+              <span style="width: 40px; height: 40px; border-radius: 12px; background: #0B0D12; border: 1px solid #222734; display: inline-flex; align-items: center; justify-content: center"><span class="n" style="font-size: 11px; color: {{accent}}">JSON</span></span>
+              <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0"><span style="font-size: 14px; font-weight: 700">kanni-model-tanaka.json</span><span style="font-size: 11px; color: #98A0B1">48 KB ・ 形式 v2 ・ 簡易見積りモデルツール 2026/10/30 に書き出し ・ 作成者 S. Tanaka</span></div>
+              <button type="button" class="btn" onClick="{{resetImport}}" style="margin-left: auto; min-height: 32px; padding: 0 12px; border-radius: 10px; border: 1px solid #2A3040; background: transparent; color: #98A0B1; font-size: 12px; cursor: pointer; font-family: inherit">別のファイル</button>
             </div>
             <div class="tile" style="padding: 20px 22px; display: flex; flex-direction: column; gap: 12px; animation-delay: 80ms">
-              <div style="display: flex; justify-content: space-between; align-items: baseline"><span style="font-size: 14px; font-weight: 700">内容 — 取り込むものを選ぶ</span><span style="font-size: 11px; color: #5E677A">{{pickedCount}} / 6 を選択</span></div>
+              <div style="display: flex; justify-content: space-between; align-items: baseline"><span style="font-size: 14px; font-weight: 700">内容 — 取り込むものを選ぶ</span><span style="font-size: 11px; color: #7F889B">{{pickedCount}} / 6 を選択</span></div>
               <div style="display: flex; flex-direction: column; gap: 6px">
                 <sc-for list="{{groups}}" as="g" hint-placeholder-count="6">
                   <button type="button" class="row" onClick="{{g.toggle}}" style="{{g.style}}">
                     <span style="{{g.box}}">{{g.mark}}</span>
-                    <span style="display: flex; flex-direction: column; gap: 2px; text-align: left; min-width: 0"><span style="font-size: 13px; font-weight: 700">{{g.name}}</span><span style="font-size: 11px; color: #8B93A5">{{g.desc}}</span></span>
+                    <span style="display: flex; flex-direction: column; gap: 2px; text-align: left; min-width: 0"><span style="font-size: 13px; font-weight: 700">{{g.name}}</span><span style="font-size: 11px; color: #98A0B1">{{g.desc}}</span></span>
                     <span class="n" style="font-size: 16px; margin-left: auto">{{g.count}}</span>
                     <span style="{{g.tagStyle}}">{{g.tag}}</span>
                   </button>
@@ -119,11 +125,11 @@ a:focus-visible,button:focus-visible,textarea:focus-visible{outline:2px solid #D
               </div>
             </div>
             <div class="tile" style="padding: 20px 22px; display: flex; flex-direction: column; gap: 12px; animation-delay: 160ms">
-              <div style="display: flex; justify-content: space-between; align-items: baseline"><span style="font-size: 14px; font-weight: 700">同じ名前の要因が 3 件 — どうしますか</span><span style="font-size: 11px; color: #5E677A">既存のモデル v3 と比較</span></div>
+              <div style="display: flex; justify-content: space-between; align-items: baseline"><span style="font-size: 14px; font-weight: 700">同じ名前の要因が 3 件 — どうしますか</span><span style="font-size: 11px; color: #7F889B">既存のモデル v3 と比較</span></div>
               <div style="display: flex; flex-direction: column; gap: 8px">
                 <sc-for list="{{conflicts}}" as="c" hint-placeholder-count="3">
                   <div style="display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 12px 14px; border-radius: 12px; background: #0B0D12; border: 1px solid #222734">
-                    <div style="display: flex; flex-direction: column; gap: 3px; min-width: 0"><span style="font-size: 13px; font-weight: 700">{{c.name}}</span><span style="font-size: 11px; color: #8B93A5">{{c.diff}}</span></div>
+                    <div style="display: flex; flex-direction: column; gap: 3px; min-width: 0"><span style="font-size: 13px; font-weight: 700">{{c.name}}</span><span style="font-size: 11px; color: #98A0B1">{{c.diff}}</span></div>
                     <div style="display: inline-flex; background: #13161E; border-radius: 999px; padding: 3px; gap: 2px"><sc-for list="{{c.opts}}" as="o" hint-placeholder-count="3"><button type="button" class="btn" onClick="{{o.pick}}" style="{{o.style}}">{{o.label}}</button></sc-for></div>
                   </div>
                 </sc-for>
@@ -134,14 +140,14 @@ a:focus-visible,button:focus-visible,textarea:focus-visible{outline:2px solid #D
             <div class="tile" style="padding: 20px 22px; display: flex; flex-direction: column; gap: 14px; animation-delay: 120ms">
               <span style="font-size: 14px; font-weight: 700">取り込み後のモデル</span>
               <div style="display: flex; flex-direction: column; gap: 8px; font-size: 12px">
-                <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #1A1F2B"><span style="color: #8B93A5">変動要因</span><span class="n">8 → {{afterFactors}}</span></div>
-                <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #1A1F2B"><span style="color: #8B93A5">三角分布</span><span class="n">16 → {{afterTri}}</span></div>
-                <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #1A1F2B"><span style="color: #8B93A5">実績データ</span><span class="n">12 → {{afterPj}}</span></div>
-                <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #1A1F2B"><span style="color: #8B93A5">標準要因リスト</span><span class="n">14 → {{afterStd}}</span></div>
+                <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #1A1F2B"><span style="color: #98A0B1">変動要因</span><span class="n">8 → {{afterFactors}}</span></div>
+                <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #1A1F2B"><span style="color: #98A0B1">三角分布</span><span class="n">16 → {{afterTri}}</span></div>
+                <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #1A1F2B"><span style="color: #98A0B1">実績データ</span><span class="n">12 → {{afterPj}}</span></div>
+                <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #1A1F2B"><span style="color: #98A0B1">うち標準由来の要因</span><span class="n">5 → {{afterStd}}</span></div>
               </div>
               <div style="display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; border-radius: 12px; background: #2A1F14; border: 1px solid #4A3320"><span style="width: 8px; height: 8px; border-radius: 4px; background: #FFB020; margin-top: 5px; flex-shrink: 0"></span><span style="font-size: 12px; color: #FFD58A; line-height: 1.6">要因や実績が変わるので、取り込み後はモデルの再構築が必要です (v4 になります)。現在の v3 はそのまま残ります。</span></div>
               <button type="button" class="btn" style="min-height: 46px; border-radius: 12px; border: 0; background: {{accent}}; color: #0B0D12; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit">{{pickedCount}} 項目を取り込む</button>
-              <button type="button" class="btn" onClick="{{resetImport}}" style="min-height: 40px; border-radius: 12px; border: 1px solid #2A3040; background: transparent; color: #8B93A5; font-size: 13px; cursor: pointer; font-family: inherit">やり直す</button>
+              <button type="button" class="btn" onClick="{{resetImport}}" style="min-height: 40px; border-radius: 12px; border: 1px solid #2A3040; background: transparent; color: #98A0B1; font-size: 13px; cursor: pointer; font-family: inherit">やり直す</button>
             </div>
           </div>
         </div>
@@ -152,12 +158,12 @@ a:focus-visible,button:focus-visible,textarea:focus-visible{outline:2px solid #D
       <div style="display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 16px; align-items: start">
         <div style="display: flex; flex-direction: column; gap: 16px">
           <div class="tile" style="padding: 20px 22px; display: flex; flex-direction: column; gap: 12px">
-            <div style="display: flex; justify-content: space-between; align-items: baseline"><span style="font-size: 14px; font-weight: 700">書き出す内容</span><span style="font-size: 11px; color: #5E677A">旧 J-MDL-006 の項目</span></div>
+            <div style="display: flex; justify-content: space-between; align-items: baseline"><span style="font-size: 14px; font-weight: 700">書き出す内容</span><span style="font-size: 11px; color: #7F889B">旧 J-MDL-006 の項目</span></div>
             <div style="display: flex; flex-direction: column; gap: 6px">
               <sc-for list="{{expItems}}" as="e" hint-placeholder-count="8">
                 <button type="button" class="row" onClick="{{e.toggle}}" style="{{e.style}}">
                   <span style="{{e.box}}">{{e.mark}}</span>
-                  <span style="display: flex; flex-direction: column; gap: 2px; text-align: left; min-width: 0"><span style="font-size: 13px; font-weight: 700">{{e.name}}</span><span style="font-size: 11px; color: #8B93A5">{{e.desc}}</span></span>
+                  <span style="display: flex; flex-direction: column; gap: 2px; text-align: left; min-width: 0"><span style="font-size: 13px; font-weight: 700">{{e.name}}</span><span style="font-size: 11px; color: #98A0B1">{{e.desc}}</span></span>
                   <span style="{{e.tagStyle}}">{{e.tag}}</span>
                 </button>
               </sc-for>
@@ -166,26 +172,26 @@ a:focus-visible,button:focus-visible,textarea:focus-visible{outline:2px solid #D
           <div class="tile" style="padding: 20px 22px; display: flex; flex-direction: column; gap: 12px; animation-delay: 100ms">
             <span style="font-size: 14px; font-weight: 700">送り先</span>
             <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
-              <sc-for list="{{dests}}" as="d" hint-placeholder-count="2"><button type="button" class="btn" onClick="{{d.pick}}" style="{{d.style}}"><span style="font-size: 13px; font-weight: 700">{{d.label}}</span><span style="font-size: 11px; color: #8B93A5; line-height: 1.5; text-align: left">{{d.desc}}</span></button></sc-for>
+              <sc-for list="{{dests}}" as="d" hint-placeholder-count="2"><button type="button" class="btn" onClick="{{d.pick}}" style="{{d.style}}"><span style="font-size: 13px; font-weight: 700">{{d.label}}</span><span style="font-size: 11px; color: #98A0B1; line-height: 1.5; text-align: left">{{d.desc}}</span></button></sc-for>
             </div>
             <sc-if value="{{isUpload}}" hint-placeholder-val="{{true}}">
               <div style="display: flex; flex-direction: column; gap: 10px">
-                <div style="display: flex; align-items: center; gap: 0; font-size: 11px; color: #8B93A5">
-                  <span style="display: inline-flex; align-items: center; gap: 6px"><span style="width: 18px; height: 18px; border-radius: 9px; background: {{accent}}; color: #0B0D12; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700">1</span>アップロード</span>
+                <div style="display: flex; align-items: center; gap: 0; font-size: 11px; color: #98A0B1">
+                  <span style="display: inline-flex; align-items: center; gap: 6px"><span style="width: 18px; height: 18px; border-radius: 9px; background: {{accent}}; color: #0B0D12; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700">1</span>アップロード</span>
                   <span style="flex: 1; height: 1px; background: #222734; margin: 0 8px"></span>
-                  <span style="display: inline-flex; align-items: center; gap: 6px"><span style="width: 18px; height: 18px; border-radius: 9px; border: 1px solid #3A4257; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700">2</span>管理者がレビュー</span>
+                  <span style="display: inline-flex; align-items: center; gap: 6px"><span style="width: 18px; height: 18px; border-radius: 9px; border: 1px solid #3A4257; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700">2</span>管理者がレビュー</span>
                   <span style="flex: 1; height: 1px; background: #222734; margin: 0 8px"></span>
-                  <span style="display: inline-flex; align-items: center; gap: 6px"><span style="width: 18px; height: 18px; border-radius: 9px; border: 1px solid #3A4257; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700">3</span>標準データへ反映</span>
+                  <span style="display: inline-flex; align-items: center; gap: 6px"><span style="width: 18px; height: 18px; border-radius: 9px; border: 1px solid #3A4257; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700">3</span>標準データへ反映</span>
                 </div>
                 <textarea rows="3" placeholder="管理者へのメモ (任意) — 例: Web 系 11 件で構築。要因 05 の L3 定義を変えています。"></textarea>
-                <span style="font-size: 11px; color: #5E677A">旧版の「XML をメールで送付」(J-MDL-007) の置き換え。送付履歴と承認状況はダッシュボードの「最近の操作」に出ます。</span>
+                <span style="font-size: 11px; color: #7F889B">旧版の「XML をメールで送付」(J-MDL-007) の置き換え。あなたの申請の状況と管理者のコメントは下に表示されます。承認された内容は、モデル管理者が CoBRA 標準データへ反映します。</span>
               </div>
             </sc-if>
           </div>
         </div>
         <div style="display: flex; flex-direction: column; gap: 16px; position: sticky; top: 24px">
           <div class="tile" style="padding: 20px 22px; display: flex; flex-direction: column; gap: 12px; animation-delay: 60ms">
-            <div style="display: flex; justify-content: space-between; align-items: baseline"><span style="font-size: 14px; font-weight: 700">プレビュー</span><span class="mono" style="font-size: 11px; color: #5E677A">estima-model-v3.json ・ 約 {{expSize}} KB</span></div>
+            <div style="display: flex; justify-content: space-between; align-items: baseline"><span style="font-size: 14px; font-weight: 700">プレビュー</span><span class="mono" style="font-size: 11px; color: #7F889B">estima-model-v3.json ・ 約 {{expSize}} KB</span></div>
             <pre class="mono" style="margin: 0; padding: 14px 16px; border-radius: 12px; background: #0B0D12; border: 1px solid #222734; font-size: 11.5px; line-height: 1.65; color: #C7CDD9; overflow: hidden; white-space: pre-wrap">{{expJson}}</pre>
             <sc-if value="{{pjOn}}" hint-placeholder-val="{{false}}">
               <div style="display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; border-radius: 12px; background: #2A1714; border: 1px solid #4A2520"><span style="width: 8px; height: 8px; border-radius: 4px; background: #FF7A59; margin-top: 5px; flex-shrink: 0"></span><span style="font-size: 12px; color: #FFB4A0; line-height: 1.6">実績データ 11 件を含めます。機密データです — 社外 (標準データ管理者) へ送る場合は含めないのが既定です。</span></div>
@@ -200,31 +206,31 @@ a:focus-visible,button:focus-visible,textarea:focus-visible{outline:2px solid #D
       <div style="display: grid; grid-template-columns: minmax(0, 1.5fr) 360px; gap: 16px; align-items: start">
         <div style="display: flex; flex-direction: column; gap: 16px">
           <div class="tile" style="padding: 16px 20px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap">
-            <span style="width: 40px; height: 40px; border-radius: 12px; background: #0B0D12; border: 1px solid #222734; display: inline-flex; align-items: center; justify-content: center"><span class="n" style="font-size: 10px; color: #6E9BFF">CSV</span></span>
-            <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0"><span style="font-size: 14px; font-weight: 700">projects_2024-2026.csv</span><span style="font-size: 11px; color: #8B93A5">14 行 ・ 12 列 ・ UTF-8 ・ 1 行目は見出し</span></div>
+            <span style="width: 40px; height: 40px; border-radius: 12px; background: #0B0D12; border: 1px solid #222734; display: inline-flex; align-items: center; justify-content: center"><span class="n" style="font-size: 11px; color: #6E9BFF">CSV</span></span>
+            <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0"><span style="font-size: 14px; font-weight: 700">projects_2024-2026.csv</span><span style="font-size: 11px; color: #98A0B1">14 行 ・ 12 列 ・ UTF-8 ・ 1 行目は見出し</span></div>
             <div style="margin-left: auto; display: flex; gap: 14px; align-items: center">
-              <div style="display: flex; flex-direction: column; gap: 4px"><span style="font-size: 11px; color: #8B93A5">規模の単位</span><div style="display: inline-flex; background: #0B0D12; border-radius: 999px; padding: 3px; gap: 2px"><sc-for list="{{sizeUnits}}" as="u" hint-placeholder-count="3"><button type="button" class="btn" onClick="{{u.pick}}" style="{{u.style}}">{{u.label}}</button></sc-for></div></div>
-              <div style="display: flex; flex-direction: column; gap: 4px"><span style="font-size: 11px; color: #8B93A5">工数の単位</span><div style="display: inline-flex; background: #0B0D12; border-radius: 999px; padding: 3px; gap: 2px"><sc-for list="{{effUnits}}" as="u" hint-placeholder-count="2"><button type="button" class="btn" onClick="{{u.pick}}" style="{{u.style}}">{{u.label}}</button></sc-for></div></div>
+              <div style="display: flex; flex-direction: column; gap: 4px"><span style="font-size: 11px; color: #98A0B1">規模の単位</span><div style="display: inline-flex; background: #0B0D12; border-radius: 999px; padding: 3px; gap: 2px"><sc-for list="{{sizeUnits}}" as="u" hint-placeholder-count="3"><button type="button" class="btn" onClick="{{u.pick}}" style="{{u.style}}">{{u.label}}</button></sc-for></div></div>
+              <div style="display: flex; flex-direction: column; gap: 4px"><span style="font-size: 11px; color: #98A0B1">工数の単位</span><div style="display: inline-flex; background: #0B0D12; border-radius: 999px; padding: 3px; gap: 2px"><sc-for list="{{effUnits}}" as="u" hint-placeholder-count="2"><button type="button" class="btn" onClick="{{u.pick}}" style="{{u.style}}">{{u.label}}</button></sc-for></div></div>
             </div>
           </div>
           <div class="tile" style="padding: 20px 22px; display: flex; flex-direction: column; gap: 12px; animation-delay: 80ms">
-            <div style="display: flex; justify-content: space-between; align-items: baseline"><span style="font-size: 14px; font-weight: 700">列の対応付け</span><span style="font-size: 11px; color: #5E677A">右の項目をクリックすると切り替わります ・ 見出し名から自動で推定済み</span></div>
+            <div style="display: flex; justify-content: space-between; align-items: baseline"><span style="font-size: 14px; font-weight: 700">列の対応付け</span><span style="font-size: 11px; color: #7F889B">右の項目をクリックすると切り替わります（Shift+クリックで戻る） ・ 見出し名から自動で推定済み</span></div>
             <table style="border-collapse: collapse; width: 100%">
               <thead><tr><th style="width: 36px">列</th><th>CSV の見出し</th><th>1 行目の値</th><th style="width: 220px">登録する項目</th></tr></thead>
               <tbody>
                 <sc-for list="{{cols}}" as="c" hint-placeholder-count="12">
-                  <tr class="row"><td class="mono" style="color: #5E677A">{{c.idx}}</td><td style="font-weight: 500">{{c.head}}</td><td class="mono" style="color: #8B93A5">{{c.sample}}</td><td><button type="button" class="btn" onClick="{{c.cycle}}" style="{{c.style}}">{{c.target}}</button></td></tr>
+                  <tr class="row"><td class="mono" style="color: #7F889B">{{c.idx}}</td><td style="font-weight: 500">{{c.head}}</td><td class="mono" style="color: #98A0B1">{{c.sample}}</td><td><button type="button" class="btn" onClick="{{c.cycle}}" style="{{c.style}}">{{c.target}}</button></td></tr>
                 </sc-for>
               </tbody>
             </table>
           </div>
           <div class="tile" style="padding: 20px 22px; display: flex; flex-direction: column; gap: 12px; animation-delay: 160ms">
-            <div style="display: flex; justify-content: space-between; align-items: baseline"><span style="font-size: 14px; font-weight: 700">登録前の確認 — 先頭 5 行</span><span style="font-size: 11px; color: #5E677A">{{effNote}}</span></div>
+            <div style="display: flex; justify-content: space-between; align-items: baseline"><span style="font-size: 14px; font-weight: 700">登録前の確認 — 先頭 5 行</span><span style="font-size: 11px; color: #7F889B">{{effNote}}</span></div>
             <table style="border-collapse: collapse; width: 100%">
               <thead><tr><th>プロジェクト名</th><th class="r" style="text-align: right">規模 (FP)</th><th style="text-align: right">工数 (人月)</th><th>要因レベル 01–08</th><th>状態</th></tr></thead>
               <tbody>
                 <sc-for list="{{preview}}" as="p" hint-placeholder-count="5">
-                  <tr class="row"><td style="font-weight: 500">{{p.name}}</td><td class="mono" style="text-align: right">{{p.size}}</td><td class="mono" style="text-align: right">{{p.effort}}</td><td class="mono" style="color: #8B93A5; letter-spacing: 0.12em">{{p.levels}}</td><td><span style="{{p.stStyle}}">{{p.status}}</span></td></tr>
+                  <tr class="row"><td style="font-weight: 500">{{p.name}}</td><td class="mono" style="text-align: right">{{p.size}}</td><td class="mono" style="text-align: right">{{p.effort}}</td><td class="mono" style="color: #98A0B1; letter-spacing: 0.12em">{{p.levels}}</td><td><span style="{{p.stStyle}}">{{p.status}}</span></td></tr>
                 </sc-for>
               </tbody>
             </table>
@@ -233,17 +239,17 @@ a:focus-visible,button:focus-visible,textarea:focus-visible{outline:2px solid #D
         <div style="display: flex; flex-direction: column; gap: 16px; position: sticky; top: 24px">
           <div class="tile" style="padding: 20px 22px; display: flex; flex-direction: column; gap: 14px; animation-delay: 120ms">
             <span style="font-size: 14px; font-weight: 700">登録できるもの</span>
-            <div style="display: flex; align-items: baseline; gap: 8px"><span class="n" style="font-size: 36px; line-height: 1">12</span><span style="font-size: 13px; color: #8B93A5">/ 14 行</span></div>
+            <div style="display: flex; align-items: baseline; gap: 8px"><span class="n" style="font-size: 36px; line-height: 1">12</span><span style="font-size: 13px; color: #98A0B1">/ 14 行</span></div>
             <div style="height: 6px; border-radius: 3px; background: #0B0D12; overflow: hidden"><div class="fill" style="{{okBar}}"></div></div>
             <div style="display: flex; flex-direction: column; gap: 6px; font-size: 12px">
-              <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #1A1F2B"><span style="color: #8B93A5">必須項目の対応</span><span style="{{reqStyle}}">{{reqText}}</span></div>
-              <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #1A1F2B"><span style="color: #8B93A5">工数が空</span><span>1 行 (PJ-2025-07)</span></div>
-              <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #1A1F2B"><span style="color: #8B93A5">レベル値が範囲外</span><span>1 行 (値 4 → L0〜L3)</span></div>
-              <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #1A1F2B"><span style="color: #8B93A5">既存と同名</span><span>0 行</span></div>
+              <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #1A1F2B"><span style="color: #98A0B1">必須項目の対応</span><span style="{{reqStyle}}">{{reqText}}</span></div>
+              <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #1A1F2B"><span style="color: #98A0B1">工数が空</span><span>1 行 (PJ-2025-07)</span></div>
+              <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #1A1F2B"><span style="color: #98A0B1">レベル値が範囲外</span><span>1 行 (値 4 → L0〜L3)</span></div>
+              <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #1A1F2B"><span style="color: #98A0B1">既存と同名</span><span>0 行</span></div>
             </div>
-            <span style="font-size: 11px; color: #5E677A; line-height: 1.6">要修正の 2 行は登録後に「実績データ」で直せます。登録した件はすべて「採用」になります。グループは A に入ります。</span>
+            <span style="font-size: 11px; color: #7F889B; line-height: 1.6">要修正の 2 行は登録されません。「実績データ」で個別に追加・修正してください。登録した件はすべて「採用」になります。グループは A に入ります。</span>
             <button type="button" class="btn" style="{{csvCta}}">{{csvCtaText}}</button>
-            <a href="ProjectData.dc.html" class="btn" style="min-height: 40px; border-radius: 12px; border: 1px solid #2A3040; background: transparent; color: #8B93A5; font-size: 13px; display: inline-flex; align-items: center; justify-content: center; text-decoration: none">実績データ一覧へ戻る</a>
+            <a href="ProjectData.dc.html" class="btn" style="min-height: 40px; border-radius: 12px; border: 1px solid #2A3040; background: transparent; color: #98A0B1; font-size: 13px; display: inline-flex; align-items: center; justify-content: center; text-decoration: none">実績データ一覧へ戻る</a>
           </div>
         </div>
       </div>
@@ -256,14 +262,14 @@ class Component extends DCLogic {
   constructor(props) {
     super(props);
     this.state = {
-      tab: 0, impStep: 1, picked: [true, true, true, true, true, false], conflict: [0, 1, 0],
+      tab: 0, impStep: 1, picked: [false, false, true, true, true, false], conflict: [0, 1, 0],
       exp: [true, true, true, true, true, true, true, false], dest: 1,
       sizeUnit: 0, effUnit: 0,
       map: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
     };
     this.groupDefs = [
-      ['CoBRA 標準の変動要因', 'デフォルト 14 要因と、その三角分布 28 件', 14, '標準リストへ'],
-      ['標準の三角分布', '標準要因ごとの 2 名分 (最良 / 最頻 / 最悪)', 28, '標準リストへ'],
+      ['CoBRA 標準の変動要因', '標準要因 14 件と、そのレベル定義。選ぶと現在のモデルに要因として追加されます', 14, 'モデルに追加'],
+      ['標準の三角分布', '標準要因ごとの 2 名分 (最良 / 最頻 / 最悪)', 28, ''],
       ['ユーザ定義の変動要因', '簡易ツールで S. Tanaka が定義。うち 3 件は既存と同名', 6, '同名 3'],
       ['ユーザ定義の三角分布', '上の 6 要因 × 2 名', 12, ''],
       ['要因間の関係', '間接 → 直接 の対応 (一段階)', 2, ''],
@@ -295,14 +301,14 @@ class Component extends DCLogic {
   renderVals() {
     const accent = this.props.accent ?? '#D4FF4F';
     const st = this.state;
-    const seg = (labels, cur, key) => labels.map((l, i) => ({ label: l, pick: () => this.setState({ [key]: i }), style: { minHeight: '28px', padding: '0 10px', borderRadius: '999px', border: '0', cursor: 'pointer', fontFamily: 'inherit', fontSize: '11px', fontWeight: '700', background: cur === i ? accent : 'transparent', color: cur === i ? '#0B0D12' : '#8B93A5' } }));
+    const seg = (labels, cur, key) => labels.map((l, i) => ({ label: l, pick: () => this.setState({ [key]: i }), style: { minHeight: '28px', padding: '0 10px', borderRadius: '999px', border: '0', cursor: 'pointer', fontFamily: 'inherit', fontSize: '11px', fontWeight: '700', background: cur === i ? accent : 'transparent', color: cur === i ? '#0B0D12' : '#98A0B1' } }));
     const rowStyle = (on) => ({ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 12px', borderRadius: '12px', border: '1px solid ' + (on ? '#2F3747' : '#1A1F2B'), background: on ? '#171B25' : 'transparent', cursor: 'pointer', fontFamily: 'inherit', color: '#F2F4F8', width: '100%', boxSizing: 'border-box' });
     const box = (on) => ({ width: '20px', height: '20px', borderRadius: '6px', flexShrink: '0', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: '700', background: on ? accent : 'transparent', color: '#0B0D12', border: on ? '0' : '1px solid #3A4257' });
-    const tag = (t) => ({ fontSize: '10px', padding: '3px 8px', borderRadius: '999px', whiteSpace: 'nowrap', marginLeft: '12px', background: t === '機密' ? '#2A1714' : t.startsWith('同名') ? '#2A1F14' : '#1B2030', color: t === '機密' ? '#FF9F84' : t.startsWith('同名') ? '#FFD58A' : '#8B93A5', display: t ? 'inline-block' : 'none' });
+    const tag = (t) => ({ fontSize: '11px', padding: '3px 8px', borderRadius: '999px', whiteSpace: 'nowrap', marginLeft: '12px', background: t === '機密' ? '#2A1714' : t.startsWith('同名') ? '#2A1F14' : '#1B2030', color: t === '機密' ? '#FF9F84' : t.startsWith('同名') ? '#FFD58A' : '#98A0B1', display: t ? 'inline-block' : 'none' });
     const groups = this.groupDefs.map((g, i) => ({ name: g[0], desc: g[1], count: g[2], tag: g[3], tagStyle: tag(g[3]), mark: st.picked[i] ? '✓' : '', box: box(st.picked[i]), style: rowStyle(st.picked[i]), toggle: () => { const p = st.picked.slice(); p[i] = !p[i]; this.setState({ picked: p }); } }));
     const pickedCount = st.picked.filter(Boolean).length;
     const addFactors = st.picked[2] ? 6 - st.conflict.filter((c) => c !== 2).length : 0;
-    const conflicts = this.conflictDefs.map((c, i) => ({ name: c[0], diff: c[1], opts: ['既存を残す', '上書き', '別名で追加'].map((l, k) => ({ label: l, pick: () => { const a = st.conflict.slice(); a[i] = k; this.setState({ conflict: a }); }, style: { minHeight: '28px', padding: '0 10px', borderRadius: '999px', border: '0', cursor: 'pointer', fontFamily: 'inherit', fontSize: '11px', fontWeight: '700', background: st.conflict[i] === k ? (k === 1 ? '#FF7A59' : accent) : 'transparent', color: st.conflict[i] === k ? '#0B0D12' : '#8B93A5' } })) }));
+    const conflicts = this.conflictDefs.map((c, i) => ({ name: c[0], diff: c[1], opts: ['既存を残す', '上書き', '別名で追加'].map((l, k) => ({ label: l, pick: () => { const a = st.conflict.slice(); a[i] = k; this.setState({ conflict: a }); }, style: { minHeight: '28px', padding: '0 10px', borderRadius: '999px', border: '0', cursor: 'pointer', fontFamily: 'inherit', fontSize: '11px', fontWeight: '700', background: st.conflict[i] === k ? (k === 1 ? '#FF7A59' : accent) : 'transparent', color: st.conflict[i] === k ? '#0B0D12' : '#98A0B1' } })) }));
     const expItems = this.expDefs.map((e, i) => ({ name: e[0], desc: e[1], tag: e[2], tagStyle: tag(e[2]), mark: st.exp[i] ? '✓' : '', box: box(st.exp[i]), style: rowStyle(st.exp[i]), toggle: () => { const a = st.exp.slice(); a[i] = !a[i]; this.setState({ exp: a }); } }));
     const lines = ['{', '  "format": "estima-model/1",', '  "model": { "name": "社内Web系開発 標準モデル", "version": 3, "alpha": 0.0210 },'];
     if (st.exp[0]) lines.push('  "groups": [ { "id": "A", "projects": 12 }, { "id": "B", "projects": 6 } ],');
@@ -314,27 +320,27 @@ class Component extends DCLogic {
     if (st.exp[7]) lines.push('  "projects": [ { "id": "PJ-001", "size": 860, "effort": 19.5, "levels": [2,1,1,2,1,2,1,0] }, … 11 件 ]');
     lines.push('}');
     const expSize = (1.2 + (st.exp[2] ? 3.1 : 0) + (st.exp[3] ? 2.4 : 0) + (st.exp[4] ? 1.8 : 0) + (st.exp[6] ? 0.6 : 0) + (st.exp[7] ? 4.2 : 0) + (st.exp[0] ? 0.3 : 0) + (st.exp[1] ? 0.2 : 0) + (st.exp[5] ? 0.1 : 0)).toFixed(1);
-    const dests = [['ファイルをダウンロード', '自分の PC に保存。別環境への持ち込みやバックアップに'], ['管理者へアップロード', '標準データへのフィードバック。承認されると CoBRA 標準データに反映']].map((d, i) => ({ label: d[0], desc: d[1], pick: () => this.setState({ dest: i }), style: { display: 'flex', flexDirection: 'column', gap: '4px', padding: '14px 16px', borderRadius: '12px', border: '1px solid ' + (st.dest === i ? accent : '#222734'), background: st.dest === i ? '#171B25' : '#0B0D12', color: '#F2F4F8', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left' } }));
+    const dests = [['ファイルをダウンロード', '自分の PC に保存。別環境への持ち込みやバックアップに'], ['管理者へアップロード', '標準データへのフィードバック。モデル管理者が確認し、承認されたものを CoBRA 標準データに反映']].map((d, i) => ({ label: d[0], desc: d[1], pick: () => this.setState({ dest: i }), style: { display: 'flex', flexDirection: 'column', gap: '4px', padding: '14px 16px', borderRadius: '12px', border: '1px solid ' + (st.dest === i ? accent : '#222734'), background: st.dest === i ? '#171B25' : '#0B0D12', color: '#F2F4F8', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left' } }));
     const cols = this.csvCols.map((c, i) => {
       const t = st.map[i], none = t === 12;
-      return { idx: i + 1, head: c[0], sample: c[1], target: this.targets[t], cycle: () => { const m = st.map.slice(); m[i] = (m[i] + 1) % this.targets.length; this.setState({ map: m }); }, style: { minHeight: '30px', padding: '0 12px', borderRadius: '8px', border: '1px solid ' + (none ? '#222734' : '#2F3747'), background: none ? 'transparent' : '#1B2030', color: none ? '#5E677A' : '#F2F4F8', fontSize: '12px', cursor: 'pointer', fontFamily: 'inherit', width: '100%', textAlign: 'left' } };
+      return { idx: i + 1, head: c[0], sample: c[1], target: this.targets[t], cycle: () => { const m = st.map.slice(); m[i] = (m[i] + 1) % this.targets.length; this.setState({ map: m }); }, style: { minHeight: '30px', padding: '0 12px', borderRadius: '8px', border: '1px solid ' + (none ? '#222734' : '#2F3747'), background: none ? 'transparent' : '#1B2030', color: none ? '#7F889B' : '#F2F4F8', fontSize: '12px', cursor: 'pointer', fontFamily: 'inherit', width: '100%', textAlign: 'left' } };
     });
     const hasReq = [0, 1, 2].every((t) => st.map.includes(t));
     const mmDiv = st.effUnit === 1 ? 160 : 1;
-    const preview = this.previewRows.map((r) => ({ name: r[0], size: st.sizeUnit === 1 ? (r[1] / 100).toFixed(1) + ' KLOC' : r[1].toLocaleString('en-US'), effort: r[2] == null ? '—' : (st.effUnit === 1 ? (r[2] * 160).toLocaleString('en-US') + ' h → ' + r[2].toFixed(1) : r[2].toFixed(1)), levels: r[3], status: ['登録できます', '工数が空', 'レベル値 4 は範囲外'][r[4]], stStyle: { fontSize: '10px', padding: '3px 8px', borderRadius: '999px', whiteSpace: 'nowrap', background: r[4] === 0 ? '#15241C' : '#2A1714', color: r[4] === 0 ? '#7EE2B8' : '#FF9F84' } }));
+    const preview = this.previewRows.map((r) => ({ name: r[0], size: st.sizeUnit === 1 ? (r[1] / 100).toFixed(1) + ' KLOC' : r[1].toLocaleString('en-US'), effort: r[2] == null ? '—' : (st.effUnit === 1 ? (r[2] * 160).toLocaleString('en-US') + ' h → ' + r[2].toFixed(1) : r[2].toFixed(1)), levels: r[3], status: ['登録できます', '工数が空', 'レベル値 4 は範囲外'][r[4]], stStyle: { fontSize: '11px', padding: '3px 8px', borderRadius: '999px', whiteSpace: 'nowrap', background: r[4] === 0 ? '#15241C' : '#2A1714', color: r[4] === 0 ? '#7EE2B8' : '#FF9F84' } }));
     return {
       accent,
-      tabs: ['JSON を取り込む', 'JSON を書き出す', 'CSV で実績を取り込む'].map((l, i) => ({ label: l, pick: () => this.setState({ tab: i }), style: { minHeight: '36px', padding: '0 16px', borderRadius: '9px', border: '0', cursor: 'pointer', fontFamily: 'inherit', fontSize: '13px', fontWeight: '700', background: st.tab === i ? accent : 'transparent', color: st.tab === i ? '#0B0D12' : '#8B93A5' } })),
+      tabs: ['JSON を取り込む', 'JSON を書き出す', 'CSV で実績を取り込む'].map((l, i) => ({ label: l, pick: () => this.setState({ tab: i }), style: { minHeight: '36px', padding: '0 16px', borderRadius: '9px', border: '0', cursor: 'pointer', fontFamily: 'inherit', fontSize: '13px', fontWeight: '700', background: st.tab === i ? accent : 'transparent', color: st.tab === i ? '#0B0D12' : '#98A0B1' } })),
       isImport: st.tab === 0, isExport: st.tab === 1, isCsv: st.tab === 2,
       impIdle: st.impStep === 0, impPreview: st.impStep === 1, chooseFile: this.chooseFile, resetImport: this.resetImport,
       groups, pickedCount, conflicts,
-      afterFactors: 8 + addFactors, afterTri: 16 + (st.picked[3] ? 12 : 0), afterPj: 12 + (st.picked[5] ? 9 : 0), afterStd: 14 + (st.picked[0] ? 0 : 0),
+      afterFactors: 8 + addFactors + (st.picked[0] ? 14 : 0), afterTri: 16 + (st.picked[3] ? 12 : 0), afterPj: 12 + (st.picked[5] ? 9 : 0), afterStd: 5 + (st.picked[0] ? 14 : 0),
       expItems, expJson: lines.join('\n'), expSize, dests, isUpload: st.dest === 1, pjOn: st.exp[7], expCta: st.dest === 1 ? '管理者へアップロードする' : 'JSON をダウンロード (' + expSize + ' KB)',
       sizeUnits: seg(['FP', 'KLOC', '画面数'], st.sizeUnit, 'sizeUnit'), effUnits: seg(['人月', '人時'], st.effUnit, 'effUnit'),
       effNote: st.effUnit === 1 ? '人時は ÷160 で人月に換算して登録' : '人月のまま登録',
       cols, preview, okBar: { width: '86%', height: '100%', background: accent, borderRadius: '3px' },
       reqText: hasReq ? '名前・規模・工数 OK' : '規模 / 工数の列が未指定', reqStyle: { color: hasReq ? '#7EE2B8' : '#FF9F84', fontWeight: '700' },
-      csvCta: { minHeight: '46px', borderRadius: '12px', border: '0', background: hasReq ? accent : '#1B2030', color: hasReq ? '#0B0D12' : '#5E677A', fontSize: '14px', fontWeight: '700', cursor: hasReq ? 'pointer' : 'not-allowed', fontFamily: 'inherit' },
+      csvCta: { minHeight: '46px', borderRadius: '12px', border: '0', background: hasReq ? accent : '#1B2030', color: hasReq ? '#0B0D12' : '#7F889B', fontSize: '14px', fontWeight: '700', cursor: hasReq ? 'pointer' : 'not-allowed', fontFamily: 'inherit' },
       csvCtaText: hasReq ? '12 件を登録する' : '必須の列を対応付けてください'
     };
   }

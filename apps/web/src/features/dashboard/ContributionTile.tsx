@@ -1,6 +1,6 @@
 import { toModelSpec, type ModelBundle } from '../../../shared/types';
 import { displayContribution, factorContributions, topWithRest } from '../../ui/contribution';
-import { fmt1 } from '../../ui/format';
+import { displayDelta, fmt1 } from '../../ui/format';
 import type { DashResult } from './results';
 import type { GenView } from './useDashboard';
 
@@ -23,7 +23,8 @@ export function ContributionTile({ gen, result, bundle, mounted }: { gen: GenVie
   if (top.rest) {
     rows.push({ key: 'rest', name: `その他 ${top.rest.count} 要因`, level: '—', l3: false, mm: top.rest.mm, share: top.rest.share });
   }
-  const overhead = result.p50 - result.nominal;
+  // 上乗せ = 表示値どうしの差（見積り画面と同じ値）
+  const overhead = displayDelta(result.p50, result.nominal);
   return (
     <div className="tile col-span-12 flex min-w-0 flex-col gap-3 px-5 py-[22px] sm:px-6 xl:col-span-6" style={{ animationDelay: '400ms' }}>
       <div className="flex flex-wrap items-center justify-between gap-2">

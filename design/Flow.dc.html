@@ -33,14 +33,14 @@ button:focus-visible,a:focus-visible{outline:2px solid #D4FF4F;outline-offset:2p
 
   <div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 24px">
     <div style="display: flex; flex-direction: column; gap: 4px">
-      <span style="font-size: 12px; color: #8B93A5">CoBRA 法 ・ 業務フローと画面の対応 (旧 Excel 版 2.1 / 3.3 に相当)</span>
+      <span style="font-size: 12px; color: #98A0B1">CoBRA 法 ・ 業務フローと画面の対応 (旧 Excel 版 2.1 / 3.3 に相当)</span>
       <h1 class="n" style="margin: 0; font-size: 24px">モデルを作る → 見積もる → リスクを見る → 報告する</h1>
     </div>
     <div style="display: flex; align-items: center; gap: 14px">
       <div style="display: flex; align-items: center; gap: 4px" aria-hidden="true">
         <sc-for list="{{segs}}" as="g" hint-placeholder-count="6"><span style="{{g.style}}"></span></sc-for>
       </div>
-      <span class="n" style="font-size: 13px; color: #8B93A5">{{stepText}}</span>
+      <span class="n" style="font-size: 13px; color: #98A0B1">{{stepText}}</span>
       <button type="button" class="btn" onClick="{{toggle}}" style="{{playStyle}}">
         <sc-if value="{{idle}}" hint-placeholder-val="{{true}}"><svg aria-hidden="true" width="12" height="12" viewBox="0 0 12 12"><path d="M2 1.5v9l8-4.5z" fill="currentColor"></path></svg><span>流れを再生</span></sc-if>
         <sc-if value="{{playing}}" hint-placeholder-val="{{false}}"><svg aria-hidden="true" class="spin" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-6.2-8.6"></path></svg><span>停止</span></sc-if>
@@ -48,8 +48,8 @@ button:focus-visible,a:focus-visible{outline:2px solid #D4FF4F;outline-offset:2p
     </div>
   </div>
 
-  <div style="position: absolute; left: 48px; top: 128px; font-size: 11px; color: #5E677A; letter-spacing: 0.08em">1. モデル構築 <span style="color: #3A4257">— モデル管理者</span></div>
-  <div style="position: absolute; left: 744px; top: 128px; font-size: 11px; color: #5E677A; letter-spacing: 0.08em">2. 見積り ・ 3. リスク ・ 4. レポート <span style="color: #3A4257">— 見積り担当 / PMO</span></div>
+  <div style="position: absolute; left: 48px; top: 128px; font-size: 11px; color: #7F889B; letter-spacing: 0.08em">1. モデル構築 <span style="color: #98A0B1">— モデル管理者</span></div>
+  <div style="position: absolute; left: 744px; top: 128px; font-size: 11px; color: #7F889B; letter-spacing: 0.08em">2. 見積り ・ 3. リスク ・ 4. レポート <span style="color: #98A0B1">— 見積り担当 / PMO</span></div>
   <div style="position: absolute; left: 48px; top: 146px; width: 640px; height: 1px; background: #222734"></div>
   <div style="position: absolute; left: 744px; top: 146px; width: 640px; height: 1px; background: #222734"></div>
 
@@ -70,31 +70,31 @@ button:focus-visible,a:focus-visible{outline:2px solid #D4FF4F;outline-offset:2p
     <button type="button" class="node nb" onClick="{{nd.pick}}" style="{{nd.style}}">
       <span style="display: flex; justify-content: space-between; align-items: center; width: 100%"><span class="n" style="{{nd.noStyle}}">{{nd.no}}</span><span style="{{nd.markStyle}}">{{nd.mark}}</span></span>
       <span style="font-size: 14px; font-weight: 700; color: #F2F4F8; text-align: left">{{nd.t}}</span>
-      <span style="font-size: 11px; color: #8B93A5; line-height: 1.5; text-align: left">{{nd.sub}}</span>
+      <span style="font-size: 11px; color: #98A0B1; line-height: 1.5; text-align: left">{{nd.sub}}</span>
     </button>
   </sc-for>
 
-  <div style="position: absolute; left: 248px; top: 308px; padding: 5px 12px; border-radius: 999px; background: #0B0D12; border: 1px dashed #3A4257; font-size: 11px; color: #8B93A5; white-space: nowrap">精度が足りない → 要因・実績を見直して再構築</div>
-  <div style="position: absolute; left: 846px; top: 308px; padding: 5px 12px; border-radius: 999px; background: #0B0D12; border: 1px dashed #3A4257; font-size: 11px; color: #8B93A5; white-space: nowrap">条件を変えて再見積り (世代 G1〜G5)</div>
+  <div style="position: absolute; left: 248px; top: 308px; padding: 5px 12px; border-radius: 999px; background: #0B0D12; border: 1px dashed #3A4257; font-size: 11px; color: #98A0B1; white-space: nowrap">精度が足りない → 要因・実績を見直して再構築</div>
+  <div style="position: absolute; left: 846px; top: 308px; padding: 5px 12px; border-radius: 999px; background: #0B0D12; border: 1px dashed #3A4257; font-size: 11px; color: #98A0B1; white-space: nowrap">条件を変えて再見積り (世代 G1〜G5)</div>
 
   <div style="{{panelStyle}}">
     <div style="display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.25fr) minmax(0, 0.95fr); gap: 32px; height: 100%">
       <div style="display: flex; flex-direction: column; gap: 10px; min-width: 0">
-        <span style="font-size: 11px; color: #5E677A; letter-spacing: 0.08em">STEP {{curNo}} ・ {{curWho}}</span>
+        <span style="font-size: 11px; color: #7F889B; letter-spacing: 0.08em">STEP {{curNo}} ・ {{curWho}}</span>
         <h2 class="n" style="margin: 0; font-size: 22px; line-height: 1.2">{{curT}}</h2>
-        <p style="margin: 0; font-size: 13px; color: #8B93A5; line-height: 1.7">{{curDesc}}</p>
+        <p style="margin: 0; font-size: 13px; color: #98A0B1; line-height: 1.7">{{curDesc}}</p>
         <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: auto">
-          <sc-for list="{{screens}}" as="s" hint-placeholder-count="2"><a class="lk" href="{{s.href}}" style="display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 0 12px; border-radius: 10px; border: 1px solid #2A3040; background: #0B0D12; color: #F2F4F8; font-size: 12px; font-weight: 700; text-decoration: none">{{s.l}}<span style="color: {{accent}}">↗</span></a></sc-for>
+          <sc-for list="{{screens}}" as="s" hint-placeholder-count="2"><a class="lk" href="{{s.href}}" style="display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 0 12px; border-radius: 10px; border: 1px solid #2A3040; background: #0B0D12; color: #F2F4F8; font-size: 12px; font-weight: 700; text-decoration: none">{{s.l}}<span style="color: {{accent}}">→</span></a></sc-for>
         </div>
       </div>
       <div style="display: grid; grid-template-columns: minmax(0, 1fr) 28px minmax(0, 1fr); gap: 10px; align-items: start">
         <div style="display: flex; flex-direction: column; gap: 8px">
-          <span style="font-size: 11px; color: #5E677A; letter-spacing: 0.08em">入力</span>
+          <span style="font-size: 11px; color: #7F889B; letter-spacing: 0.08em">入力</span>
           <div style="display: flex; flex-wrap: wrap; gap: 6px"><sc-for list="{{inp}}" as="c" hint-placeholder-count="2"><span class="chip">{{c}}</span></sc-for></div>
         </div>
         <div style="display: flex; align-items: center; justify-content: center; height: 100%; color: {{accent}}; font-size: 18px; padding-top: 18px">→</div>
         <div style="display: flex; flex-direction: column; gap: 8px">
-          <span style="font-size: 11px; color: #5E677A; letter-spacing: 0.08em">出力</span>
+          <span style="font-size: 11px; color: #7F889B; letter-spacing: 0.08em">出力</span>
           <div style="display: flex; flex-wrap: wrap; gap: 6px"><sc-for list="{{out}}" as="c" hint-placeholder-count="3"><span class="chip" style="border-color: #2F3A1E; background: #161C10; color: #E6FF8A">{{c}}</span></sc-for></div>
         </div>
         <div style="grid-column: 1 / -1; margin-top: 6px; padding: 12px 14px; border-radius: 12px; background: #0B0D12; border: 1px solid #222734; display: flex; gap: 10px; align-items: flex-start">
@@ -104,12 +104,12 @@ button:focus-visible,a:focus-visible{outline:2px solid #D4FF4F;outline-offset:2p
       </div>
       <div style="display: flex; flex-direction: column; gap: 14px; min-width: 0">
         <div style="display: flex; flex-direction: column; gap: 8px">
-          <span style="font-size: 11px; color: #5E677A; letter-spacing: 0.08em">旧 Excel 版の要件 ID</span>
+          <span style="font-size: 11px; color: #7F889B; letter-spacing: 0.08em">旧 Excel 版の要件 ID</span>
           <div style="display: flex; flex-wrap: wrap; gap: 6px"><sc-for list="{{old}}" as="c" hint-placeholder-count="2"><span class="chip n" style="font-weight: 500; letter-spacing: 0">{{c}}</span></sc-for></div>
         </div>
         <div style="display: flex; flex-direction: column; gap: 8px">
-          <span style="font-size: 11px; color: #5E677A; letter-spacing: 0.08em">Web 版で変わること</span>
-          <span style="font-size: 12px; color: #8B93A5; line-height: 1.6">{{curDiff}}</span>
+          <span style="font-size: 11px; color: #7F889B; letter-spacing: 0.08em">Web 版で変わること</span>
+          <span style="font-size: 12px; color: #98A0B1; line-height: 1.6">{{curDiff}}</span>
         </div>
       </div>
     </div>
@@ -118,26 +118,26 @@ button:focus-visible,a:focus-visible{outline:2px solid #D4FF4F;outline-offset:2p
   <div class="node" style="position: absolute; left: 48px; top: 724px; width: 808px; height: 228px; box-sizing: border-box; padding: 20px 22px; border-radius: 18px; background: #13161E; border: 1px solid #222734; display: flex; flex-direction: column; gap: 14px; animation-delay: 700ms">
     <div style="display: flex; justify-content: space-between; align-items: baseline">
       <span style="font-size: 14px; font-weight: 700">データの出入り</span>
-      <span style="font-size: 11px; color: #5E677A">旧 3.2 外部ファイル (XML, Shift-JIS) → JSON / CSV</span>
+      <span style="font-size: 11px; color: #7F889B">旧 3.2 外部ファイル (XML, Shift-JIS) → JSON / CSV</span>
     </div>
     <div style="display: grid; grid-template-columns: minmax(0, 1fr) 28px minmax(0, 1.1fr) 28px minmax(0, 1fr); gap: 0; align-items: stretch">
-      <div style="padding: 12px 14px; border-radius: 12px; background: #0B0D12; border: 1px solid #222734; display: flex; flex-direction: column; gap: 4px"><span class="n" style="font-size: 11px; color: #6E9BFF">IN ・ JSON</span><span style="font-size: 12px; font-weight: 700">モデルパラメータの取り込み</span><span style="font-size: 11px; color: #8B93A5; line-height: 1.5">標準要因・三角分布・要因間の関係。簡易ツールからの持ち込みも同形式</span></div>
-      <div style="display: flex; align-items: center; justify-content: center; color: #3A4257">→</div>
-      <div style="padding: 12px 14px; border-radius: 12px; background: #171B25; border: 1px solid #3A4257; display: flex; flex-direction: column; gap: 4px"><span class="n" style="font-size: 11px; color: {{accent}}">サーバ保存</span><span style="font-size: 12px; font-weight: 700">見積りモデル v1 → v3</span><span style="font-size: 11px; color: #8B93A5; line-height: 1.5">組織内で共有。α と精度の推移を版ごとに保持</span></div>
-      <div style="display: flex; align-items: center; justify-content: center; color: #3A4257">→</div>
-      <div style="padding: 12px 14px; border-radius: 12px; background: #0B0D12; border: 1px solid #222734; display: flex; flex-direction: column; gap: 4px"><span class="n" style="font-size: 11px; color: #7EE2B8">OUT ・ JSON / PDF</span><span style="font-size: 12px; font-weight: 700">エクスポートとレポート</span><span style="font-size: 11px; color: #8B93A5; line-height: 1.5">標準データへのフィードバック。実績データは「含める / 含めない」を選択</span></div>
+      <div style="padding: 12px 14px; border-radius: 12px; background: #0B0D12; border: 1px solid #222734; display: flex; flex-direction: column; gap: 4px"><span class="n" style="font-size: 11px; color: #6E9BFF">IN ・ JSON</span><span style="font-size: 12px; font-weight: 700">モデルパラメータの取り込み</span><span style="font-size: 11px; color: #98A0B1; line-height: 1.5">標準要因・三角分布・要因間の関係。簡易ツールからの持ち込みも同形式</span></div>
+      <div style="display: flex; align-items: center; justify-content: center; color: #7F889B" aria-hidden="true">→</div>
+      <div style="padding: 12px 14px; border-radius: 12px; background: #171B25; border: 1px solid #3A4257; display: flex; flex-direction: column; gap: 4px"><span class="n" style="font-size: 11px; color: {{accent}}">サーバ保存</span><span style="font-size: 12px; font-weight: 700">見積りモデル v1 → v3</span><span style="font-size: 11px; color: #98A0B1; line-height: 1.5">組織内で共有。α と精度の推移を版ごとに保持</span></div>
+      <div style="display: flex; align-items: center; justify-content: center; color: #7F889B" aria-hidden="true">→</div>
+      <div style="padding: 12px 14px; border-radius: 12px; background: #0B0D12; border: 1px solid #222734; display: flex; flex-direction: column; gap: 4px"><span class="n" style="font-size: 11px; color: #7EE2B8">OUT ・ JSON / PDF</span><span style="font-size: 12px; font-weight: 700">エクスポートとレポート</span><span style="font-size: 11px; color: #98A0B1; line-height: 1.5">標準データへのフィードバック。実績データは「含める / 含めない」を選択</span></div>
     </div>
-    <div style="display: flex; align-items: center; gap: 10px; font-size: 11px; color: #8B93A5"><span class="n" style="font-size: 11px; color: #6E9BFF">IN ・ CSV</span><span>実績データの一括取り込み — プロジェクト名・規模・工数・レベル値。列の対応付けを画面で確認してから登録</span></div>
+    <div style="display: flex; align-items: center; gap: 10px; font-size: 11px; color: #98A0B1"><span class="n" style="font-size: 11px; color: #6E9BFF">IN ・ CSV</span><span>実績データの一括取り込み — プロジェクト名・規模・工数・レベル値。列の対応付けを画面で確認してから登録</span></div>
   </div>
 
   <div class="node" style="position: absolute; left: 880px; top: 724px; width: 512px; height: 228px; box-sizing: border-box; padding: 20px 22px; border-radius: 18px; background: #13161E; border: 1px solid #222734; display: flex; flex-direction: column; gap: 10px; animation-delay: 780ms">
     <span style="font-size: 14px; font-weight: 700">旧 Excel 版からの置き換え</span>
     <div style="display: grid; grid-template-columns: minmax(0, 1fr) 20px minmax(0, 1.2fr); gap: 6px 8px; font-size: 11.5px; align-items: center">
-      <span style="color: #8B93A5">ワークシート 10 枚 + ダイアログ</span><span style="color: #3A4257; text-align: center">→</span><span>画面 8 つ。手順は同じ、解説は画面内に常駐</span>
-      <span style="color: #8B93A5">VBA の構築・見積り処理</span><span style="color: #3A4257; text-align: center">→</span><span>サーバ側で計算、進捗を表示 (旧 5.1 性能要件)</span>
-      <span style="color: #8B93A5">XML をメールで送付</span><span style="color: #3A4257; text-align: center">→</span><span>JSON をアップロード、管理者が承認</span>
-      <span style="color: #8B93A5">レポート・シート</span><span style="color: #3A4257; text-align: center">→</span><span>A4 印刷レイアウト + PDF、モデル情報を同梱</span>
-      <span style="color: #8B93A5">1 人 1 ファイル</span><span style="color: #3A4257; text-align: center">→</span><span>組織で 1 モデルを共有、版と世代で履歴管理</span>
+      <span style="color: #98A0B1">ワークシート 10 枚 + ダイアログ</span><span aria-hidden="true" style="color: #7F889B; text-align: center">→</span><span>画面 8 つ。手順は同じ、解説は画面内に常駐</span>
+      <span style="color: #98A0B1">VBA の構築・見積り処理</span><span aria-hidden="true" style="color: #7F889B; text-align: center">→</span><span>ブラウザ内で計算、進捗を表示 (旧 5.1 性能要件)</span>
+      <span style="color: #98A0B1">XML をメールで送付</span><span aria-hidden="true" style="color: #7F889B; text-align: center">→</span><span>JSON をアップロード、管理者が承認</span>
+      <span style="color: #98A0B1">レポート・シート</span><span aria-hidden="true" style="color: #7F889B; text-align: center">→</span><span>A4 印刷レイアウト + PDF、モデル情報を同梱</span>
+      <span style="color: #98A0B1">1 人 1 ファイル</span><span aria-hidden="true" style="color: #7F889B; text-align: center">→</span><span>組織で 1 モデルを共有、版と世代で履歴管理</span>
     </div>
   </div>
 </div>
@@ -150,10 +150,10 @@ class Component extends DCLogic {
     this.stages = [
       { no: '01', t: '変動要因を定義', sub: 'カテゴリ・L0〜L3・直接/間接・三角分布', who: 'モデル管理者', desc: '工数を押し上げる要因を決め、各レベルの意味を言葉で定義します。専門家ごとに最良・最頻・最悪の 3 点で工数増加率を見積もり、間接要因はどの直接要因を強めるかを 1 つだけ指定します。', screens: [['変動要因', 'Factors.dc.html'], ['要因を追加', 'FactorNew.dc.html']], inp: ['標準要因 JSON', '専門家の判断 (S.T. / Y.T.)'], out: ['要因定義 L0〜L3', '三角分布 (最良 / 最頻 / 最悪)', '間接 → 直接の関係'], old: ['J-MDL-001', 'J-MDL-002', 'J-MDL-007'], tip: '一から定義するのが既定の流れ。標準要因は「参考に取り込む」位置づけで、取り込んだ後も同じ画面で編集できます。', diff: '要因ごとの三角形がその場で描かれ、数字を直すと即座に形が変わる。XML の手編集はなくなった。' },
       { no: '02', t: '実績データを入れる', sub: '規模・工数・レベル値。採用 / 除外とグループ', who: 'PMO', desc: '過去プロジェクトの規模 (FP) と工数 (人月)、各要因のレベル値を登録します。特殊な案件は除外し、性質の近いものをグループにまとめてモデルに使います。', screens: [['実績データ', 'ProjectData.dc.html']], inp: ['CSV (規模・工数・レベル値)', '手入力'], out: ['採用 / 除外の判定', 'グループ A / B', '名目線 (α) のプレビュー'], old: ['J-MDL-005', 'EF002'], tip: '採用を切り替えると散布図の名目線がその場で動くので、外れ値の影響を見ながら決められます。', diff: 'CSV の列対応を画面で確認してから登録。1 件ごとの追加・修正もシートを探さずに済む。' },
-      { no: '03', t: 'モデルを構築', sub: 'α を推定 → 交差検証 → 不整合チェック', who: 'モデル管理者', desc: '採用した実績から名目生産性 α を推定し、1 件抜きの交差検証で精度 (MMRE / PRED) を確認します。ΣCO と実績の生産性が食い違う案件は不整合として指摘されます。', screens: [['モデル構築', 'Build.dc.html']], inp: ['要因定義', '採用した実績 11 件', '専門家 (S.T. / Y.T. / 平均)'], out: ['α と 95% 信頼区間', 'MMRE / PRED(25)', '不整合の指摘', 'モデル v1 → v3'], old: ['J-MDL-003', 'J-MDL-004', 'J-MDL-006'], tip: '精度が足りなければ要因や実績に戻る。この往復が旧版の「J-MDL-003 / 004 の繰り返し」に当たります。', diff: '計算はサーバ側。三段の進捗が見え、版 (v1〜v3) を残して α と精度の推移を追える。' },
-      { no: '04', t: '工数を見積もる', sub: '規模とレベル値を入力 → 分布と推定値', who: '見積り担当', desc: '新しい案件の規模と各要因のレベル値を入れると、10,000 回のシミュレーションから工数の分布と推定値 (中央値) が得られます。条件を変えた案は世代として並べて比較します。', screens: [['工数見積り', 'Estimate.dc.html']], inp: ['規模 (FP)', 'レベル値 L0〜L3', '採用するモデル'], out: ['推定工数 (P50)', 'P20〜P95 の幅', '要因ごとの上乗せ', '世代 G1〜G5'], old: ['J-EST-001', 'J-EST-002', 'J-EST-003'], tip: 'レベルを 1 つ変えるたびに推定値と帯が動くので、何が効いているかを会話しながら詰められます。', diff: '世代は最大 5 つ。旧版の「世代」の考え方はそのまま、比較は同じ画面に並ぶ。' },
+      { no: '03', t: 'モデルを構築', sub: 'α を推定 → 交差検証 → 不整合チェック', who: 'モデル管理者', desc: '採用した実績から名目生産性 α を推定し、1 件抜きの交差検証で精度 (MMRE / PRED) を確認します。ΣCO と実績の生産性が食い違う案件は不整合として指摘されます。', screens: [['モデル構築', 'Build.dc.html']], inp: ['要因定義', '採用した実績 11 件', '専門家 (S.T. / Y.T. / 平均)'], out: ['α と 95% 信頼区間', 'MMRE / PRED(25)', '不整合の指摘', 'モデル v1 → v3'], old: ['J-MDL-003', 'J-MDL-004', 'J-MDL-006'], tip: '精度が足りなければ要因や実績に戻る。この往復が旧版の「J-MDL-003 / 004 の繰り返し」に当たります。', diff: '計算はブラウザ内 (Web Worker)。三段の進捗が見え、版 (v1〜v3) を残して α と精度の推移を追える。' },
+      { no: '04', t: '工数を見積もる', sub: '規模とレベル値を入力 → 分布と推定値', who: '見積り担当', desc: '新しい案件の規模と各要因のレベル値を入れると、10,000 回のシミュレーションから工数の分布と推定値 (中央値) が得られます。条件を変えた案は世代として並べて比較します。', screens: [['工数見積り', 'Estimate.dc.html']], inp: ['規模 (FP)', 'レベル値 L0〜L3', '採用するモデル'], out: ['推定工数 (中央値)', '超過確率 80%〜5% の幅 (P20〜P95)', '要因ごとの上乗せ', '世代 G1〜G5'], old: ['J-EST-001', 'J-EST-002', 'J-EST-003'], tip: 'レベルを 1 つ変えるたびに推定値と帯が動くので、何が効いているかを会話しながら詰められます。', diff: '世代は最大 5 つ。旧版の「世代」の考え方はそのまま、比較は同じ画面に並ぶ。' },
       { no: '05', t: 'リスクを見る', sub: '超過確率 ⇄ 工数、要因の寄与度', who: '見積り担当 / PM', desc: '予算に対する超過確率、逆に確率から必要な工数を読み取ります。どの要因が上乗せの何割を占めるかと、レベルを 1 段下げたときの効き目を確認します。', screens: [['リスクアセスメント', 'Risk.dc.html']], inp: ['予算 (人月)', '目標の超過確率'], out: ['超過確率 ⇄ 工数', '要因の寄与度 (% / 人月)', '効く打ち手 上位 3'], old: ['J-RSK-001', 'J-RSK-002', 'J-RSK-003', 'J-RSK-004'], tip: '予算スライダーを動かすと曲線上の点と「予算内」の領域が追従します。', diff: '寄与度は番号順 / 寄与度順、% / 人月を切り替え。打ち手の提案は Web 版で追加。' },
-      { no: '06', t: '報告する', sub: 'A4 レポート / PDF、JSON エクスポート', who: 'PMO', desc: '採用した世代の結果とモデル情報を 1 枚のレポートにまとめます。実績データは含めず、標準データへのフィードバック用に JSON を書き出せます。', screens: [['見積りレポート', 'Report.dc.html']], inp: ['採用した世代', 'モデル情報', '前提と注意事項'], out: ['A4 レポート / PDF', 'モデルパラメータ JSON'], old: ['J-REP-001', 'EF001'], tip: 'レポートには見込み幅 (P5〜P95)、根拠付きの要因表、打ち手の候補まで載るので、そのまま承認に回せます。', diff: 'メールで XML を送る運用は、JSON のアップロードと承認フローに置き換え。' }
+      { no: '06', t: '報告する', sub: 'A4 レポート / PDF、モデルの JSON 書き出し', who: 'PMO', desc: '採用した世代の結果とモデル情報を 1 枚のレポートにまとめます。実績データは含めず、標準データへのフィードバック用に JSON を書き出せます。', screens: [['見積りレポート', 'Report.dc.html'], ['JSON を書き出す', 'Transfer.dc.html']], inp: ['採用した世代', 'モデル情報', '前提と注意事項'], out: ['A4 レポート / PDF', 'モデルパラメータ JSON'], old: ['J-REP-001', 'EF001'], tip: 'レポートには見込み幅 (超過確率 95%〜5%・P5〜P95)、根拠付きの要因表、打ち手の候補まで載るので、そのまま承認に回せます。', diff: 'メールで XML を送る運用は、JSON のアップロードと承認フローに置き換え。' }
     ];
     this.toggle = this.toggle.bind(this);
   }
@@ -175,8 +175,8 @@ class Component extends DCLogic {
       return {
         no: s.no, t: s.t, sub: s.sub, pick: () => this.pick(i), mark: done ? '✓' : act ? '現在' : '',
         style: { position: 'absolute', left: (48 + i * 232) + 'px', top: '160px', width: '176px', minHeight: '118px', boxSizing: 'border-box', padding: '14px 16px', borderRadius: '14px', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '6px', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left', background: act ? '#171B25' : '#13161E', border: act ? '1px solid ' + col : done ? '1px solid #3A4257' : '1px solid #222734', boxShadow: act ? '0 0 0 4px ' + col + '22, 0 12px 32px rgba(0,0,0,.35)' : 'none', opacity: act || done ? 1 : 0.62, transform: act ? 'translateY(-4px)' : 'none', color: '#F2F4F8', animationDelay: (i * 90) + 'ms' },
-        noStyle: { fontSize: '12px', color: act || done ? col : '#5E677A' },
-        markStyle: { fontSize: '10px', fontWeight: '700', color: done ? col : '#0B0D12', background: act ? col : 'transparent', borderRadius: '999px', padding: act ? '1px 7px' : '0' }
+        noStyle: { fontSize: '12px', color: act || done ? col : '#7F889B' },
+        markStyle: { fontSize: '11px', fontWeight: '700', color: done ? col : '#0B0D12', background: act ? col : 'transparent', borderRadius: '999px', padding: act ? '1px 7px' : '0' }
       };
     });
     const edges = [];

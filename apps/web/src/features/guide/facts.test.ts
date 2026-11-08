@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { accuracyFacts, axisTicks, exceedBracket, formulaStart, readStoredResult } from './facts';
+import { accuracyFacts, axisTicks, exceedBracket, flowFacts, formulaStart, readStoredResult } from './facts';
+import { FLOW_STAGES, flowStagesFor, versionSpan } from './flowStages';
 
 // 見本データ（ローカル D1 の v3 と portal G3）と同じ値
 const v3 = { version: 3, n: 11, mmre: 0.1275998153253042, pred25: 0.8181818181818182, inconsistencies: [{ projectId: 'PJ-007', gap: -0.26, excluded: true }] };
@@ -96,5 +97,98 @@ describe('formulaStart', () => {
   it('欠けていれば null', () => {
     expect(formulaStart(undefined, 1200, 0.7)).toBeNull();
     expect(formulaStart(0.02, Number.NaN, 0.7)).toBeNull();
+  });
+});
+
+// 見本データ（ローカル D1）と同じ形: 専門家 S.T. / Y.T.、グループ A / B、版 v3 / v2 / v1（新しい順）、使用中 v3 は n = 11
+const tri = (expert: string) => ({ expert, best: 0, mode: 0.1, worst: 0.3 });
+const bundle = {
+  factors: [{ triangles: [tri('S.T.'), tri('Y.T.')] }, { triangles: [tri('Y.T.'), tri(' S.T. ')] }],
+  groups: [{ id: 'A' }, { id: 'B' }],
+  versions: [{ version: 3 }, { version: 2 }, { version: 1 }],
+  activeVersion: { n: 11 },
+};
+
+describe('flowFacts', () => {
+  it('見本のモデル → 専門家 2 名・グループ A / B・採用 11 件・v1〜v3', () => {
+    expect(flowFacts(bundle)).toEqual({ experts: ['S.T.', 'Y.T.'], groups: ['A', 'B'], adoptedN: 11, versions: { first: 1, last: 3 } });
+  });
+  it('版なし・使用中の版なし・空', () => {
+    expect(flowFacts({ factors: [], groups: [], versions: [], activeVersion: null })).toEqual({ experts: [], groups: [], adoptedN: null, versions: null });
+    expect(flowFacts({})).toEqual({ experts: [], groups: [], adoptedN: null, versions: null });
+    expect(flowFacts({ ...bundle, versions: [{ version: 4 }] })?.versions).toEqual({ first: 4, last: 4 });
+  });
+  it('n = 0 は 0 件、壊れた値は捨てる', () => {
+    expect(flowFacts({ ...bundle, activeVersion: { n: 0 } })?.adoptedN).toBe(0);
+    expect(flowFacts({ ...bundle, activeVersion: { n: Number.NaN } })?.adoptedN).toBeNull();
+    expect(flowFacts({ ...bundle, activeVersion: { n: -1 } })?.adoptedN).toBeNull();
+    expect(flowFacts({ ...bundle, activeVersion: { n: '11' } })?.adoptedN).toBeNull();
+    expect(flowFacts({ ...bundle, versions: [{ version: 0 }, { version: 1.5 }, { version: 'v2' }, { version: 2 }] })?.versions).toEqual({ first: 2, last: 2 });
+    expect(flowFacts({ ...bundle, factors: [{ triangles: [{ expert: '' }, { expert: 3 }, {}] }, { triangles: null }] })?.experts).toEqual([]);
+    expect(flowFacts({ ...bundle, groups: [{ id: '' }, {}, { id: 'C' }] })?.groups).toEqual(['C']);
+  });
+  it('読み込み中・失敗（null / undefined）は null', () => {
+    expect(flowFacts(null)).toBeNull();
+    expect(flowFacts(undefined)).toBeNull();
+  });
+});
+
+describe('flowStagesFor（業務フローの見本の値を現在のモデルから差し込む）', () => {
+  const chips = (no: string, f: Parameters<typeof flowStagesFor>[0]) => {
+    const s = flowStagesFor(f).find((x) => x.no === no)!;
+    return { inp: s.inp, out: s.out, diff: s.diff };
+  };
+
+  it('見本のモデルでは設計稿と同じ文言になる', () => {
+    const f = flowFacts(bundle);
+    expect(chips('01', f).inp).toContain('専門家の判断 (S.T. / Y.T.)');
+    expect(chips('02', f).out).toContain('グループ A / B');
+    const s3 = chips('03', f);
+    expect(s3.inp).toEqual(['要因定義', '採用した実績 11 件', '専門家 (S.T. / Y.T. / 平均)']);
+    expect(s3.out).toContain('モデル v1 → v3');
+    expect(s3.diff).toContain('版 (v1〜v3) を残して');
+  });
+
+  it('件数・版は実データに追従する（12 件、v1〜v4）', () => {
+    const f = flowFacts({ ...bundle, versions: [{ version: 4 }, ...bundle.versions], activeVersion: { n: 12 } });
+    expect(chips('03', f).inp).toContain('採用した実績 12 件');
+    expect(chips('03', f).out).toContain('モデル v1 → v4');
+    expect(chips('03', f).diff).toContain('版 (v1〜v4)');
+  });
+
+  it('読み込み中（null）は数値を出さない', () => {
+    expect(flowStagesFor(null)).toBe(FLOW_STAGES);
+    const all = JSON.stringify(FLOW_STAGES);
+    expect(all).not.toMatch(/11 件|S\.T\.|Y\.T\.|v1|v3|グループ A/);
+    expect(chips('03', null).inp).toContain('採用した実績');
+  });
+
+  it('版がない・使用中の版がない・専門家がいないときは数値なしの文言のまま', () => {
+    const f = flowFacts({ factors: [], groups: [], versions: [], activeVersion: null });
+    const s3 = chips('03', f);
+    expect(s3.inp).toEqual(['要因定義', '採用した実績', '専門家 (各人 / 平均)']);
+    expect(s3.out).toContain('モデルの版');
+    expect(s3.diff).toContain('版を残して');
+    expect(chips('01', f).inp).toContain('専門家の判断');
+    expect(chips('02', f).out).toContain('グループ');
+  });
+
+  it('0 件は「0 件」と出す（使用中の版が 0 件で作られた場合）', () => {
+    expect(chips('03', flowFacts({ ...bundle, activeVersion: { n: 0 } })).inp).toContain('採用した実績 0 件');
+  });
+
+  it('差し込み以外の段・項目は変えない', () => {
+    const out = flowStagesFor(flowFacts(bundle));
+    expect(out.map((s) => s.no)).toEqual(FLOW_STAGES.map((s) => s.no));
+    for (const no of ['04', '05', '06']) expect(out.find((s) => s.no === no)).toBe(FLOW_STAGES.find((s) => s.no === no));
+    expect(FLOW_STAGES.find((s) => s.no === '04')!.desc).toContain('10,000 回 (既定)');
+  });
+
+  it('versionSpan', () => {
+    expect(versionSpan(null)).toBeNull();
+    expect(versionSpan(flowFacts(bundle))).toBe('v1 → v3');
+    expect(versionSpan(flowFacts(bundle), '〜')).toBe('v1〜v3');
+    expect(versionSpan(flowFacts({ ...bundle, versions: [{ version: 2 }] }))).toBe('v2');
+    expect(versionSpan(flowFacts({ ...bundle, versions: [] }))).toBeNull();
   });
 });

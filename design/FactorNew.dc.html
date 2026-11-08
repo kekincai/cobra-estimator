@@ -6,6 +6,10 @@
 <script src="./support.js"></script>
 </head>
 <body>
+<!--
+  実装メモ（PR #15 以降。設計稿に描いていない振る舞い。一覧と経緯は design/README.md）
+  - 入力エラーは各欄の下に表示し、フォーム上部に「すべての項目が必須です。」。保存ボタンは押せるままにし、押したら最初の誤りへフォーカス。数値は全角数字も受け付け、不正な値を 0 にしない。
+-->
 <x-dc>
 <helmet>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Space+Grotesk:wght@500;700&display=swap">
@@ -15,7 +19,7 @@ a{color:#D4FF4F}a:hover{color:#E6FF8A}
 .n{font-family:'Space Grotesk','Noto Sans JP',sans-serif;font-weight:700;letter-spacing:-0.03em;font-variant-numeric:tabular-nums}
 .tile{background:#13161E;border:1px solid #222734;border-radius:18px;box-sizing:border-box;animation:rise .7s cubic-bezier(.2,.7,.2,1) backwards}
 @keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
-.nav{display:flex;align-items:center;gap:12px;min-height:44px;padding:0 14px;border-radius:12px;color:#8B93A5;text-decoration:none;font-size:13px;font-weight:500;transition:background .2s,color .2s}
+.nav{display:flex;align-items:center;gap:12px;min-height:44px;padding:0 14px;border-radius:12px;color:#98A0B1;text-decoration:none;font-size:13px;font-weight:500;transition:background .2s,color .2s}
 .nav:hover{background:#171B25;color:#F2F4F8}
 .nav.on{background:#1B2030;color:#F2F4F8}
 .card{transition:transform .2s,border-color .2s,background .2s,opacity .3s;animation:rise .5s cubic-bezier(.2,.7,.2,1) backwards}
@@ -39,12 +43,12 @@ a:focus-visible,button:focus-visible{outline:2px solid #D4FF4F;outline-offset:2p
       <span class="n" style="font-size: 18px">Estima</span>
     </a>
     <a href="Main.dc.html" class="nav"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8" rx="2"></rect><rect x="13" y="3" width="8" height="5" rx="2"></rect><rect x="13" y="11" width="8" height="10" rx="2"></rect><rect x="3" y="14" width="8" height="7" rx="2"></rect></svg>ダッシュボード</a>
-    <span style="font-size: 11px; color: #5E677A; padding: 16px 14px 6px; letter-spacing: 0.06em">MODEL</span>
+    <span style="font-size: 11px; color: #7F889B; padding: 16px 14px 6px; letter-spacing: 0.06em">MODEL</span>
     <a href="Factors.dc.html" aria-current="page" class="nav on"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h10M4 18h6"></path></svg>変動要因</a>
     <a href="ProjectData.dc.html" class="nav"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="8" ry="3"></ellipse><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"></path></svg>実績データ</a>
     <a href="Build.dc.html" class="nav"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"></path></svg>モデル構築</a>
     <a href="Transfer.dc.html" class="nav"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"></path></svg>取り込み / 書き出し</a>
-    <span style="font-size: 11px; color: #5E677A; padding: 16px 14px 6px; letter-spacing: 0.06em">ESTIMATE</span>
+    <span style="font-size: 11px; color: #7F889B; padding: 16px 14px 6px; letter-spacing: 0.06em">ESTIMATE</span>
     <a href="Estimate.dc.html" class="nav"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="3"></rect><path d="M8 7h8M8 12h3M13 12h3M8 17h3M13 17h3"></path></svg>工数見積り</a>
     <a href="Risk.dc.html" class="nav"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 17H3z"></path><path d="M12 10v4M12 17.5h.01"></path></svg>リスク</a>
     <a href="Report.dc.html" class="nav"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6M16 13H8M16 17H8"></path></svg>レポート</a>
@@ -56,9 +60,9 @@ a:focus-visible,button:focus-visible{outline:2px solid #D4FF4F;outline-offset:2p
 
     <header style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px">
       <div style="display: flex; flex-direction: column; gap: 6px">
-        <span style="font-size: 11px; color: #8B93A5"><a href="Factors.dc.html" style="color: #8B93A5; text-decoration: none">変動要因</a> <span style="margin: 0 6px">›</span> 新しい要因</span>
+        <span style="font-size: 11px; color: #98A0B1"><a href="Factors.dc.html" style="color: #98A0B1; text-decoration: none">変動要因</a> <span style="margin: 0 6px">›</span> 新しい要因</span>
         <h1 class="n" style="margin: 0; font-size: 30px; line-height: 1.1">要因を追加</h1>
-        <span style="font-size: 12px; color: #8B93A5">自社向けに一から定義するのが基本です。CoBRA 標準データの要因を下敷きにしたいときは右の切替から選べます。追加した要因は「社内Web系開発 標準モデル v3」に入ります (現在 8 要因)。</span>
+        <span style="font-size: 12px; color: #98A0B1">自社向けに一から定義するのが基本です。CoBRA 標準データの要因を下敷きにしたいときは右の切替から選べます。追加した要因は「社内Web系開発 標準モデル v3」に入ります (現在 8 要因)。</span>
       </div>
       <div style="display: inline-flex; background: #13161E; border: 1px solid #222734; border-radius: 12px; padding: 4px; gap: 4px">
         <sc-for list="{{modes}}" as="md" hint-placeholder-count="2"><button type="button" class="btn" onClick="{{md.pick}}" style="{{md.style}}">{{md.label}}</button></sc-for>
@@ -72,18 +76,18 @@ a:focus-visible,button:focus-visible{outline:2px solid #D4FF4F;outline-offset:2p
             <input type="search" aria-label="標準要因を検索" placeholder="標準要因を検索" style="width: 220px; border-radius: 999px; padding: 8px 14px">
             <sc-for list="{{cats}}" as="ct" hint-placeholder-count="5"><button type="button" class="chip" onClick="{{ct.pick}}" style="{{ct.style}}">{{ct.label}}</button></sc-for>
             <div style="flex-grow: 1"></div>
-            <span style="font-size: 11px; color: #5E677A">CoBRA 標準データ v2.1 ・ {{shownCount}} 件</span>
+            <span style="font-size: 11px; color: #7F889B">CoBRA 標準データ v2.1 ・ {{shownCount}} 件</span>
           </div>
           <sc-for list="{{stdList}}" as="f" hint-placeholder-count="8">
             <div class="tile card" style="{{f.style}}">
               <button type="button" onClick="{{f.focus}}" style="display: grid; grid-template-columns: minmax(0, 1fr) 86px; gap: 12px; align-items: center; background: transparent; border: 0; padding: 0; color: #F2F4F8; font-family: inherit; cursor: pointer; text-align: left; min-width: 0">
                 <span style="display: flex; flex-direction: column; gap: 4px; min-width: 0">
-                  <span style="display: flex; align-items: center; gap: 8px"><span style="font-size: 14px; font-weight: 700">{{f.name}}</span><span style="padding: 2px 8px; border-radius: 999px; background: #1B2030; color: #8B93A5; font-size: 10px">{{f.cat}}</span><sc-if value="{{f.inModel}}" hint-placeholder-val="{{false}}"><span style="padding: 2px 8px; border-radius: 999px; background: #15241C; color: #7EE2B8; font-size: 10px">モデルに登録済</span></sc-if></span>
-                  <span style="font-size: 11px; color: #8B93A5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{f.def}}</span>
+                  <span style="display: flex; align-items: center; gap: 8px"><span style="font-size: 14px; font-weight: 700">{{f.name}}</span><span style="padding: 2px 8px; border-radius: 999px; background: #1B2030; color: #98A0B1; font-size: 11px">{{f.cat}}</span><sc-if value="{{f.inModel}}" hint-placeholder-val="{{false}}"><span style="padding: 2px 8px; border-radius: 999px; background: #15241C; color: #7EE2B8; font-size: 11px">モデルに登録済</span></sc-if></span>
+                  <span style="font-size: 11px; color: #98A0B1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{f.def}}</span>
                 </span>
                 <span style="display: flex; align-items: flex-end; gap: 2px; height: 24px"><span style="width: 20%; height: 20%; background: #2A3040; border-radius: 2px"></span><span style="width: 20%; height: 55%; background: #3A4257; border-radius: 2px"></span><span class="tri" style="{{f.peakStyle}}"></span><span style="width: 20%; height: 65%; background: #3A4257; border-radius: 2px"></span><span style="width: 20%; height: 30%; background: #2A3040; border-radius: 2px"></span></span>
               </button>
-              <span class="n" style="font-size: 12px; color: #8B93A5; white-space: nowrap">{{f.tri}}</span>
+              <span class="n" style="font-size: 12px; color: #98A0B1; white-space: nowrap">{{f.tri}}</span>
               <button type="button" class="btn" onClick="{{f.toggle}}" style="{{f.btnStyle}}" aria-label="{{f.btnAria}}">{{f.btnLabel}}</button>
             </div>
           </sc-for>
@@ -91,11 +95,11 @@ a:focus-visible,button:focus-visible{outline:2px solid #D4FF4F;outline-offset:2p
 
         <aside class="tile" style="grid-column: span 5; padding: 22px 24px; display: flex; flex-direction: column; gap: 14px; min-width: 0; animation-delay: 120ms">
           <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px">
-            <span style="font-size: 11px; color: #8B93A5">プレビュー</span>
-            <span style="padding: 3px 9px; border-radius: 999px; background: #1B2030; color: #8B93A5; font-size: 10px">{{focus.cat}} ・ {{focus.kind}}</span>
+            <span style="font-size: 11px; color: #98A0B1">プレビュー</span>
+            <span style="padding: 3px 9px; border-radius: 999px; background: #1B2030; color: #98A0B1; font-size: 11px">{{focus.cat}} ・ {{focus.kind}}</span>
           </div>
           <h2 class="n" style="margin: 0; font-size: 20px">{{focus.name}}</h2>
-          <p style="margin: 0; font-size: 12px; line-height: 1.6; color: #8B93A5">{{focus.def}}</p>
+          <p style="margin: 0; font-size: 12px; line-height: 1.6; color: #98A0B1">{{focus.def}}</p>
           <div style="display: flex; flex-direction: column; gap: 6px">
             <sc-for list="{{focus.levels}}" as="l" hint-placeholder-count="4">
               <div style="display: flex; gap: 10px; align-items: center; font-size: 12px"><span class="n" style="{{l.style}}">{{l.id}}</span><span>{{l.text}}</span></div>
@@ -104,22 +108,22 @@ a:focus-visible,button:focus-visible{outline:2px solid #D4FF4F;outline-offset:2p
           <svg role="img" aria-label="三角分布の形状" viewBox="0 0 400 110" style="width: 100%; height: auto">
             <line x1="20" y1="86" x2="380" y2="86" stroke="#222734"></line>
             <polygon class="tri" points="{{focus.poly}}" fill="{{accent}}" fill-opacity="0.16" stroke="{{accent}}" stroke-width="2.5" stroke-linejoin="round"></polygon>
-            <text x="20" y="104" font-size="11" fill="#5E677A" font-family="Space Grotesk, sans-serif">0%</text>
-            <text x="200" y="104" font-size="11" fill="#5E677A" font-family="Space Grotesk, sans-serif" text-anchor="middle">60%</text>
-            <text x="380" y="104" font-size="11" fill="#5E677A" font-family="Space Grotesk, sans-serif" text-anchor="end">120%</text>
+            <text x="20" y="104" font-size="11" fill="#7F889B" font-family="Space Grotesk, sans-serif">0%</text>
+            <text x="200" y="104" font-size="11" fill="#7F889B" font-family="Space Grotesk, sans-serif" text-anchor="middle">60%</text>
+            <text x="380" y="104" font-size="11" fill="#7F889B" font-family="Space Grotesk, sans-serif" text-anchor="end">120%</text>
           </svg>
           <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
-            <div style="background: #0B0D12; border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 10px; color: #8B93A5">最良</span><span class="n" style="font-size: 18px">{{focus.best}}</span></div>
-            <div style="background: #0B0D12; border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 10px; color: #8B93A5">最頻</span><span class="n" style="font-size: 18px; color: {{accent}}">{{focus.likely}}</span></div>
-            <div style="background: #0B0D12; border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 10px; color: #8B93A5">最悪</span><span class="n" style="font-size: 18px; color: #FF7A59">{{focus.worst}}</span></div>
+            <div style="background: #0B0D12; border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 11px; color: #98A0B1">最良</span><span class="n" style="font-size: 18px">{{focus.best}}</span></div>
+            <div style="background: #0B0D12; border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 11px; color: #98A0B1">最頻</span><span class="n" style="font-size: 18px; color: {{accent}}">{{focus.likely}}</span></div>
+            <div style="background: #0B0D12; border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 11px; color: #98A0B1">最悪</span><span class="n" style="font-size: 18px; color: #FF7A59">{{focus.worst}}</span></div>
           </div>
-          <span style="font-size: 11px; color: #5E677A">標準の三角分布は「標準」という担当者名で入ります。追加後に自社の担当者の分布を足せます。</span>
+          <span style="font-size: 11px; color: #7F889B">標準の三角分布は「標準」という担当者名で入ります。追加後に自社の担当者の分布を足せます。</span>
 
           <div style="display: flex; flex-direction: column; gap: 8px; padding-top: 12px; border-top: 1px solid #222734; margin-top: auto">
-            <div style="display: flex; align-items: center; justify-content: space-between"><span style="font-size: 12px; color: #8B93A5">モデルに追加する要因</span><span class="n" style="font-size: 16px; color: {{accent}}">{{selCount}}</span></div>
+            <div style="display: flex; align-items: center; justify-content: space-between"><span style="font-size: 12px; color: #98A0B1">モデルに追加する要因</span><span class="n" style="font-size: 16px; color: {{accent}}">{{selCount}}</span></div>
             <div style="display: flex; flex-wrap: wrap; gap: 6px; min-height: 28px">
-              <sc-for list="{{selected}}" as="sl" hint-placeholder-count="2"><button type="button" class="chip" onClick="{{sl.remove}}" style="display: inline-flex; align-items: center; gap: 6px; min-height: 28px; padding: 0 10px; border-radius: 999px; border: 1px solid #2A3040; background: #1B2030; color: #F2F4F8; font-size: 11px; cursor: pointer; font-family: inherit" aria-label="{{sl.aria}}">{{sl.name}} <span style="color: #8B93A5">×</span></button></sc-for>
-              <sc-if value="{{noneSel}}" hint-placeholder-val="{{false}}"><span style="font-size: 11px; color: #5E677A; align-self: center">一覧の「+ 追加」で選んでください</span></sc-if>
+              <sc-for list="{{selected}}" as="sl" hint-placeholder-count="2"><button type="button" class="chip" onClick="{{sl.remove}}" style="display: inline-flex; align-items: center; gap: 6px; min-height: 28px; padding: 0 10px; border-radius: 999px; border: 1px solid #2A3040; background: #1B2030; color: #F2F4F8; font-size: 11px; cursor: pointer; font-family: inherit" aria-label="{{sl.aria}}">{{sl.name}} <span style="color: #98A0B1">×</span></button></sc-for>
+              <sc-if value="{{noneSel}}" hint-placeholder-val="{{false}}"><span style="font-size: 11px; color: #7F889B; align-self: center">一覧の「+ 追加」で選んでください</span></sc-if>
             </div>
             <a href="Factors.dc.html" class="btn" style="{{ctaStyle}}">{{ctaLabel}}</a>
           </div>
@@ -131,31 +135,31 @@ a:focus-visible,button:focus-visible{outline:2px solid #D4FF4F;outline-offset:2p
       <section class="pane" style="display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 16px; align-items: start">
         <form class="tile" style="grid-column: span 7; padding: 22px 24px; display: flex; flex-direction: column; gap: 14px; min-width: 0">
           <div style="display: grid; grid-template-columns: minmax(0, 1fr) 190px; gap: 12px">
-            <div style="display: flex; flex-direction: column; gap: 6px"><label for="n-name" style="font-size: 11px; color: #8B93A5">名称</label><input id="n-name" type="text" value="{{form.name}}" onChange="{{setName}}" placeholder="例: ドキュメント要求の厳しさ"></div>
-            <div style="display: flex; flex-direction: column; gap: 6px"><span style="font-size: 11px; color: #8B93A5">カテゴリ</span><div style="display: inline-flex; background: #0B0D12; border-radius: 999px; padding: 3px; gap: 2px"><sc-for list="{{formCats}}" as="fc" hint-placeholder-count="3"><button type="button" class="chip" onClick="{{fc.pick}}" style="{{fc.style}}">{{fc.label}}</button></sc-for></div></div>
+            <div style="display: flex; flex-direction: column; gap: 6px"><label for="n-name" style="font-size: 11px; color: #98A0B1">名称</label><input id="n-name" type="text" value="{{form.name}}" onChange="{{setName}}" placeholder="例: ドキュメント要求の厳しさ"></div>
+            <div style="display: flex; flex-direction: column; gap: 6px"><span style="font-size: 11px; color: #98A0B1">カテゴリ</span><div style="display: inline-flex; background: #0B0D12; border-radius: 999px; padding: 3px; gap: 2px"><sc-for list="{{formCats}}" as="fc" hint-placeholder-count="3"><button type="button" class="chip" onClick="{{fc.pick}}" style="{{fc.style}}">{{fc.label}}</button></sc-for></div></div>
           </div>
-          <div style="display: flex; flex-direction: column; gap: 6px"><label for="n-def" style="font-size: 11px; color: #8B93A5">定義 — 何を測る要因か</label><textarea id="n-def" rows="2" value="{{form.def}}" onChange="{{setDef}}" placeholder="例: 顧客が求める設計書・手順書の分量と承認の厳しさ"></textarea></div>
+          <div style="display: flex; flex-direction: column; gap: 6px"><label for="n-def" style="font-size: 11px; color: #98A0B1">定義 — 何を測る要因か</label><textarea id="n-def" rows="2" value="{{form.def}}" onChange="{{setDef}}" placeholder="例: 顧客が求める設計書・手順書の分量と承認の厳しさ"></textarea></div>
 
           <div style="display: flex; flex-direction: column; gap: 6px; padding-top: 10px; border-top: 1px solid #222734">
-            <span style="font-size: 11px; color: #8B93A5">レベル定義 (L0 = 影響なし → L3 = 最大。見積り時にこの 4 段階で評価します)</span>
+            <span style="font-size: 11px; color: #98A0B1">レベル定義 (L0 = 影響なし → L3 = 最大。見積り時にこの 4 段階で評価します)</span>
             <sc-for list="{{form.levels}}" as="l" hint-placeholder-count="4">
               <div style="display: flex; gap: 10px; align-items: center"><span class="n" style="{{l.style}}">{{l.id}}</span><input type="text" value="{{l.text}}" onChange="{{l.set}}" placeholder="{{l.ph}}" aria-label="{{l.id}}"></div>
             </sc-for>
           </div>
 
           <div style="display: grid; grid-template-columns: 190px minmax(0, 1fr); gap: 12px; padding-top: 10px; border-top: 1px solid #222734; align-items: start">
-            <div style="display: flex; flex-direction: column; gap: 6px"><span style="font-size: 11px; color: #8B93A5">種別</span><div style="display: inline-flex; background: #0B0D12; border-radius: 999px; padding: 3px; gap: 2px"><sc-for list="{{kinds}}" as="k" hint-placeholder-count="2"><button type="button" class="chip" onClick="{{k.pick}}" style="{{k.style}}">{{k.label}}</button></sc-for></div></div>
+            <div style="display: flex; flex-direction: column; gap: 6px"><span style="font-size: 11px; color: #98A0B1">種別</span><div style="display: inline-flex; background: #0B0D12; border-radius: 999px; padding: 3px; gap: 2px"><sc-for list="{{kinds}}" as="k" hint-placeholder-count="2"><button type="button" class="chip" onClick="{{k.pick}}" style="{{k.style}}">{{k.label}}</button></sc-for></div></div>
             <sc-if value="{{form.indirect}}" hint-placeholder-val="{{false}}">
-              <div style="display: flex; flex-direction: column; gap: 6px"><label for="n-target" style="font-size: 11px; color: #8B93A5">影響を強める直接要因 (間接要因は直接要因 1 つにつき 1 つまで)</label><select id="n-target"><option>03 開発者のスキル・経験</option><option>04 チーム間のコミュニケーション</option><option>05 新規技術の割合</option><option>06 外部システム連携数</option><option>07 開発プロセスの成熟度</option><option>08 納期の厳しさ</option></select></div>
+              <div style="display: flex; flex-direction: column; gap: 6px"><label for="n-target" style="font-size: 11px; color: #98A0B1">影響を強める直接要因 (間接要因は直接要因 1 つにつき 1 つまで)</label><select id="n-target"><option>03 開発者のスキル・経験</option><option>04 チーム間のコミュニケーション</option><option>05 新規技術の割合</option><option>06 外部システム連携数</option><option>07 開発プロセスの成熟度</option><option>08 納期の厳しさ</option></select></div>
             </sc-if>
             <sc-if value="{{form.direct}}" hint-placeholder-val="{{true}}">
-              <span style="font-size: 11px; color: #5E677A; padding-top: 24px">直接要因は ΣCO に直接加算されます。</span>
+              <span style="font-size: 11px; color: #7F889B; padding-top: 24px">直接要因は、レベルに応じた CO (工数増加率) が ΣCO に直接加算されます。</span>
             </sc-if>
           </div>
 
           <div style="display: flex; flex-direction: column; gap: 8px; padding-top: 10px; border-top: 1px solid #222734">
-            <div style="display: flex; align-items: center; justify-content: space-between"><span style="font-size: 11px; color: #8B93A5">三角分布 — L3 のときの工数増加率 (%)</span><button type="button" class="btn" onClick="{{addExpert}}" style="min-height: 26px; padding: 0 10px; border-radius: 999px; border: 1px solid #2A3040; background: transparent; color: #8B93A5; font-size: 11px; cursor: pointer; font-family: inherit">+ 担当者</button></div>
-            <div style="display: grid; grid-template-columns: 90px repeat(3, minmax(0, 1fr)); gap: 8px; font-size: 10px; color: #5E677A"><span></span><span>最良</span><span>最頻</span><span>最悪</span></div>
+            <div style="display: flex; align-items: center; justify-content: space-between"><span style="font-size: 11px; color: #98A0B1">三角分布 — L3 のときの工数増加率 (%)</span><button type="button" class="btn" onClick="{{addExpert}}" style="min-height: 26px; padding: 0 10px; border-radius: 999px; border: 1px solid #2A3040; background: transparent; color: #98A0B1; font-size: 11px; cursor: pointer; font-family: inherit">+ 担当者</button></div>
+            <div style="display: grid; grid-template-columns: 90px repeat(3, minmax(0, 1fr)); gap: 8px; font-size: 11px; color: #7F889B"><span></span><span>最良</span><span>最頻</span><span>最悪</span></div>
             <sc-for list="{{form.experts}}" as="x" hint-placeholder-count="2">
               <div style="display: grid; grid-template-columns: 90px repeat(3, minmax(0, 1fr)); gap: 8px; align-items: center">
                 <input type="text" value="{{x.name}}" onChange="{{x.setName}}" aria-label="担当者名" style="padding: 7px 10px">
@@ -164,35 +168,35 @@ a:focus-visible,button:focus-visible{outline:2px solid #D4FF4F;outline-offset:2p
                 <input type="text" class="n" value="{{x.worst}}" onChange="{{x.setWorst}}" aria-label="最悪" style="padding: 7px 10px; font-size: 14px">
               </div>
             </sc-for>
-            <sc-if value="{{form.bad}}" hint-placeholder-val="{{false}}"><span style="font-size: 11px; color: #FF9F84">最良 ≤ 最頻 ≤ 最悪 の順になるように入力してください。</span></sc-if>
+            <sc-if value="{{form.bad}}" hint-placeholder-val="{{false}}"><span style="font-size: 11px; color: #FF9F84">最良 ≤ 最頻 ≤ 最悪 の順にしてください。</span></sc-if>
           </div>
 
           <div style="display: flex; gap: 8px; padding-top: 6px">
             <a href="Factors.dc.html" class="btn" style="{{saveStyle}}">保存してモデルに追加</a>
             <button type="button" class="btn" style="min-height: 42px; padding: 0 14px; border-radius: 10px; border: 1px solid #2A3040; background: transparent; color: #F2F4F8; font-size: 13px; font-weight: 500; cursor: pointer; font-family: inherit">下書き保存</button>
-            <a href="Factors.dc.html" style="display: inline-flex; align-items: center; min-height: 42px; padding: 0 12px; color: #8B93A5; text-decoration: none; font-size: 13px">キャンセル</a>
+            <a href="Factors.dc.html" style="display: inline-flex; align-items: center; min-height: 42px; padding: 0 12px; color: #98A0B1; text-decoration: none; font-size: 13px">キャンセル</a>
           </div>
         </form>
 
         <aside class="tile" style="grid-column: span 5; padding: 22px 24px; display: flex; flex-direction: column; gap: 14px; min-width: 0; animation-delay: 120ms">
-          <span style="font-size: 11px; color: #8B93A5">ライブプレビュー — 見積り画面ではこう見えます</span>
+          <span style="font-size: 11px; color: #98A0B1">ライブプレビュー — 見積り画面ではこう見えます</span>
           <div style="background: #0B0D12; border-radius: 14px; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px">
-            <div style="display: flex; align-items: center; gap: 8px"><span class="n" style="color: #5E677A; font-size: 12px">09</span><span style="font-size: 14px; font-weight: 700">{{form.nameShown}}</span><span style="padding: 2px 8px; border-radius: 999px; background: #1B2030; color: #8B93A5; font-size: 10px">{{form.catLabel}}</span><span style="padding: 2px 8px; border-radius: 999px; background: #1B2030; color: #8B93A5; font-size: 10px">{{form.kindLabel}}</span></div>
-            <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px"><span style="font-size: 12px; color: #8B93A5">レベルを選ぶ</span><span style="display: inline-flex; background: #13161E; border-radius: 999px; padding: 3px; gap: 2px"><span class="n" style="width: 30px; height: 26px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; color: #8B93A5">0</span><span class="n" style="width: 30px; height: 26px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; color: #8B93A5">1</span><span class="n" style="width: 30px; height: 26px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; color: #8B93A5">2</span><span class="n" style="width: 30px; height: 26px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; background: #FF7A59; color: #0B0D12">3</span></span></div>
+            <div style="display: flex; align-items: center; gap: 8px"><span class="n" style="color: #7F889B; font-size: 12px">09</span><span style="font-size: 14px; font-weight: 700">{{form.nameShown}}</span><span style="padding: 2px 8px; border-radius: 999px; background: #1B2030; color: #98A0B1; font-size: 11px">{{form.catLabel}}</span><span style="padding: 2px 8px; border-radius: 999px; background: #1B2030; color: #98A0B1; font-size: 11px">{{form.kindLabel}}</span></div>
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px"><span style="font-size: 12px; color: #98A0B1">レベルを選ぶ</span><span style="display: inline-flex; background: #13161E; border-radius: 999px; padding: 3px; gap: 2px"><span class="n" style="width: 30px; height: 26px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; color: #98A0B1">0</span><span class="n" style="width: 30px; height: 26px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; color: #98A0B1">1</span><span class="n" style="width: 30px; height: 26px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; color: #98A0B1">2</span><span class="n" style="width: 30px; height: 26px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; background: #FF7A59; color: #0B0D12">3</span></span></div>
           </div>
           <svg role="img" aria-label="入力した三角分布の形状" viewBox="0 0 400 130" style="width: 100%; height: auto">
             <line x1="20" y1="100" x2="380" y2="100" stroke="#222734"></line>
             <sc-for list="{{form.polys}}" as="pg" hint-placeholder-count="2"><polygon class="tri" points="{{pg.points}}" fill="{{pg.fill}}" fill-opacity="0.14" stroke="{{pg.stroke}}" stroke-width="2.5" stroke-linejoin="round" stroke-dasharray="{{pg.dash}}"></polygon></sc-for>
-            <text x="20" y="120" font-size="11" fill="#5E677A" font-family="Space Grotesk, sans-serif">0%</text>
-            <text x="200" y="120" font-size="11" fill="#5E677A" font-family="Space Grotesk, sans-serif" text-anchor="middle">60%</text>
-            <text x="380" y="120" font-size="11" fill="#5E677A" font-family="Space Grotesk, sans-serif" text-anchor="end">120%</text>
+            <text x="20" y="120" font-size="11" fill="#7F889B" font-family="Space Grotesk, sans-serif">0%</text>
+            <text x="200" y="120" font-size="11" fill="#7F889B" font-family="Space Grotesk, sans-serif" text-anchor="middle">60%</text>
+            <text x="380" y="120" font-size="11" fill="#7F889B" font-family="Space Grotesk, sans-serif" text-anchor="end">120%</text>
           </svg>
           <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
-            <div style="background: #0B0D12; border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 10px; color: #8B93A5">平均の最頻値 (L3)</span><span class="n" style="font-size: 20px; color: {{accent}}">{{form.avgLikely}}</span></div>
-            <div style="background: #0B0D12; border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 10px; color: #8B93A5">L1 / L2 の目安</span><span class="n" style="font-size: 20px">{{form.l1}} / {{form.l2}}</span></div>
+            <div style="background: #0B0D12; border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 11px; color: #98A0B1">平均の最頻値 (L3)</span><span class="n" style="font-size: 20px; color: {{accent}}">{{form.avgLikely}}</span></div>
+            <div style="background: #0B0D12; border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 11px; color: #98A0B1">L1 / L2 の目安</span><span class="n" style="font-size: 20px">{{form.l1}} / {{form.l2}}</span></div>
           </div>
           <div style="display: flex; flex-direction: column; gap: 6px; padding-top: 12px; border-top: 1px solid #222734; margin-top: auto">
-            <span style="font-size: 11px; color: #8B93A5">追加前チェック</span>
+            <span style="font-size: 11px; color: #98A0B1">追加前チェック</span>
             <sc-for list="{{form.checks}}" as="ck" hint-placeholder-count="4"><span style="display: flex; align-items: center; gap: 8px; font-size: 12px"><span style="{{ck.dot}}"></span><span style="{{ck.text}}">{{ck.label}}</span></span></sc-for>
           </div>
         </aside>
@@ -237,10 +241,10 @@ class Component extends DCLogic {
     const accent = this.props.accent ?? '#D4FF4F';
     const st = this.state;
     const X = (v) => (20 + Math.min(120, Math.max(0, v)) / 120 * 360).toFixed(1);
-    const seg = (on) => ({ minHeight: '28px', padding: '0 12px', borderRadius: '999px', border: '0', cursor: 'pointer', fontFamily: 'inherit', fontSize: '11px', fontWeight: '700', background: on ? accent : 'transparent', color: on ? '#0B0D12' : '#8B93A5' });
-    const modes = [{ l: '一から定義する', id: 1 }, { l: '標準要因から選ぶ', id: 0 }].map((m) => ({ label: m.l, pick: () => this.setState({ mode: m.id }), style: { minHeight: '36px', padding: '0 16px', borderRadius: '9px', border: '0', cursor: 'pointer', fontFamily: 'inherit', fontSize: '13px', fontWeight: '700', background: st.mode === m.id ? '#1B2030' : 'transparent', color: st.mode === m.id ? '#F2F4F8' : '#8B93A5' } }));
+    const seg = (on) => ({ minHeight: '28px', padding: '0 12px', borderRadius: '999px', border: '0', cursor: 'pointer', fontFamily: 'inherit', fontSize: '11px', fontWeight: '700', background: on ? accent : 'transparent', color: on ? '#0B0D12' : '#98A0B1' });
+    const modes = [{ l: '一から定義する', id: 1 }, { l: '標準要因から選ぶ', id: 0 }].map((m) => ({ label: m.l, pick: () => this.setState({ mode: m.id }), style: { minHeight: '36px', padding: '0 16px', borderRadius: '9px', border: '0', cursor: 'pointer', fontFamily: 'inherit', fontSize: '13px', fontWeight: '700', background: st.mode === m.id ? '#1B2030' : 'transparent', color: st.mode === m.id ? '#F2F4F8' : '#98A0B1' } }));
     const catNames = ['すべて', '要件', '人・体制', '技術', 'スケジュール'];
-    const cats = catNames.map((l, i) => ({ label: l, pick: () => this.setState({ cat: i }), style: { minHeight: '30px', padding: '0 12px', borderRadius: '999px', border: '0', cursor: 'pointer', fontFamily: 'inherit', fontSize: '12px', fontWeight: '500', background: st.cat === i ? '#1B2030' : 'transparent', color: st.cat === i ? '#F2F4F8' : '#8B93A5' } }));
+    const cats = catNames.map((l, i) => ({ label: l, pick: () => this.setState({ cat: i }), style: { minHeight: '30px', padding: '0 12px', borderRadius: '999px', border: '0', cursor: 'pointer', fontFamily: 'inherit', fontSize: '12px', fontWeight: '500', background: st.cat === i ? '#1B2030' : 'transparent', color: st.cat === i ? '#F2F4F8' : '#98A0B1' } }));
     const idx = this.std.map((f, i) => i).filter((i) => st.cat === 0 || this.std[i].cat === catNames[st.cat]);
     const stdList = idx.map((i, k) => {
       const f = this.std[i], on = st.sel.indexOf(i) >= 0, focused = st.focus === i;
@@ -250,13 +254,13 @@ class Component extends DCLogic {
         style: { display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 130px 92px', gap: '12px', alignItems: 'center', padding: '12px 16px', borderRadius: '14px', border: focused ? '1px solid ' + accent : '1px solid #222734', background: focused ? '#171B25' : '#13161E', opacity: f.inModel ? 0.55 : 1, animationDelay: (k * 40) + 'ms' },
         peakStyle: { width: '20%', height: Math.round(40 + f.tri[1] / 120 * 60) + '%', background: on ? accent : '#6E9BFF', borderRadius: '2px', display: 'inline-block' },
         btnLabel: f.inModel ? '登録済' : on ? '✓ 追加' : '+ 追加', btnAria: (on ? '選択を外す: ' : '追加: ') + f.name,
-        btnStyle: { minHeight: '32px', padding: '0 12px', borderRadius: '999px', border: f.inModel ? '1px solid #222734' : on ? '0' : '1px solid #2A3040', background: on && !f.inModel ? accent : 'transparent', color: f.inModel ? '#5E677A' : on ? '#0B0D12' : '#F2F4F8', fontSize: '12px', fontWeight: '700', cursor: f.inModel ? 'default' : 'pointer', fontFamily: 'inherit' }
+        btnStyle: { minHeight: '32px', padding: '0 12px', borderRadius: '999px', border: f.inModel ? '1px solid #222734' : on ? '0' : '1px solid #2A3040', background: on && !f.inModel ? accent : 'transparent', color: f.inModel ? '#7F889B' : on ? '#0B0D12' : '#F2F4F8', fontSize: '12px', fontWeight: '700', cursor: f.inModel ? 'default' : 'pointer', fontFamily: 'inherit' }
       };
     });
     const fo = this.std[st.focus];
     const focus = {
       name: fo.name, cat: fo.cat, kind: fo.kind + '要因', def: fo.def,
-      levels: fo.levels.map((t, i) => ({ id: 'L' + i, text: t, style: { width: '28px', height: '28px', borderRadius: '14px', background: i === 3 ? '#FF7A59' : '#1B2030', color: i === 3 ? '#0B0D12' : '#8B93A5', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', flexShrink: '0' } })),
+      levels: fo.levels.map((t, i) => ({ id: 'L' + i, text: t, style: { width: '28px', height: '28px', borderRadius: '14px', background: i === 3 ? '#FF7A59' : '#1B2030', color: i === 3 ? '#0B0D12' : '#98A0B1', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', flexShrink: '0' } })),
       poly: X(fo.tri[0]) + ',86 ' + X(fo.tri[1]) + ',16 ' + X(fo.tri[2]) + ',86',
       best: '+' + fo.tri[0] + '%', likely: '+' + fo.tri[1] + '%', worst: '+' + fo.tri[2] + '%'
     };
@@ -273,23 +277,23 @@ class Component extends DCLogic {
     const catL = ['要件', '人・体制', '技術'];
     const nameOk = f.name.trim().length > 0, defOk = f.def.trim().length > 0, lvOk = f.levels.every((l) => l.trim().length > 0), triOk = !bad && tris.length > 0;
     const allOk = nameOk && defOk && lvOk && triOk;
-    const checks = [[nameOk, '名称が入っている'], [defOk, '定義が書かれている'], [lvOk, 'レベル 0〜3 がすべて埋まっている'], [triOk, '三角分布が 最良 ≤ 最頻 ≤ 最悪']].map((c) => ({ label: c[1], dot: { width: '8px', height: '8px', borderRadius: '4px', background: c[0] ? '#7EE2B8' : '#3A4257', flexShrink: '0' }, text: { color: c[0] ? '#F2F4F8' : '#8B93A5' } }));
+    const checks = [[nameOk, '名称が入っている'], [defOk, '定義が書かれている'], [lvOk, 'レベル 0〜3 がすべて埋まっている'], [triOk, '三角分布が 最良 ≤ 最頻 ≤ 最悪']].map((c) => ({ label: c[1], dot: { width: '8px', height: '8px', borderRadius: '4px', background: c[0] ? '#7EE2B8' : '#3A4257', flexShrink: '0' }, text: { color: c[0] ? '#F2F4F8' : '#98A0B1' } }));
     const phs = ['例: 最小限の文書で可', '例: 標準的な設計書一式', '例: 承認付きの詳細設計書', '例: 監査対応レベルの文書と履歴'];
     const form = {
       name: f.name, def: f.def, nameShown: f.name.trim() || '(名称未入力)', catLabel: catL[f.cat], kindLabel: f.indirect ? '間接要因' : '直接要因', indirect: f.indirect, direct: !f.indirect, bad,
-      levels: f.levels.map((t, i) => ({ id: 'L' + i, text: t, ph: phs[i], set: this.setLevel(i), style: { width: '30px', height: '30px', borderRadius: '15px', background: i === 3 ? '#FF7A59' : '#1B2030', color: i === 3 ? '#0B0D12' : '#8B93A5', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', flexShrink: '0' } })),
+      levels: f.levels.map((t, i) => ({ id: 'L' + i, text: t, ph: phs[i], set: this.setLevel(i), style: { width: '30px', height: '30px', borderRadius: '15px', background: i === 3 ? '#FF7A59' : '#1B2030', color: i === 3 ? '#0B0D12' : '#98A0B1', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', flexShrink: '0' } })),
       experts: f.experts.map((x, i) => ({ name: x.name, best: x.best, likely: x.likely, worst: x.worst, setName: this.setExpert(i, 'name'), setBest: this.setExpert(i, 'best'), setLikely: this.setExpert(i, 'likely'), setWorst: this.setExpert(i, 'worst') })),
       polys, avgLikely: '+' + Math.round(avgLikely) + '%', l1: '+' + Math.round(avgLikely / 3) + '%', l2: '+' + Math.round(avgLikely * 2 / 3) + '%', checks
     };
     return {
       accent, modes, isStd: st.mode === 0, isNew: st.mode === 1, cats, shownCount: idx.length, stdList, focus, selected, selCount: nsel, noneSel: nsel === 0,
       ctaLabel: nsel ? nsel + ' 件をモデルに追加' : 'モデルに追加',
-      ctaStyle: { display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minHeight: '44px', borderRadius: '12px', background: nsel ? accent : '#1B2030', color: nsel ? '#0B0D12' : '#5E677A', textDecoration: 'none', fontSize: '13px', fontWeight: '700', pointerEvents: nsel ? 'auto' : 'none' },
+      ctaStyle: { display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minHeight: '44px', borderRadius: '12px', background: nsel ? accent : '#1B2030', color: nsel ? '#0B0D12' : '#7F889B', textDecoration: 'none', fontSize: '13px', fontWeight: '700', pointerEvents: nsel ? 'auto' : 'none' },
       setName: this.setName, setDef: this.setDef, addExpert: this.addExpert,
       formCats: catL.map((l, i) => ({ label: l, pick: () => { const g = Object.assign({}, f, { cat: i }); this.setState({ form: g }); }, style: seg(f.cat === i) })),
       kinds: ['直接要因', '間接要因'].map((l, i) => ({ label: l, pick: () => { const g = Object.assign({}, f, { indirect: i === 1 }); this.setState({ form: g }); }, style: seg(f.indirect === (i === 1)) })),
       form,
-      saveStyle: { display: 'inline-flex', alignItems: 'center', minHeight: '42px', padding: '0 18px', borderRadius: '10px', background: allOk ? accent : '#1B2030', color: allOk ? '#0B0D12' : '#5E677A', textDecoration: 'none', fontSize: '13px', fontWeight: '700', pointerEvents: allOk ? 'auto' : 'none' }
+      saveStyle: { display: 'inline-flex', alignItems: 'center', minHeight: '42px', padding: '0 18px', borderRadius: '10px', background: allOk ? accent : '#1B2030', color: allOk ? '#0B0D12' : '#7F889B', textDecoration: 'none', fontSize: '13px', fontWeight: '700', pointerEvents: allOk ? 'auto' : 'none' }
     };
   }
 }

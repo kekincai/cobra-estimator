@@ -3,6 +3,10 @@ on:
   push:
     branches: [main]
   pull_request:
+
+permissions:
+  contents: read
+
 jobs:
   check:
     runs-on: ubuntu-latest
@@ -15,3 +19,53 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm check
+
+  # 画面ソースの AI っぽい見た目（side-tab など）を検出する。指摘は PR 上に注釈で出る。
+  # 指摘があると exit 2 で失敗する。誤検知は該当行に
+  # `/* impeccable-disable-line <rule> -- 理由 */` を付けて抑止する。
+  impeccable:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      # setup-node は package.json の packageManager (pnpm) を見て pnpm を探すので、先に入れておく
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+      - run: npx --yes impeccable@4.8.0 detect --github apps/web/src
+
+  # main への push で、check が通ったときだけ本番へデプロイする。
+  deploy:
+    needs: check
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://cobra.kejincai.dev
+    # デプロイは重ねず、実行中のものは途中で止めない（後続は待つ）
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - name: Cloudflare のシークレットを確認
+        run: |
+          missing=""
+          [ -n "$CLOUDFLARE_API_TOKEN" ] || missing="$missing CLOUDFLARE_API_TOKEN"
+          [ -n "$CLOUDFLARE_ACCOUNT_ID" ] || missing="$missing CLOUDFLARE_ACCOUNT_ID"
+          if [ -n "$missing" ]; then
+            echo "::error title=デプロイできません::シークレットが未設定です:$missing。Settings → Secrets and variables → Actions（または production 環境）に追加して、このジョブを再実行してください。手順は README の「デプロイ」を参照。"
+            exit 1
+          fi
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # build → D1 マイグレーション（remote）→ wrangler deploy
+      - run: pnpm run deploy

@@ -6,6 +6,14 @@
 <script src="./support.js"></script>
 </head>
 <body>
+<!--
+  実装メモ（PR #15 以降。設計稿に描いていない振る舞い。一覧と経緯は design/README.md）
+  - 検索ボックスはコマンドパレット（⌘K / Ctrl K）を開く入口。クリック・Enter・入力で開き、入力済みの文字を初期検索語として渡す（フォーカスだけでは開かない）。
+  - 「要確認 N 件」は N>0 のとき /model/build へのリンク（→ 付き）。0 件は枠なしの文字と緑の点。
+  - 「+ 新しい見積り」は名前（必須）と予算（任意）を入れるダイアログ（ConfirmDialog と同じ見た目の <dialog>）。作成後 /estimate/:id へ。
+  - 予算スライダーを保存値から動かすと「試算中（保存値 45.0 人月）」と「予算を保存」（coral）「元に戻す」を出す。保存後は「予算 55.0 人月を保存しました」（role=status）。
+  - 再実行中は推定値を動かさない（仮の値を出さない）。進捗バーとボタン文言だけ変える。世代を選ぶと URL に ?gen=G2 を付け、条件 / リスク / レポートへのリンクにも引き継ぐ。
+-->
 <x-dc>
 <helmet>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Space+Grotesk:wght@500;700&display=swap">
@@ -16,7 +24,7 @@ a{color:#D4FF4F}a:hover{color:#E6FF8A}
 .tile{background:#13161E;border:1px solid #222734;border-radius:18px;box-sizing:border-box;animation:rise .7s cubic-bezier(.2,.7,.2,1) backwards;transition:transform .25s ease,border-color .25s ease,box-shadow .25s ease}
 .tile:hover{transform:translateY(-2px);border-color:#3A4257;box-shadow:0 12px 32px rgba(0,0,0,.35)}
 @keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
-.nav{display:flex;align-items:center;gap:12px;min-height:44px;padding:0 14px;border-radius:12px;color:#8B93A5;text-decoration:none;font-size:13px;font-weight:500;transition:background .2s,color .2s}
+.nav{display:flex;align-items:center;gap:12px;min-height:44px;padding:0 14px;border-radius:12px;color:#98A0B1;text-decoration:none;font-size:13px;font-weight:500;transition:background .2s,color .2s}
 .nav:hover{background:#171B25;color:#F2F4F8}
 .nav.on{background:#1B2030;color:#F2F4F8}
 .bar{flex:1;border-radius:3px 3px 0 0;transition:height .9s cubic-bezier(.2,.7,.2,1),background .4s}
@@ -45,12 +53,12 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid #D4FF
       <span class="n" style="font-size: 18px">Estima</span>
     </a>
     <a href="Main.dc.html" aria-current="page" class="nav on"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8" rx="2"></rect><rect x="13" y="3" width="8" height="5" rx="2"></rect><rect x="13" y="11" width="8" height="10" rx="2"></rect><rect x="3" y="14" width="8" height="7" rx="2"></rect></svg>ダッシュボード</a>
-    <span style="font-size: 11px; color: #5E677A; padding: 16px 14px 6px; letter-spacing: 0.06em">MODEL</span>
+    <span style="font-size: 11px; color: #7F889B; padding: 16px 14px 6px; letter-spacing: 0.06em">MODEL</span>
     <a href="Factors.dc.html" class="nav"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h10M4 18h6"></path></svg>変動要因</a>
     <a href="ProjectData.dc.html" class="nav"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="8" ry="3"></ellipse><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"></path></svg>実績データ</a>
     <a href="Build.dc.html" class="nav"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"></path></svg>モデル構築</a>
     <a href="Transfer.dc.html" class="nav"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"></path></svg>取り込み / 書き出し</a>
-    <span style="font-size: 11px; color: #5E677A; padding: 16px 14px 6px; letter-spacing: 0.06em">ESTIMATE</span>
+    <span style="font-size: 11px; color: #7F889B; padding: 16px 14px 6px; letter-spacing: 0.06em">ESTIMATE</span>
     <a href="Estimate.dc.html" class="nav"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="3"></rect><path d="M8 7h8M8 12h3M13 12h3M8 17h3M13 17h3"></path></svg>工数見積り</a>
     <a href="Risk.dc.html" class="nav"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 17H3z"></path><path d="M12 10v4M12 17.5h.01"></path></svg>リスク</a>
     <a href="Report.dc.html" class="nav"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6M16 13H8M16 17H8"></path></svg>レポート</a>
@@ -58,7 +66,7 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid #D4FF
     <a href="Guide.dc.html" class="nav"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"></path></svg>CoBRA法の解説</a>
     <div style="display: flex; align-items: center; gap: 10px; padding: 12px 14px 4px">
       <span style="width: 30px; height: 30px; border-radius: 15px; background: #2A3040; color: #F2F4F8; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700">KC</span>
-      <span style="display: flex; flex-direction: column"><span style="font-size: 12px; font-weight: 500">K. Cai</span><span style="font-size: 11px; color: #5E677A">PMO</span></span>
+      <span style="display: flex; flex-direction: column"><span style="font-size: 12px; font-weight: 500">K. Cai</span><span style="font-size: 11px; color: #7F889B">PMO</span></span>
     </div>
   </nav>
 
@@ -66,27 +74,27 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid #D4FF
 
     <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px">
       <div style="position: relative; display: inline-flex; align-items: center">
-        <svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#5E677A" stroke-width="2.2" stroke-linecap="round" style="position: absolute; left: 13px"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+        <svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#7F889B" stroke-width="2.2" stroke-linecap="round" style="position: absolute; left: 13px"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
         <input type="search" aria-label="見積り・モデルを検索" placeholder="見積り、モデル、プロジェクトを検索">
-        <span style="position: absolute; right: 10px; font-size: 10px; color: #5E677A; border: 1px solid #2A3040; border-radius: 5px; padding: 1px 5px; font-family: 'Space Grotesk', sans-serif">⌘K</span>
+        <span style="position: absolute; right: 10px; font-size: 11px; color: #7F889B; border: 1px solid #2A3040; border-radius: 5px; padding: 1px 5px; font-family: 'Space Grotesk', sans-serif">⌘K</span>
       </div>
       <div style="flex-grow: 1"></div>
-      <span style="display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 0 12px; border-radius: 10px; background: #13161E; border: 1px solid #222734; font-size: 12px; color: #8B93A5"><span style="width: 7px; height: 7px; border-radius: 4px; background: #FF7A59"></span>要確認 1 件</span>
-      <a href="Transfer.dc.html" class="btn" style="min-height: 36px; padding: 0 12px; border-radius: 10px; border: 1px solid #222734; background: #13161E; color: #F2F4F8; font-size: 12px; font-weight: 500; cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; text-decoration: none">インポート / エクスポート</a>
+      <span style="display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 0 12px; border-radius: 10px; background: #13161E; border: 1px solid #222734; font-size: 12px; color: #98A0B1"><span style="width: 7px; height: 7px; border-radius: 4px; background: #FF7A59"></span>要確認 1 件</span>
+      <a href="Transfer.dc.html" class="btn" style="min-height: 36px; padding: 0 12px; border-radius: 10px; border: 1px solid #222734; background: #13161E; color: #F2F4F8; font-size: 12px; font-weight: 500; cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; text-decoration: none">取り込み / 書き出し</a>
       <a href="Estimate.dc.html" class="btn" style="display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 0 14px; border-radius: 10px; background: {{accent}}; color: #0B0D12; font-size: 12px; font-weight: 700; text-decoration: none">+ 新しい見積り</a>
     </div>
 
     <header style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px">
       <div style="display: flex; flex-direction: column; gap: 6px">
-        <button type="button" class="btn" style="display: inline-flex; align-items: center; gap: 8px; align-self: flex-start; min-height: 28px; padding: 0 10px 0 8px; border-radius: 8px; border: 1px solid #222734; background: #13161E; color: #8B93A5; font-size: 11px; cursor: pointer; font-family: inherit"><span style="width: 6px; height: 6px; border-radius: 3px; background: #5EEAD4"></span>社内Web系開発 標準モデル v3<svg aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 9l6 6 6-6"></path></svg></button>
+        <a href="Build.dc.html" class="btn" style="display: inline-flex; align-items: center; gap: 8px; align-self: flex-start; min-height: 28px; padding: 0 10px 0 8px; border-radius: 8px; border: 1px solid #222734; background: #13161E; color: #98A0B1; font-size: 11px; text-decoration: none"><span style="width: 6px; height: 6px; border-radius: 3px; background: #5EEAD4"></span>社内Web系開発 標準モデル v3<span aria-hidden="true">→</span></a>
         <h1 class="n" style="margin: 0; font-size: 30px; line-height: 1.1">顧客ポータル刷新</h1>
-        <span style="font-size: 12px; color: #8B93A5">11/5 モデル構築 ・ α 0.0210 ・ 要因 8 ・ 実績 11/12 件 ・ 見積り 3 世代</span>
+        <span style="font-size: 12px; color: #98A0B1">11/5 モデル構築 ・ α 0.0210 ・ 要因 8 ・ 実績 11/12 件 ・ 見積り 3 世代</span>
       </div>
       <div style="display: flex; gap: 6px">
         <span style="display: inline-flex; align-items: center; min-height: 30px; padding: 0 12px; border-radius: 999px; background: #1B2030; color: #F2F4F8; font-size: 12px; font-weight: 500">概要</span>
-        <a href="Estimate.dc.html" style="display: inline-flex; align-items: center; min-height: 30px; padding: 0 12px; border-radius: 999px; color: #8B93A5; font-size: 12px; font-weight: 500; text-decoration: none">条件</a>
-        <a href="Risk.dc.html" style="display: inline-flex; align-items: center; min-height: 30px; padding: 0 12px; border-radius: 999px; color: #8B93A5; font-size: 12px; font-weight: 500; text-decoration: none">リスク</a>
-        <a href="Report.dc.html" style="display: inline-flex; align-items: center; min-height: 30px; padding: 0 12px; border-radius: 999px; color: #8B93A5; font-size: 12px; font-weight: 500; text-decoration: none">レポート</a>
+        <a href="Estimate.dc.html" style="display: inline-flex; align-items: center; min-height: 30px; padding: 0 12px; border-radius: 999px; color: #98A0B1; font-size: 12px; font-weight: 500; text-decoration: none">条件</a>
+        <a href="Risk.dc.html" style="display: inline-flex; align-items: center; min-height: 30px; padding: 0 12px; border-radius: 999px; color: #98A0B1; font-size: 12px; font-weight: 500; text-decoration: none">リスク</a>
+        <a href="Report.dc.html" style="display: inline-flex; align-items: center; min-height: 30px; padding: 0 12px; border-radius: 999px; color: #98A0B1; font-size: 12px; font-weight: 500; text-decoration: none">レポート</a>
       </div>
     </header>
 
@@ -94,27 +102,27 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid #D4FF
 
       <div class="tile" style="grid-column: span 5; padding: 24px 26px; display: flex; flex-direction: column; gap: 16px; min-width: 0; animation-delay: 0ms">
         <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px">
-          <span style="display: inline-flex; align-items: center; gap: 8px; font-size: 12px; color: #8B93A5"><span class="pulse" style="width: 8px; height: 8px; border-radius: 4px; background: {{accent}}"></span>{{g.id}} ・ {{g.name}}</span>
-          <span style="font-size: 12px; color: #5E677A">{{g.date}}</span>
+          <span style="display: inline-flex; align-items: center; gap: 8px; font-size: 12px; color: #98A0B1"><span aria-hidden="true" style="width: 8px; height: 8px; border-radius: 4px; background: {{accent}}"></span>{{g.id}} ・ {{g.name}}</span>
+          <span style="font-size: 12px; color: #7F889B">{{g.date}}</span>
         </div>
         <div style="display: flex; flex-direction: column; gap: 4px">
-          <span style="font-size: 12px; color: #8B93A5">推定工数 (超過確率 50%)</span>
+          <span style="font-size: 12px; color: #98A0B1">推定工数 (超過確率 50%)</span>
           <div style="display: flex; align-items: flex-end; gap: 14px; flex-wrap: wrap">
-            <span class="n" style="font-size: 84px; line-height: 0.95; color: {{accent}}">{{shown}}<span style="font-size: 22px; margin-left: 8px; color: #8B93A5; font-weight: 500; letter-spacing: 0">人月</span></span>
+            <span class="n" style="font-size: 84px; line-height: 0.95; color: {{accent}}">{{shown}}<span style="font-size: 22px; margin-left: 8px; color: #98A0B1; font-weight: 500; letter-spacing: 0">人月</span></span>
             <span style="{{deltaStyle}}">{{deltaText}}</span>
           </div>
-          <span style="font-size: 12px; color: #8B93A5">規模 {{g.sizeText}} FP ・ ΣCO {{g.scoText}} ・ 名目 {{nominal}} + 上乗せ {{overhead}}</span>
+          <span style="font-size: 12px; color: #98A0B1">規模 {{g.sizeText}} FP ・ ΣCO {{g.scoText}} ・ 名目 {{nominal}} + 上乗せ {{overhead}}</span>
         </div>
 
         <div style="display: flex; flex-direction: column; gap: 8px">
-          <div style="display: flex; justify-content: space-between; font-size: 11px; color: #5E677A"><span>P20 {{p20}}</span><span>P50 {{p50}}</span><span>P80 {{p80}}</span><span>P95 {{p95}}</span></div>
+          <div style="display: flex; justify-content: space-between; font-size: 11px; color: #7F889B"><span title="P20" style="display: flex; flex-direction: column; line-height: 1.3"><span>超過確率 80%</span><span class="n" style="color: #98A0B1">{{p20}}</span></span><span title="P50" style="display: flex; flex-direction: column; line-height: 1.3"><span>超過確率 50%</span><span class="n" style="color: #98A0B1">{{p50}}</span></span><span title="P80" style="display: flex; flex-direction: column; line-height: 1.3"><span>超過確率 20%</span><span class="n" style="color: #98A0B1">{{p80}}</span></span><span title="P95" style="display: flex; flex-direction: column; line-height: 1.3; align-items: flex-end"><span>超過確率 5%</span><span class="n" style="color: #98A0B1">{{p95}}</span></span></div>
           <div style="position: relative; height: 14px; border-radius: 7px; background: #1B2030">
             <div class="mk" style="{{bandStyle}}"></div>
             <div class="mk" style="{{bandDimStyle}}"></div>
             <div class="mk" style="{{p50MarkStyle}}"></div>
             <div class="mk" style="{{budgetMarkStyle}}"></div>
           </div>
-          <div style="display: flex; justify-content: space-between; font-size: 11px; color: #5E677A; font-family: 'Space Grotesk', sans-serif"><span>30</span><span style="color: #FF7A59">予算 {{budgetText}}</span><span>65 人月</span></div>
+          <div style="display: flex; justify-content: space-between; font-size: 11px; color: #7F889B; font-family: 'Space Grotesk', sans-serif"><span>30</span><span style="color: #FF7A59">予算 {{budgetText}}</span><span>65 人月</span></div>
         </div>
 
         <div style="display: flex; flex-direction: column; gap: 10px; margin-top: auto">
@@ -126,13 +134,13 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid #D4FF
               <sc-if value="{{running}}" hint-placeholder-val="{{false}}"><span>実行中 {{progress}}% ・ {{runs}} / 10,000</span></sc-if>
             </button>
             <a href="Risk.dc.html" class="btn" style="display: inline-flex; align-items: center; min-height: 38px; padding: 0 14px; border-radius: 10px; background: #1B2030; color: #F2F4F8; text-decoration: none; font-size: 12px; font-weight: 500">リスクを見る</a>
-            <a href="Report.dc.html" class="btn" style="display: inline-flex; align-items: center; min-height: 38px; padding: 0 14px; border-radius: 10px; border: 1px solid #222734; color: #8B93A5; text-decoration: none; font-size: 12px; font-weight: 500">レポート</a>
+            <a href="Report.dc.html" class="btn" style="display: inline-flex; align-items: center; min-height: 38px; padding: 0 14px; border-radius: 10px; border: 1px solid #222734; color: #98A0B1; text-decoration: none; font-size: 12px; font-weight: 500">レポート</a>
           </div>
         </div>
       </div>
 
       <div class="tile" style="grid-column: span 4; padding: 22px 24px; display: flex; flex-direction: column; gap: 12px; min-width: 0; animation-delay: 80ms">
-        <div style="display: flex; align-items: center; justify-content: space-between"><span style="font-size: 13px; font-weight: 500">工数の分布</span><span style="font-size: 12px; color: #5E677A">10,000 回 ・ 対数正規</span></div>
+        <div style="display: flex; align-items: center; justify-content: space-between"><span style="font-size: 13px; font-weight: 500">工数の分布</span><span style="font-size: 12px; color: #7F889B">10,000 回 ・ 対数正規</span></div>
         <div style="position: relative; height: 160px">
           <div role="img" aria-label="見積り工数のヒストグラム。推定値付近が最頻で、右に裾を引く" style="position: absolute; left: 0; right: 0; bottom: 0; display: flex; align-items: flex-end; gap: 4px; height: 150px">
             <sc-for list="{{bins}}" as="b" hint-placeholder-count="24"><div class="bar" style="{{b.style}}"></div></sc-for>
@@ -140,8 +148,8 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid #D4FF
           <div class="mk" style="{{histBudgetStyle}}"></div>
           <span class="mk" style="{{histBudgetLabelStyle}}">予算 {{budgetText}}</span>
         </div>
-        <div style="display: flex; justify-content: space-between; font-size: 11px; color: #5E677A; font-family: 'Space Grotesk', sans-serif"><span>{{axis0}}</span><span>{{axis1}}</span><span>{{axis2}}</span><span>{{axis3}}</span></div>
-        <div style="display: flex; gap: 14px; font-size: 11px; color: #8B93A5; padding-top: 10px; border-top: 1px solid #222734; flex-wrap: wrap"><span><span style="display: inline-block; width: 10px; height: 10px; border-radius: 3px; background: {{accent}}; vertical-align: -1px; margin-right: 6px"></span>P50〜P80</span><span><span style="display: inline-block; width: 10px; height: 10px; border-radius: 3px; background: #FF7A59; vertical-align: -1px; margin-right: 6px"></span>予算を超える領域 {{pExceed}}%</span></div>
+        <div style="display: flex; justify-content: space-between; font-size: 11px; color: #7F889B; font-family: 'Space Grotesk', sans-serif"><span>{{axis0}}</span><span>{{axis1}}</span><span>{{axis2}}</span><span>{{axis3}}</span></div>
+        <div style="display: flex; gap: 14px; font-size: 11px; color: #98A0B1; padding-top: 10px; border-top: 1px solid #222734; flex-wrap: wrap"><span><span style="display: inline-block; width: 10px; height: 10px; border-radius: 3px; background: {{accent}}; vertical-align: -1px; margin-right: 6px"></span>超過確率 50〜20%（P50〜P80）</span><span><span style="display: inline-block; width: 10px; height: 10px; border-radius: 3px; background: #FF7A59; vertical-align: -1px; margin-right: 6px"></span>予算を超える領域 {{pExceed}}%</span></div>
       </div>
 
       <div class="tile" style="grid-column: span 3; padding: 22px 24px; display: flex; flex-direction: column; gap: 10px; align-items: center; min-width: 0; animation-delay: 160ms">
@@ -150,40 +158,40 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid #D4FF
           <circle cx="70" cy="70" r="56" fill="none" stroke="#222734" stroke-width="14"></circle>
           <circle class="ring" cx="70" cy="70" r="56" fill="none" stroke="#FF7A59" stroke-width="14" stroke-linecap="round" stroke-dasharray="{{ringDash}}" transform="rotate(-90 70 70)"></circle>
           <text x="70" y="66" text-anchor="middle" font-size="30" font-weight="700" fill="#F2F4F8" font-family="Space Grotesk, sans-serif">{{pExceed}}%</text>
-          <text x="70" y="86" text-anchor="middle" font-size="11" fill="#8B93A5" font-family="Noto Sans JP, sans-serif">超過する確率</text>
+          <text x="70" y="86" text-anchor="middle" font-size="11" fill="#98A0B1" font-family="Noto Sans JP, sans-serif">超過する確率</text>
         </svg>
-        <label for="budget" style="font-size: 11px; color: #8B93A5; align-self: stretch; display: flex; justify-content: space-between"><span>30</span><span>予算を動かす</span><span>65</span></label>
+        <label for="budget" style="font-size: 11px; color: #98A0B1; align-self: stretch; display: flex; justify-content: space-between"><span>30</span><span>予算を動かす</span><span>65</span></label>
         <input id="budget" type="range" min="30" max="65" step="0.5" value="{{budget}}" onChange="{{setBudget}}" onInput="{{setBudget}}">
-        <span style="font-size: 12px; color: #8B93A5; text-align: center; line-height: 1.6; margin-top: auto">80% で収めるなら <span class="n" style="color: #F2F4F8; font-size: 14px">{{p80}}</span> 人月</span>
+        <span style="font-size: 12px; color: #98A0B1; text-align: center; line-height: 1.6; margin-top: auto">80% で収めるなら <span class="n" style="color: #F2F4F8; font-size: 14px">{{p80}}</span> 人月</span>
       </div>
 
       <div class="tile" style="grid-column: span 3; padding: 22px 24px; display: flex; flex-direction: column; gap: 6px; min-width: 0; animation-delay: 240ms">
-        <span style="font-size: 12px; color: #8B93A5">生産性 α</span>
+        <span style="font-size: 12px; color: #98A0B1">生産性 α</span>
         <span class="n" style="font-size: 40px; line-height: 1">0.0210</span>
-        <span style="font-size: 11px; color: #5E677A">人月 / FP ・ 95% CI 0.0186 – 0.0237</span>
+        <span style="font-size: 11px; color: #7F889B">人月 / FP ・ 95% CI 0.0186 – 0.0237</span>
         <svg role="img" aria-label="α の推移。v1 0.0232、v2 0.0198、v3 0.0210" viewBox="0 0 220 60" style="width: 100%; height: auto; margin-top: auto">
           <polyline class="line" points="20,18 110,46 200,30" fill="none" stroke="{{accent}}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></polyline>
           <circle cx="20" cy="18" r="4" fill="#2A3040" stroke="{{accent}}" stroke-width="2"></circle>
           <circle cx="110" cy="46" r="4" fill="#2A3040" stroke="{{accent}}" stroke-width="2"></circle>
           <circle cx="200" cy="30" r="5" fill="{{accent}}"></circle>
-          <text x="20" y="58" font-size="10" fill="#5E677A" font-family="Space Grotesk, sans-serif" text-anchor="middle">v1</text>
-          <text x="110" y="58" font-size="10" fill="#5E677A" font-family="Space Grotesk, sans-serif" text-anchor="middle">v2</text>
-          <text x="200" y="58" font-size="10" fill="#8B93A5" font-family="Space Grotesk, sans-serif" text-anchor="middle">v3</text>
+          <text x="20" y="58" font-size="11" fill="#7F889B" font-family="Space Grotesk, sans-serif" text-anchor="middle">v1</text>
+          <text x="110" y="58" font-size="11" fill="#7F889B" font-family="Space Grotesk, sans-serif" text-anchor="middle">v2</text>
+          <text x="200" y="58" font-size="11" fill="#98A0B1" font-family="Space Grotesk, sans-serif" text-anchor="middle">v3</text>
         </svg>
       </div>
 
       <div class="tile" style="grid-column: span 3; padding: 22px 24px; display: flex; flex-direction: column; gap: 6px; min-width: 0; animation-delay: 320ms">
-        <span style="font-size: 12px; color: #8B93A5">見積り精度 MMRE</span>
+        <span style="font-size: 12px; color: #98A0B1">見積り精度 MMRE</span>
         <span class="n" style="font-size: 40px; line-height: 1">18.4%</span>
-        <span style="font-size: 11px; color: #5E677A">交差検証 (1件抜き) ・ 11 件</span>
+        <span style="font-size: 11px; color: #7F889B">交差検証 (1件抜き) ・ 11 件</span>
         <div style="display: flex; align-items: center; gap: 12px; margin-top: auto">
           <svg role="img" aria-label="PRED(25) 75%" viewBox="0 0 48 48" style="width: 44px; height: 44px"><circle cx="24" cy="24" r="18" fill="none" stroke="#222734" stroke-width="7"></circle><circle class="ring" cx="24" cy="24" r="18" fill="none" stroke="#6E9BFF" stroke-width="7" stroke-linecap="round" stroke-dasharray="{{predDash}}" transform="rotate(-90 24 24)"></circle></svg>
-          <span style="display: flex; flex-direction: column"><span class="n" style="font-size: 18px">75%</span><span style="font-size: 11px; color: #8B93A5">PRED(25) 誤差25%以内</span></span>
+          <span style="display: flex; flex-direction: column"><span class="n" style="font-size: 18px">75%</span><span style="font-size: 11px; color: #98A0B1">PRED(25) 誤差25%以内</span></span>
         </div>
       </div>
 
       <div class="tile" style="grid-column: span 6; padding: 22px 24px; display: flex; flex-direction: column; gap: 12px; min-width: 0; animation-delay: 400ms">
-        <div style="display: flex; align-items: center; justify-content: space-between"><span style="font-size: 13px; font-weight: 500">要因の寄与度 — どこで工数が増えているか</span><span style="font-size: 12px; color: #5E677A">{{g.id}} ・ 上乗せ {{overhead}} 人月の内訳</span></div>
+        <div style="display: flex; align-items: center; justify-content: space-between"><span style="font-size: 13px; font-weight: 500">要因の寄与度 — どこで工数が増えているか</span><span style="font-size: 12px; color: #7F889B">{{g.id}} ・ 上乗せ {{overhead}} 人月の内訳</span></div>
         <div style="display: flex; flex-direction: column; gap: 9px">
           <sc-for list="{{contribs}}" as="c" hint-placeholder-count="6">
             <div style="display: grid; grid-template-columns: 196px minmax(0, 1fr) 52px; gap: 12px; align-items: center; font-size: 12px"><span style="display: flex; align-items: center; gap: 8px"><span class="n" style="{{c.lvStyle}}">{{c.level}}</span>{{c.name}}</span><div style="height: 12px; background: #1B2030; border-radius: 6px"><div class="fill" style="{{c.style}}"></div></div><span class="n" style="text-align: right">{{c.value}}</span></div>
@@ -194,7 +202,7 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid #D4FF
       <div class="tile" style="grid-column: span 7; padding: 22px 24px; display: flex; flex-direction: column; gap: 8px; min-width: 0; animation-delay: 480ms">
         <div style="display: flex; align-items: center; justify-content: space-between"><span style="font-size: 13px; font-weight: 500">見積りの世代 — クリックで切替</span><a href="Estimate.dc.html" style="font-size: 12px; font-weight: 500">5世代まで比較 →</a></div>
         <sc-for list="{{gens}}" as="r" hint-placeholder-count="3">
-          <button type="button" class="row" onClick="{{r.pick}}" style="{{r.style}}"><span class="n" style="{{r.idStyle}}">{{r.id}}</span><span style="font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left">{{r.name}}</span><span style="font-size: 11px; color: #8B93A5">{{r.sizeText}} FP ・ {{r.scoText}}</span><span style="display: flex; align-items: center; gap: 6px"><span style="width: 90px; height: 6px; border-radius: 3px; background: #1B2030"><span class="fill" style="{{r.trackStyle}}"></span></span></span><span class="n" style="{{r.valStyle}}">{{r.medianText}}</span></button>
+          <button type="button" class="row" onClick="{{r.pick}}" style="{{r.style}}"><span class="n" style="{{r.idStyle}}">{{r.id}}</span><span style="font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left">{{r.name}}</span><span style="font-size: 11px; color: #98A0B1">{{r.sizeText}} FP ・ {{r.scoText}}</span><span style="display: flex; align-items: center; gap: 6px"><span style="width: 90px; height: 6px; border-radius: 3px; background: #1B2030"><span class="fill" style="{{r.trackStyle}}"></span></span></span><span class="n" style="{{r.valStyle}}">{{r.medianText}}</span></button>
         </sc-for>
         <div style="display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px; border-radius: 12px; background: #2A1A16; color: #FFB4A0; margin-top: auto">
           <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF7A59" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 2px"><path d="M12 3l9 17H3z"></path><path d="M12 10v4M12 17.5h.01"></path></svg>
@@ -205,11 +213,11 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid #D4FF
       <div class="tile" style="grid-column: span 5; padding: 22px 24px; display: flex; flex-direction: column; gap: 12px; min-width: 0; animation-delay: 560ms">
         <span style="font-size: 13px; font-weight: 500">最近の操作</span>
         <div style="display: flex; flex-direction: column; gap: 0">
-          <div class="feed" style="display: grid; grid-template-columns: 18px minmax(0, 1fr) 64px; gap: 12px; align-items: start; padding: 8px 0; animation-delay: 650ms"><span style="width: 10px; height: 10px; border-radius: 5px; background: {{accent}}; margin-top: 4px; margin-left: 4px"></span><span style="font-size: 12px; line-height: 1.5"><span style="font-weight: 500">G3 を実行</span> — 案B、規模 1,200 FP、ΣCO +68%</span><span style="font-size: 11px; color: #5E677A; text-align: right">11/6 15:20</span></div>
-          <div class="feed" style="display: grid; grid-template-columns: 18px minmax(0, 1fr) 64px; gap: 12px; align-items: start; padding: 8px 0; border-top: 1px solid #1B2030; animation-delay: 720ms"><span style="width: 10px; height: 10px; border-radius: 5px; background: #6E9BFF; margin-top: 4px; margin-left: 4px"></span><span style="font-size: 12px; line-height: 1.5"><span style="font-weight: 500">要因 06 のレベルを L2 → L3</span> — 外部連携の仕様未確定が判明</span><span style="font-size: 11px; color: #5E677A; text-align: right">11/6 15:12</span></div>
-          <div class="feed" style="display: grid; grid-template-columns: 18px minmax(0, 1fr) 64px; gap: 12px; align-items: start; padding: 8px 0; border-top: 1px solid #1B2030; animation-delay: 790ms"><span style="width: 10px; height: 10px; border-radius: 5px; background: #6E9BFF; margin-top: 4px; margin-left: 4px"></span><span style="font-size: 12px; line-height: 1.5"><span style="font-weight: 500">G2 を実行</span> — 案A、規模 1,050 FP</span><span style="font-size: 11px; color: #5E677A; text-align: right">11/6 14:02</span></div>
-          <div class="feed" style="display: grid; grid-template-columns: 18px minmax(0, 1fr) 64px; gap: 12px; align-items: start; padding: 8px 0; border-top: 1px solid #1B2030; animation-delay: 860ms"><span style="width: 10px; height: 10px; border-radius: 5px; background: #FF7A59; margin-top: 4px; margin-left: 4px"></span><span style="font-size: 12px; line-height: 1.5"><span style="font-weight: 500">PJ-007 を除外</span> — ΣCO と生産性の不整合を検出</span><span style="font-size: 11px; color: #5E677A; text-align: right">11/5 10:42</span></div>
-          <div class="feed" style="display: grid; grid-template-columns: 18px minmax(0, 1fr) 64px; gap: 12px; align-items: start; padding: 8px 0; border-top: 1px solid #1B2030; animation-delay: 930ms"><span style="width: 10px; height: 10px; border-radius: 5px; background: #5EEAD4; margin-top: 4px; margin-left: 4px"></span><span style="font-size: 12px; line-height: 1.5"><span style="font-weight: 500">モデル v3 を構築</span> — α 0.0210、MMRE 18.4%</span><span style="font-size: 11px; color: #5E677A; text-align: right">11/5 10:42</span></div>
+          <div class="feed" style="display: grid; grid-template-columns: 18px minmax(0, 1fr) 64px; gap: 12px; align-items: start; padding: 8px 0; animation-delay: 650ms"><span style="width: 10px; height: 10px; border-radius: 5px; background: {{accent}}; margin-top: 4px; margin-left: 4px"></span><span style="font-size: 12px; line-height: 1.5"><span style="font-weight: 500">G3 を実行</span> — 案B、規模 1,200 FP、ΣCO +68%</span><span style="font-size: 11px; color: #7F889B; text-align: right">11/6 15:20</span></div>
+          <div class="feed" style="display: grid; grid-template-columns: 18px minmax(0, 1fr) 64px; gap: 12px; align-items: start; padding: 8px 0; border-top: 1px solid #1B2030; animation-delay: 720ms"><span style="width: 10px; height: 10px; border-radius: 5px; background: #6E9BFF; margin-top: 4px; margin-left: 4px"></span><span style="font-size: 12px; line-height: 1.5"><span style="font-weight: 500">要因 06 のレベルを L2 → L3</span> — 外部連携の仕様未確定が判明</span><span style="font-size: 11px; color: #7F889B; text-align: right">11/6 15:12</span></div>
+          <div class="feed" style="display: grid; grid-template-columns: 18px minmax(0, 1fr) 64px; gap: 12px; align-items: start; padding: 8px 0; border-top: 1px solid #1B2030; animation-delay: 790ms"><span style="width: 10px; height: 10px; border-radius: 5px; background: #6E9BFF; margin-top: 4px; margin-left: 4px"></span><span style="font-size: 12px; line-height: 1.5"><span style="font-weight: 500">G2 を実行</span> — 案A、規模 1,050 FP</span><span style="font-size: 11px; color: #7F889B; text-align: right">11/6 14:02</span></div>
+          <div class="feed" style="display: grid; grid-template-columns: 18px minmax(0, 1fr) 64px; gap: 12px; align-items: start; padding: 8px 0; border-top: 1px solid #1B2030; animation-delay: 860ms"><span style="width: 10px; height: 10px; border-radius: 5px; background: #FF7A59; margin-top: 4px; margin-left: 4px"></span><span style="font-size: 12px; line-height: 1.5"><span style="font-weight: 500">PJ-007 を除外</span> — ΣCO と生産性の不整合を検出</span><span style="font-size: 11px; color: #7F889B; text-align: right">11/5 10:42</span></div>
+          <div class="feed" style="display: grid; grid-template-columns: 18px minmax(0, 1fr) 64px; gap: 12px; align-items: start; padding: 8px 0; border-top: 1px solid #1B2030; animation-delay: 930ms"><span style="width: 10px; height: 10px; border-radius: 5px; background: #5EEAD4; margin-top: 4px; margin-left: 4px"></span><span style="font-size: 12px; line-height: 1.5"><span style="font-weight: 500">モデル v3 を構築</span> — α 0.0210、MMRE 18.4%</span><span style="font-size: 11px; color: #7F889B; text-align: right">11/5 10:42</span></div>
         </div>
       </div>
     </section>
@@ -318,7 +326,7 @@ class Component extends DCLogic {
     const names = ['要件の安定性', '外部システム連携数', '新規技術の割合', 'チーム間コミュニケーション', '開発者のスキル', 'その他 3 要因'];
     const contribs = shares.map((sh, i) => ({
       name: names[i], level: g.levels[i], value: (overhead * sh).toFixed(1),
-      lvStyle: { minWidth: '26px', height: '20px', borderRadius: '6px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', background: g.levels[i] === 'L3' ? '#FF7A59' : '#1B2030', color: g.levels[i] === 'L3' ? '#0B0D12' : '#8B93A5' },
+      lvStyle: { minWidth: '26px', height: '20px', borderRadius: '6px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', background: g.levels[i] === 'L3' ? '#FF7A59' : '#1B2030', color: g.levels[i] === 'L3' ? '#0B0D12' : '#98A0B1' },
       style: { width: (mounted ? Math.round(sh * 100) : 0) + '%', height: '100%', borderRadius: '6px', background: i < 2 ? accent : '#6E9BFF', transitionDelay: (i * 60) + 'ms' }
     }));
 
@@ -328,8 +336,8 @@ class Component extends DCLogic {
       return {
         id: r.id, name: r.name, sizeText: fmt(r.size), scoText: '+' + Math.round(r.sco * 100) + '%', medianText: r.median.toFixed(1), pick: () => this.pick(i),
         style: { display: 'grid', gridTemplateColumns: '40px minmax(0, 1fr) 120px 90px 60px', gap: '12px', alignItems: 'center', padding: '10px 12px', borderRadius: '12px', background: on ? '#1B2030' : 'transparent', border: on ? '1px solid #2F3747' : '1px solid transparent', color: '#F2F4F8', fontSize: '13px', fontFamily: 'inherit', cursor: 'pointer', width: '100%', textAlign: 'left', minHeight: '44px' },
-        idStyle: { color: on ? accent : '#5E677A' },
-        valStyle: { fontSize: '18px', textAlign: 'right', color: on ? '#F2F4F8' : '#8B93A5' },
+        idStyle: { color: on ? accent : '#7F889B' },
+        valStyle: { fontSize: '18px', textAlign: 'right', color: on ? '#F2F4F8' : '#98A0B1' },
         trackStyle: { display: 'block', height: '100%', borderRadius: '3px', width: (mounted ? Math.round(r.median / maxMed * 100) : 0) + '%', background: on ? accent : '#3A4257' }
       };
     }).reverse();
@@ -343,7 +351,7 @@ class Component extends DCLogic {
       bandStyle, bandDimStyle, p50MarkStyle, budgetMarkStyle,
       bins, axis0: axis(0), axis1: axis(1 / 3), axis2: axis(2 / 3), axis3: axis(1) + ' 人月',
       histBudgetStyle: { position: 'absolute', top: '0', bottom: '0', left: hb + '%', width: '2px', background: '#FF7A59', opacity: mounted ? 0.9 : 0 },
-      histBudgetLabelStyle: { position: 'absolute', top: '-2px', left: 'calc(' + hb + '% + 6px)', fontSize: '10px', color: '#FF7A59', fontFamily: 'Space Grotesk, sans-serif', fontWeight: '700', whiteSpace: 'nowrap', opacity: mounted ? 1 : 0 },
+      histBudgetLabelStyle: { position: 'absolute', top: '-2px', left: 'calc(' + hb + '% + 6px)', fontSize: '11px', color: '#FF7A59', fontFamily: 'Space Grotesk, sans-serif', fontWeight: '700', whiteSpace: 'nowrap', opacity: mounted ? 1 : 0 },
       budget, budgetText: budget.toFixed(1), setBudget: this.setBudget,
       pExceed: Math.round(pEx * 100), ringDash, predDash,
       contribs, gens: rows,

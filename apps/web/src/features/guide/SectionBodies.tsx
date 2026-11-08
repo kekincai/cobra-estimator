@@ -84,7 +84,7 @@ const Factors = () => (
         </div>
         <div className={smallCard}>
           <h3>複数の専門家</h3>
-          <span className={note}>三角分布は担当者ごとに持てます (S.T. / Y.T.)。モデル構築ではどれを使うか、平均を使うかを選びます。</span>
+          <span className={note}>三角分布は担当者ごとに持てます (例: S.T. / Y.T.)。モデル構築ではどれを使うか、平均を使うかを選びます。</span>
         </div>
         <GoLink to="/model/factors" className="justify-center">
           変動要因の画面へ

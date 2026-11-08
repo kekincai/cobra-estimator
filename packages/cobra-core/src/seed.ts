@@ -73,7 +73,7 @@ export const SEED_G3 = {
     p5: 34.3,
     p95: 56.2,
     exceedAtBudget: 0.43,
-    contributions: { F01: 7.7, F06: 4.7, F05: 2.5, F04: 1.9, F03: 1.0, F07: 0.5, F08: 0.4 },
+    contributions: { F01: 7.7, F06: 4.7, F05: 2.5, F04: 1.8, F03: 1.0, F07: 0.5, F08: 0.4 },
   },
 } as const;
 

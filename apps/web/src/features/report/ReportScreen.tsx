@@ -11,6 +11,7 @@ import { binSamples, histRange, niceTicks } from '../../ui/stats';
 import { MEMO_KEY, expertLabel, specFor, useEstimateContext, useGenerationSimulation, useLevers, type EstimateContext } from '../estimate/context';
 import { estimatePath, useGenParam } from '../estimate/genParam';
 import { leverDelta } from '../risk/display';
+import { MEMO_SEE_FULL, NOTES_MAX_LINES, estimateLines, fitMemo, memoOmittedNote } from './memoFit';
 import { exceedRow, fmtBudget, pct0, reportTitle, resolveReportGen } from './reportFormat';
 import './report.css';
 
@@ -187,6 +188,20 @@ function Report({
     .split(/\n|(?<=。)/)
     .map((s) => s.trim())
     .filter(Boolean);
+  // 05 の固定の注意事項。前提メモはこれと合わせて NOTES_MAX_LINES 行に収め、はみ出す分は省略して注記を付ける（2 ページに収めるため）
+  const fixedNotes = [
+    ...(sizeLo !== null && sizeHi !== null
+      ? [
+          `モデルの実績データは ${fmtInt(sizeLo)} 〜 ${fmtInt(sizeHi)} FP の範囲。本案件 (${fmtInt(gen.sizeFP)} FP) は${
+            inRange ? 'その範囲内にあり、外挿にはあたらない。' : 'その範囲外にあり外挿となるため、結果の幅は実際より狭く出ている可能性がある。'
+          }`,
+        ]
+      : []),
+    `推定値は中央値（${exceedLabel(50)}）。予算・要員計画には ${exceedWithP(80)} など、許容できる超過確率に応じた値を併せて用いる。`,
+    '本レポートは見積り結果のみを含み、実績データ (個別プロジェクトの工数) は含まない。',
+  ];
+  const memoFit = fitMemo(memoItems, NOTES_MAX_LINES - fixedNotes.reduce((n, t) => n + estimateLines(t), 0));
+  const memoNote = memoOmittedNote(memoFit);
 
   return (
     <>
@@ -568,18 +583,21 @@ function Report({
         <h2>
           <span className="no">05</span>前提と注意事項
         </h2>
-        <ul className="m-0 flex list-disc flex-col gap-[3px] pl-[18px] text-[10pt] text-ink-body">
-          {memoItems.map((m, i) => (
+        <ul className="rp-memo m-0 flex list-disc flex-col gap-[3px] pl-[18px] text-[10pt] text-ink-body">
+          {memoFit.items.map((m, i) => (
             <li key={i}>{m}</li>
           ))}
-          {sizeLo !== null && sizeHi !== null && (
-            <li>
-              モデルの実績データは {fmtInt(sizeLo)} 〜 {fmtInt(sizeHi)} FP の範囲。本案件 ({fmtInt(gen.sizeFP)} FP) は
-              {inRange ? 'その範囲内にあり、外挿にはあたらない。' : 'その範囲外にあり外挿となるため、結果の幅は実際より狭く出ている可能性がある。'}
+          {memoNote && (
+            <li className="list-none text-ink-sub">
+              {memoNote}
+              {MEMO_SEE_FULL.before}
+              <Link to={estimatePath(estimate.id, 'conditions', gen.label)}>{MEMO_SEE_FULL.link}</Link>
+              {MEMO_SEE_FULL.after}
             </li>
           )}
-          <li>推定値は中央値（{exceedLabel(50)}）。予算・要員計画には {exceedWithP(80)} など、許容できる超過確率に応じた値を併せて用いる。</li>
-          <li>本レポートは見積り結果のみを含み、実績データ (個別プロジェクトの工数) は含まない。</li>
+          {fixedNotes.map((t) => (
+            <li key={t}>{t}</li>
+          ))}
         </ul>
       </section>
 

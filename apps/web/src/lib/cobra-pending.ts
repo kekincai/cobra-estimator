@@ -10,6 +10,8 @@ interface Entry {
   resolve: (v: unknown) => void;
   reject: (e: Error) => void;
   onProgress?: Progress;
+  /** Worker に送った依頼そのもの。Worker を作り直したときに送り直すために持つ */
+  req?: unknown;
 }
 
 /** 画面に出す日本語のエラー文言 */
@@ -22,7 +24,21 @@ export const CALC_ERROR = {
   unreadable: '計算結果を受け取れませんでした。もう一度実行してください。',
   /** 依頼を Worker に送れない（postMessage の複製失敗など） */
   unsendable: '計算の依頼を送れませんでした。入力内容を確認して、もう一度実行してください。',
+  /** 画面から取りやめた（AbortSignal）。画面ではエラー扱いにしない */
+  aborted: '計算を取りやめました。',
 } as const;
+
+/** 取りやめ（AbortSignal）で reject するエラー。name は DOM の AbortError と同じ 'AbortError' */
+export function abortError(reason?: unknown): Error {
+  const e = new Error(CALC_ERROR.aborted, reason === undefined ? undefined : { cause: reason });
+  e.name = 'AbortError';
+  return e;
+}
+
+/** 取りやめによる失敗か（cobra-client の abortError、DOMException の AbortError のどちらも true） */
+export function isAbortError(e: unknown): boolean {
+  return typeof e === 'object' && e !== null && (e as { name?: unknown }).name === 'AbortError';
+}
 
 const JA = /[぀-ヿ㐀-鿿＀-￯]/;
 
@@ -82,6 +98,13 @@ export class PendingCalls {
     if (!p) return;
     this.map.delete(id);
     p.reject(err);
+  }
+
+  /** 待っている依頼のうち、送り直せるもの（req を持つもの）を ID 順に返す。依頼は残したまま */
+  resendable(): { id: number; req: unknown }[] {
+    const out: { id: number; req: unknown }[] = [];
+    for (const [id, p] of this.map) if (p.req !== undefined) out.push({ id, req: p.req });
+    return out.sort((a, b) => a.id - b.id);
   }
 
   /** 待っている依頼をすべて失敗にする（Worker の停止・応答の破損） */

@@ -2,7 +2,7 @@
 // 数値の整形は facts.ts（純関数・テストあり）。読み込み中・失敗時は各節が数値なしの文に切り替える。
 import { useEstimate, useModel } from '../../data/api';
 import { CURRENT_ESTIMATE_ID } from '../../ui/Layout';
-import { accuracyFacts, readStoredResult, type AccuracyFacts, type StoredResult } from './facts';
+import { accuracyFacts, flowFacts, readStoredResult, type AccuracyFacts, type FlowFacts, type StoredResult } from './facts';
 
 export interface SampleEstimate {
   id: string;
@@ -14,7 +14,14 @@ export interface SampleEstimate {
   result: StoredResult;
 }
 
-export function useGuideFacts(): { accuracy: AccuracyFacts | null; alpha: number | null; sample: SampleEstimate | null; loading: boolean } {
+export function useGuideFacts(): {
+  accuracy: AccuracyFacts | null;
+  alpha: number | null;
+  sample: SampleEstimate | null;
+  /** 業務フロー画面に差し込む現在のモデルの事実（flowStagesFor に渡す） */
+  flow: FlowFacts | null;
+  loading: boolean;
+} {
   const model = useModel();
   const est = useEstimate(CURRENT_ESTIMATE_ID);
   const active = model.data?.activeVersion ?? null;
@@ -26,6 +33,7 @@ export function useGuideFacts(): { accuracy: AccuracyFacts | null; alpha: number
     loading: model.isPending || est.isPending,
     accuracy: accuracyFacts(active),
     alpha: active?.alpha ?? null,
+    flow: flowFacts(model.data),
     sample:
       est.data && gen && result
         ? { id: est.data.id, name: est.data.name, genLabel: gen.label, genName: gen.name, sizeFP: gen.sizeFP, budget: est.data.budget, result }

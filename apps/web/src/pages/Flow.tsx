@@ -2,7 +2,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import { FlowDiagram } from '../features/guide/FlowDiagram';
-import { AUTOPLAY_MS, FLOW_STAGES } from '../features/guide/flowStages';
+import { AUTOPLAY_MS, FLOW_STAGES, flowStagesFor, versionSpan } from '../features/guide/flowStages';
+import { useGuideFacts } from '../features/guide/useGuideFacts';
 import '../features/guide/flow.css';
 import '../features/guide/guide.css';
 
@@ -11,6 +12,10 @@ export default function FlowPage() {
   const [playing, setPlaying] = useState(false);
   const [tick, setTick] = useState(0);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
+  // 件数・専門家・グループ・版は現在のモデルから（読み込み中は数値なしの文言）
+  const { flow } = useGuideFacts();
+  const stages = flowStagesFor(flow);
+  const span = versionSpan(flow);
 
   const stop = () => {
     if (timer.current) clearInterval(timer.current);
@@ -41,7 +46,7 @@ export default function FlowPage() {
     setTick((t) => t + 1);
   };
 
-  const cur = FLOW_STAGES[active]!;
+  const cur = stages[active]!;
   const lane = 'flex flex-col gap-2 border-b border-line pb-3 text-[11px] tracking-[0.08em] text-sub';
 
   return (
@@ -183,7 +188,7 @@ export default function FlowPage() {
           <div className="grid items-stretch md:grid-cols-[minmax(0,1fr)_28px_minmax(0,1.1fr)_28px_minmax(0,1fr)]">
             <IoCard tag="IN ・ JSON" tagClass="text-info" title="モデルパラメータの取り込み" body="標準要因・三角分布・要因間の関係。簡易ツールからの持ち込みも同形式" to="/transfer" />
             <Arrow />
-            <IoCard tag="サーバ保存" tagClass="text-accent" title="見積りモデル v1 → v3" body="組織内で共有。α と精度の推移を版ごとに保持" strong />
+            <IoCard tag="サーバ保存" tagClass="text-accent" title={span ? `見積りモデル ${span}` : '見積りモデル'} body="組織内で共有。α と精度の推移を版ごとに保持" strong />
             <Arrow />
             <IoCard tag="OUT ・ JSON / PDF" tagClass="text-ok" title="エクスポートとレポート" body="標準データへのフィードバック。実績データは「含める / 含めない」を選択" to="/transfer?tab=export" />
           </div>
